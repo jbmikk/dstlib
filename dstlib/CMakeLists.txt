@@ -6,3 +6,5 @@ add_library (
         cmemory.c
         bsearch.c
 )
+
+export(TARGETS dstlib FILE dstlib-exports.cmake)
