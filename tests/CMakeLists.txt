@@ -1,4 +1,4 @@
-include_directories("${PROJECT_SOURCE_DIR}/dstlib")
+include_directories("${PROJECT_SOURCE_DIR}/src")
 
 add_executable(test_bsearch test_bsearch.c)
 add_executable(test_radixtree test_radixtree.c)

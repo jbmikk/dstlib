@@ -47,7 +47,7 @@ cd build
 echo ""
 echo "TESTSTLIB:"
 echo "---------"
-cd testdstlib
+cd tests
 
 run_test $MODE $PATTERN ./test_bsearch
 run_test $MODE $PATTERN ./test_radixtree

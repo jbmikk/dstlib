@@ -10,6 +10,6 @@ add_custom_target(
 
 include_directories("${PROJECT_SOURCE_DIR}/vendor/dbg")
 
-add_subdirectory(dstlib)
-add_subdirectory(testdstlib)
+add_subdirectory(src)
+add_subdirectory(tests)
 
