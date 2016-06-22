@@ -1,82 +1,84 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <glib.h>
 
+#include "test.h"
 #include "bsearch.h"
 #include "radixtree.h"
 
 typedef struct {
 	Node node;
-	gchar *str1;
-	gchar *str2;
-	gchar *str3;
-	gchar *str4;
-	gchar *str5;
-}BSearchFixture;
+	char *str1;
+	char *str2;
+	char *str3;
+	char *str4;
+	char *str5;
+} BSearchFixture;
 
-void bsearch_setup(BSearchFixture* fixture, gconstpointer data){
-	radix_tree_init(&fixture->node, 0, 0, NULL);
+BSearchFixture fixture;
+
+void t_setup(){
+	radix_tree_init(&fixture.node, 0, 0, NULL);
 }
-void bsearch_teardown(BSearchFixture* fixture, gconstpointer data){
-	bsearch_delete_all(&fixture->node);
+void t_teardown(){
+	bsearch_delete_all(&fixture.node);
 }
 
-void bsearch__set_and_get(BSearchFixture* fix, gconstpointer data){
+void bsearch__set_and_get(){
 	Node *a1, *a2;
-	a1 = bsearch_insert(&fix->node, 'a');
-	a2 = bsearch_get(&fix->node, 'a');
-	g_assert(a1 != NULL);
-	g_assert(a2 != NULL);
-	g_assert(a1 == a2);
+	a1 = bsearch_insert(&fixture.node, 'a');
+	a2 = bsearch_get(&fixture.node, 'a');
+	t_assert(a1 != NULL);
+	t_assert(a2 != NULL);
+	t_assert(a1 == a2);
 }
 
-void bsearch__set2_and_get2(BSearchFixture* fix, gconstpointer data){
+void bsearch__set2_and_get2(){
 	Node *a1, *a2, *b1, *b2;
 	Node d1, d2;
 
-	a1 = bsearch_insert(&fix->node, 'a');
+	a1 = bsearch_insert(&fixture.node, 'a');
 	a1->child = (void *) &d1;
-	b1 = bsearch_insert(&fix->node, 'b');
+	b1 = bsearch_insert(&fixture.node, 'b');
 	b1->child = (void *) &d2;
-	a2 = bsearch_get(&fix->node, 'a');
-	b2 = bsearch_get(&fix->node, 'b');
+	a2 = bsearch_get(&fixture.node, 'a');
+	b2 = bsearch_get(&fixture.node, 'b');
 
-	g_assert(fix->node.size == 2);
-	g_assert(a2 != NULL);
-	g_assert(a2->child == (void *)&d1);
-	g_assert(b2 != NULL);
-	g_assert(b2->child == (void *)&d2);
+	t_assert(fixture.node.size == 2);
+	t_assert(a2 != NULL);
+	t_assert(a2->child == (void *)&d1);
+	t_assert(b2 != NULL);
+	t_assert(b2->child == (void *)&d2);
 }
 
-void bsearch__set2_and_delete1(BSearchFixture* fix, gconstpointer data){
+void bsearch__set2_and_delete1(){
 	Node *a1, *a2, *b1, *b2;
 	Node d1, d2;
 
-	a1 = bsearch_insert(&fix->node, 'a');
+	a1 = bsearch_insert(&fixture.node, 'a');
 	a1->child = (void *) &d1;
-	b1 = bsearch_insert(&fix->node, 'b');
+	b1 = bsearch_insert(&fixture.node, 'b');
 	b1->child = (void *) &d2;
 
-	bsearch_delete(&fix->node, 'a');
+	bsearch_delete(&fixture.node, 'a');
 
-	a2 = bsearch_get(&fix->node, 'a');
-	b2 = bsearch_get(&fix->node, 'b');
+	a2 = bsearch_get(&fixture.node, 'a');
+	b2 = bsearch_get(&fixture.node, 'b');
 
-	g_assert(fix->node.size == 1);
-	g_assert(a2 == NULL);
-	g_assert(b2 != NULL);
-	g_assert(b2->child == (void *)&d2);
+	t_assert(fixture.node.size == 1);
+	t_assert(a2 == NULL);
+	t_assert(b2 != NULL);
+	t_assert(b2->child == (void *)&d2);
 }
 
 int main(int argc, char** argv) {
-	g_test_init(&argc, &argv, NULL);
-	g_test_add("/BSearch/set_and_get", BSearchFixture, NULL, bsearch_setup, bsearch__set_and_get, bsearch_teardown);
-	g_test_add("/BSearch/set2_and_get2", BSearchFixture, NULL, bsearch_setup, bsearch__set2_and_get2, bsearch_teardown);
-	g_test_add("/BSearch/set2_and_delete1", BSearchFixture, NULL, bsearch_setup, bsearch__set2_and_delete1, bsearch_teardown);
+	t_init();
+	t_test(bsearch__set_and_get);
+	t_test(bsearch__set2_and_get2);
+	t_test(bsearch__set2_and_delete1);
 	//TODO:
 	//delete
 	//set_and_out_of_memory
 	//delete_and_out_of_memory
-	return g_test_run();
+	return t_done();
 }
 

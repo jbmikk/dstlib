@@ -14,7 +14,6 @@ Build
 
 In order to build this library you need:
 * cmake
-* glib 2.0 dev
 
 
 Test
