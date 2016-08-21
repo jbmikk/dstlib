@@ -561,7 +561,7 @@ void radix_tree_remove(Node *tree, char *string, unsigned int length)
 	}
 }
 
-init_status(ScanStatus *status, ScanStatus *poststatus, char *string, unsigned int length)
+void init_status(ScanStatus *status, ScanStatus *poststatus, char *string, unsigned int length)
 {
 	status->index = 0;
 	status->subindex = 0;
