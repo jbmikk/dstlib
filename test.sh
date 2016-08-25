@@ -47,13 +47,10 @@ cd build
 echo ""
 echo "TESTSTLIB:"
 echo "---------"
-cd tests
 
 run_test $MODE $PATTERN ./test_bsearch
 run_test $MODE $PATTERN ./test_radixtree
 run_test $MODE $PATTERN ./test_arrays
-
-cd ..
 
 cd ..
 
