@@ -28,3 +28,14 @@ int array_to_int(unsigned char *array, unsigned int size)
 	}
 	return symbol;
 }
+
+void int_to_padded_array(unsigned char *array, int integer)
+{
+	int remainder = integer;
+	int i;
+
+	for (i = 0; i < sizeof(int); i++) {
+		array[i] = remainder & 0xFF;
+		remainder >>= 8;
+	}
+}
