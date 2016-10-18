@@ -20,6 +20,13 @@ void radix_tree_iterator_init(Iterator *iterator, Node *tree);
 void radix_tree_iterator_dispose(Iterator *iterator);
 void **radix_tree_iterator_next(Iterator *iterator);
 
+
+//Integer functions
+
+void *radix_tree_get_int(Node *tree, int number);
+void radix_tree_set_int(Node *tree, int number, void *data);
+void *radix_tree_get_next_int(Node *tree, int number);
+
 #endif	//RADIXTREE_H
 
 

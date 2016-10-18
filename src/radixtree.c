@@ -7,6 +7,7 @@
 
 #include "cmemory.h"
 #include "bsearch.h"
+#include "arrays.h"
 
 #ifdef RADIXTREE_TRACE
 #define trace(M, ...) fprintf(stderr, "RADIXTREE: " M "\n", ##__VA_ARGS__)
@@ -653,4 +654,25 @@ void **radix_tree_iterator_next(Iterator *iterator)
 	} else {
 		return NULL;
 	}
+}
+
+void *radix_tree_get_int(Node *tree, int number)
+{
+	unsigned char buffer[sizeof(int)];
+	int_to_padded_array(buffer, number);
+	return radix_tree_get(tree, buffer, sizeof(int));
+}
+
+void radix_tree_set_int(Node *tree, int number, void *data)
+{
+	unsigned char buffer[sizeof(int)];
+	int_to_padded_array(buffer, number);
+	radix_tree_set(tree, buffer, sizeof(int), data);
+}
+
+void *radix_tree_get_next_int(Node *tree, int number)
+{
+	unsigned char buffer[sizeof(int)];
+	int_to_padded_array(buffer, number);
+	return radix_tree_get_next(tree, buffer, sizeof(int));
 }
