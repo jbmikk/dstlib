@@ -5,7 +5,7 @@ typedef struct _Node {
     void *child;
     char type;
     unsigned char size;
-    char key;
+    unsigned char key;
 } Node;
 
 typedef struct _DataNode {

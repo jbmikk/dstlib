@@ -50,6 +50,16 @@ void bsearch__set2_and_get2(){
 	t_assert(b2->child == (void *)&d2);
 }
 
+void bsearch__set2_and_get2_ensure_unsigned(){
+	Node *a1, *b1;
+
+	a1 = bsearch_insert(&fixture.node, 10);
+	b1 = bsearch_insert(&fixture.node, 128);
+
+	t_assert(fixture.node.size == 2);
+	t_assert(((Node*)fixture.node.child)->key == 10);
+}
+
 void bsearch__set2_and_delete1(){
 	Node *a1, *a2, *b1, *b2;
 	Node d1, d2;
@@ -74,6 +84,7 @@ int main(int argc, char** argv) {
 	t_init();
 	t_test(bsearch__set_and_get);
 	t_test(bsearch__set2_and_get2);
+	t_test(bsearch__set2_and_get2_ensure_unsigned);
 	t_test(bsearch__set2_and_delete1);
 	//TODO:
 	//delete
