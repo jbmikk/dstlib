@@ -116,6 +116,28 @@ void int_to_padded_array__one_byte(){
 	}
 }
 
+void int_to_padded_array_le__one_byte(){
+
+	int symbol = 40;
+	unsigned char buffer[sizeof(int)];
+	unsigned int size;
+
+	int i;
+
+	// Fill with crap
+	for (i = 0; i < sizeof(int); i++) {
+		buffer[i] = 0xFF;
+	}
+
+	int_to_padded_array_le(buffer, symbol);
+
+	t_assert(buffer[sizeof(int)-1] == 40);
+
+	for (i = sizeof(int)-2; i >= 0; i--) {
+		t_assert(buffer[i] == 0);
+	}
+}
+
 int main(int argc, char** argv){
 
 	t_init();
@@ -123,6 +145,7 @@ int main(int argc, char** argv){
 	t_test(int_to_array__two_bytes);
 	t_test(int_to_array__negative);
 	t_test(int_to_padded_array__one_byte);
+	t_test(int_to_padded_array_le__one_byte);
 	t_test(array_to_int__one_byte);
 	t_test(array_to_int__two_bytes);
 	t_test(array_to_int__negative);
