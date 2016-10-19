@@ -250,6 +250,31 @@ void test_radix_tree__iterate(){
 	t_assert(out5 == NULL);
 }
 
+void test_radix_tree__get_next(){
+	char *in1="DINOSAURIO", *in2="DINO", *in3="CASA", *in4="PIANO";
+	char *out1, *out2, *out3, *out4, *out5;
+	Node *tree = &fixture.tree;
+
+	Iterator it;
+
+	radix_tree_set(tree, nzs("dinosaurio"), in1);
+	radix_tree_set(tree, nzs("dino"), in2);
+	radix_tree_set(tree, nzs("casa"), in3);
+	radix_tree_set(tree, nzs("piano"), in4);
+
+	out1 = (char *)radix_tree_get_next(tree, NULL, 0);
+	out2 = (char *)radix_tree_get_next(tree, nzs("dinosaurio"));
+	out3 = (char *)radix_tree_get_next(tree, nzs("dino"));
+	out4 = (char *)radix_tree_get_next(tree, nzs("casa"));
+	out5 = (char *)radix_tree_get_next(tree, nzs("piano"));
+
+	t_assert(!strcmp(out1, "CASA"));
+	t_assert(!strcmp(out2, "PIANO"));
+	t_assert(!strcmp(out3, "DINOSAURIO"));
+	t_assert(!strcmp(out4, "DINO"));
+	t_assert(out5 == NULL);
+}
+
 int main(int argc, char** argv) {
 	t_init();
 	t_test(test_radix_tree__set_and_get);
@@ -268,6 +293,7 @@ int main(int argc, char** argv) {
 	t_test(test_radix_tree__add_prefix);
 	t_test(test_radix_tree__add_suffix);
 	t_test(test_radix_tree__iterate);
+	t_test(test_radix_tree__get_next);
 	return t_done();
 }
 
