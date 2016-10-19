@@ -676,3 +676,24 @@ void *radix_tree_get_next_int(Node *tree, int number)
 	int_to_padded_array(buffer, number);
 	return radix_tree_get_next(tree, buffer, sizeof(int));
 }
+
+void *radix_tree_get_ple_int(Node *tree, int number)
+{
+	unsigned char buffer[sizeof(int)];
+	int_to_padded_array_le(buffer, number);
+	return radix_tree_get(tree, buffer, sizeof(int));
+}
+
+void radix_tree_set_ple_int(Node *tree, int number, void *data)
+{
+	unsigned char buffer[sizeof(int)];
+	int_to_padded_array_le(buffer, number);
+	radix_tree_set(tree, buffer, sizeof(int), data);
+}
+
+void *radix_tree_get_next_ple_int(Node *tree, int number)
+{
+	unsigned char buffer[sizeof(int)];
+	int_to_padded_array_le(buffer, number);
+	return radix_tree_get_next(tree, buffer, sizeof(int));
+}
