@@ -35,6 +35,20 @@ void test_radix_tree__set_and_get(){
 	t_assert(!strcmp(out1, "BLUE"));
 }
 
+void test_radix_tree__set_and_contains(){
+	char *in1="BLUE";
+	int out1 = 0, out2 = 0;
+	Node *tree = &fixture.tree;
+
+	radix_tree_set(tree, nzs("blue"), in1);
+	out1 = radix_tree_contains(tree, nzs("blue"));
+	out2 = radix_tree_contains(tree, nzs("green"));
+
+	t_assert(tree->type == NODE_TYPE_ARRAY);
+	t_assert(out1 == 1);
+	t_assert(out2 == 0);
+}
+
 void test_radix_tree__set_and_get_1key(){
 	char *in1="BLUE", *out1;
 	Node *tree = &fixture.tree;
@@ -278,6 +292,7 @@ void test_radix_tree__get_next(){
 int main(int argc, char** argv) {
 	t_init();
 	t_test(test_radix_tree__set_and_get);
+	t_test(test_radix_tree__set_and_contains);
 	t_test(test_radix_tree__set_and_get_1key);
 	t_test(test_radix_tree__set_and_remove_1key);
 	t_test(test_radix_tree__set2_and_remove1_1key);

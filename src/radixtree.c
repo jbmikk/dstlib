@@ -496,6 +496,27 @@ void radix_tree_set(Node *tree, char *string, unsigned int length, void *data)
 	data_node->data = data;
 }
 
+int radix_tree_contains(Node *tree, char *string, unsigned int length)
+{
+	trace("RADIXTREE-CONTAINS(%p)", tree);
+	ScanStatus status;
+	status.index = 0;
+	status.subindex = 0;
+	status.found = 0;
+	status.key = string;
+	status.size = length;
+	status.type = S_DEFAULT;
+	Node * node = radix_tree_seek(tree, &status);
+
+	if(status.index == length && node->type == NODE_TYPE_DATA) {
+		trace("FOUND %p, %p", node, node->child);
+		return 1;
+	} else {
+		trace("NOTFOUND");
+		return 0;
+	}
+}
+
 //TODO: add missing tests
 void *radix_tree_try_set(Node *tree, char *string, unsigned int length, void *data)
 {
