@@ -3,6 +3,8 @@
 
 #include "structs.h"
 
+#include <stdint.h>
+
 typedef enum {
 	S_DEFAULT = 0,
 	S_FETCHNEXT
@@ -36,6 +38,14 @@ void *radix_tree_get_ple_int(Node *tree, int number);
 void radix_tree_set_ple_int(Node *tree, int number, void *data);
 int radix_tree_contains_ple_int(Node *tree, int number);
 void *radix_tree_get_next_ple_int(Node *tree, int number);
+
+
+// intptr_t functions
+
+void *radix_tree_get_intptr(Node *tree, intptr_t ptr);
+void radix_tree_set_intptr(Node *tree, intptr_t ptr, void *data);
+int radix_tree_contains_intptr(Node *tree, intptr_t ptr);
+void *radix_tree_get_next_intptr(Node *tree, intptr_t ptr);
 
 #endif	//RADIXTREE_H
 
