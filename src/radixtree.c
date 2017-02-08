@@ -254,6 +254,7 @@ Node * radix_tree_split_node(Node *node, ScanStatus *status)
 
 	Node *old = node->child, *prefix, *sufix;
 	Node *data_node = c_new(Node, 1);
+	data_node->data = NULL;
 	data_node->array = NULL;
 
 	char *old_suffix = old->array+subindex;
