@@ -1,6 +1,7 @@
 cmake_minimum_required (VERSION 2.8.0)
 project (dstlib)
 
+option(PROFILE "Enable profiling options" OFF)
 
 # Dependencies
 
@@ -10,6 +11,12 @@ add_custom_target(
         dependencies ALL sh install.sh
         WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
 )
+
+# Profiling
+
+if(PROFILE)
+        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pg")
+endif(PROFILE)
 
 
 # Dstlib

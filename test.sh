@@ -38,6 +38,12 @@ else
 	TRACE="OFF"
 fi
 
+if [ "$MODE" = "prof" ]; then
+	PROFILE="ON"
+else
+	PROFILE="OFF"
+fi
+
 PATTERN=${2:-"no-pattern"}
 
 
@@ -45,7 +51,7 @@ PATTERN=${2:-"no-pattern"}
 mkdir -p build
 cd build
 
-cmake .. -DTRACE=$TRACE
+cmake .. -DTRACE=$TRACE -DPROFILE=$PROFILE
 make
 
 
