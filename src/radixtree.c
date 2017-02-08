@@ -22,11 +22,14 @@
 #endif
 
 
-void radix_tree_init(Node *tree, char type, unsigned char size, void *child)
+void radix_tree_init(Node *tree, char type, unsigned char size, Node *child)
 {
 	tree->type = type;
 	tree->size = size;
 	tree->child = child;
+	//TODO: should not leave uninitialized
+	//tree->array = NULL;
+	//tree->data = NULL;
 }
 
 /**
@@ -54,7 +57,7 @@ Node *radix_tree_seek_step(Node *tree, ScanStatus *status)
 	} else if (current->type == NODE_TYPE_ARRAY) {
 		//Match array as far a possible
 		char *key = (char *)status->key;
-		char *array = ((DataNode*)current->child)->data;
+		char *array = current->child->array;
 		int array_length = current->size;
 		int j;
 		unsigned int i = status->index;
@@ -156,10 +159,10 @@ Node *radix_tree_seek_metadata(Node *tree, ScanStatus *status, ScanMetadata *met
 /**
  * Scan the tree recursively for the next datanode.
  */
-DataNode *radix_tree_scan(Node *node, ScanStatus *status, ScanStatus *post)
+Node *radix_tree_scan(Node *node, ScanStatus *status, ScanStatus *post)
 {
 	char *key = (char *)status->key;
-	DataNode *result = NULL;
+	Node *result = NULL;
 
 	if (node->type == NODE_TYPE_TREE) {
 		Node *children = node->child;
@@ -188,13 +191,13 @@ DataNode *radix_tree_scan(Node *node, ScanStatus *status, ScanStatus *post)
 		//if the prefix matches, then it's a match for
 		if(status->type == S_DEFAULT) {
 			post->size = status->index;
-			result = (DataNode*)node->child;
+			result = node->child;
 		} else {
 			unsigned int match = status->index >= status->size;
 			if(match) {
 				status->type = S_DEFAULT;
 			}
-			if(((Node*)node->child)->child != NULL) {
+			if(node->child->child != NULL) {
 				result = radix_tree_scan(node->child, status, post);
 			} 
 		}
@@ -205,7 +208,7 @@ DataNode *radix_tree_scan(Node *node, ScanStatus *status, ScanStatus *post)
 		status->index += node->size;
 		post->key = c_renew(post->key, char, status->index);
 
-		char *array = ((DataNode*)node->child)->data;
+		char *array = node->child->array;
 		memcpy(post->key+offset, array, node->size);
 
 		result = radix_tree_scan(node->child, status, post);
@@ -220,7 +223,7 @@ DataNode *radix_tree_scan(Node *node, ScanStatus *status, ScanStatus *post)
 Node *radix_tree_build_node(Node *node, char *string, unsigned int length)
 {
 	if(length > 1) {
-		DataNode* array_node = c_new(DataNode, 1);
+		Node* array_node = c_new(Node, 1);
 		char *keys = c_malloc_n(length);
 		radix_tree_init(node, NODE_TYPE_ARRAY, length, array_node);
 
@@ -230,9 +233,9 @@ Node *radix_tree_build_node(Node *node, char *string, unsigned int length)
 			keys[i] = string[i];
 		}
 
-		array_node->data = keys;
-		array_node->node.type = NODE_TYPE_LEAF;
-		node = (Node*)array_node;
+		array_node->array = keys;
+		array_node->type = NODE_TYPE_LEAF;
+		node = array_node;
 	} else if (length == 1) {
 		radix_tree_init(node, NODE_TYPE_TREE, 0, NULL);
 		node = bsearch_insert(node, string[0]);
@@ -245,30 +248,30 @@ Node *radix_tree_build_node(Node *node, char *string, unsigned int length)
 /**
  * create split array node in two using a tree node
  */
-DataNode * radix_tree_split_node(Node *node, ScanStatus *status)
+Node * radix_tree_split_node(Node *node, ScanStatus *status)
 {
 	unsigned subindex = status->subindex;
 
-	DataNode *old = node->child, *prefix, *sufix;
-	DataNode *data_node = c_new(DataNode, 1);
-	data_node->data = NULL;
+	Node *old = node->child, *prefix, *sufix;
+	Node *data_node = c_new(Node, 1);
+	data_node->array = NULL;
 
-	char *old_suffix = old->data+subindex;
+	char *old_suffix = old->array+subindex;
 	char *new_suffix = status->key + status->index;
 	unsigned int old_suffix_size = node->size - subindex;
 	unsigned int new_suffix_size = status->size - status->index;
 
 	//make node point to new prefix array, if necessary
-	node = radix_tree_build_node(node, old->data, subindex);
+	node = radix_tree_build_node(node, old->array, subindex);
 
 	if (new_suffix_size == 0) {
                 //No new suffix, then we append data node right here
 		radix_tree_init(node, NODE_TYPE_DATA, 0, data_node);
-		node = &data_node->node;
+		node = data_node;
 
                 //After the data node we append the old suffix
 		node = radix_tree_build_node(node, old_suffix, old_suffix_size);
-		radix_tree_init(node, old->node.type, old->node.size, old->node.child);
+		radix_tree_init(node, old->type, old->size, old->child);
 	} else {
 		//make node point to new tree node
 		radix_tree_init(node, NODE_TYPE_TREE, 0, NULL);
@@ -276,17 +279,17 @@ DataNode * radix_tree_split_node(Node *node, ScanStatus *status)
 		//add branch to hold old suffix and delete old data
 		Node *branch1 = bsearch_insert(node, old_suffix[0]);
 		branch1 = radix_tree_build_node(branch1, old_suffix+1, old_suffix_size-1);
-		radix_tree_init(branch1, old->node.type, old->node.size, old->node.child);
+		radix_tree_init(branch1, old->type, old->size, old->child);
 
 		//add branch to hold new suffix and return new node
 		Node *branch2 = bsearch_insert(node, new_suffix[0]);
 		branch2 = radix_tree_build_node(branch2, new_suffix+1, new_suffix_size -1);
 
 		radix_tree_init(branch2, NODE_TYPE_DATA, 0, data_node);
-		radix_tree_init(&data_node->node, NODE_TYPE_LEAF, 0, NULL);
+		radix_tree_init(data_node, NODE_TYPE_LEAF, 0, NULL);
 	}
-	//delete old data
-	c_free(old->data);
+	//delete old array
+	c_free(old->array);
 	c_delete(old);
 
 	return data_node;
@@ -295,7 +298,7 @@ DataNode * radix_tree_split_node(Node *node, ScanStatus *status)
 void radix_tree_compact_nodes(Node *node1, Node *node2, Node *node3)
 {
 	Node *target = NULL;
-	Node *cont = (Node*)node3->child;
+	Node *cont = node3->child;
 	int nodes = 0;
 	int joined_size = 0;
 
@@ -315,7 +318,7 @@ void radix_tree_compact_nodes(Node *node1, Node *node2, Node *node3)
 	if(node3) {
 		if(node3->type == NODE_TYPE_ARRAY) {
 			trace("Node 3 is array");
-			node3_str = ((DataNode*)node3->child)->data;
+			node3_str = node3->child->array;
 			node3_size = node3->size;
 			joined_size += node3_size;
 			nodes++;
@@ -342,7 +345,7 @@ void radix_tree_compact_nodes(Node *node1, Node *node2, Node *node3)
 	if(node1) {
 		if(node1->type == NODE_TYPE_ARRAY) {
 			trace("Node 1 is array");
-			node1_str = ((DataNode*)node1->child)->data;
+			node1_str = node1->child->array;
 			node1_size = node1->size;
 			joined_size += node1_size;
 			nodes++;
@@ -414,8 +417,9 @@ void radix_tree_clean_dangling_nodes(Node *node, ScanStatus *status, ScanMetadat
 		//Delete node preceeding the leaf
 		Node *previous = meta->previous;
 		if(previous && previous->type == NODE_TYPE_ARRAY) {
-			DataNode *leaf = (DataNode*)previous->child;
-			c_free(leaf->data);
+			Node *leaf = previous->child;
+			c_free(leaf->array);
+			leaf->array = NULL;
 			c_delete(leaf);
 			previous->type = NODE_TYPE_LEAF;
 			previous->size = 0;
@@ -460,7 +464,7 @@ void *radix_tree_get(Node *tree, char *string, unsigned int length)
 
 	if(status.index == length && node->type == NODE_TYPE_DATA) {
 		trace("FOUND %p, %p", node, node->child);
-		return ((DataNode*)node->child)->data;
+		return node->child->data;
 	} else {
 		trace("NOTFOUND");
 		return NULL;
@@ -470,7 +474,7 @@ void *radix_tree_get(Node *tree, char *string, unsigned int length)
 void radix_tree_set(Node *tree, char *string, unsigned int length, void *data)
 {
 	trace("RADIXTREE-SET(%p)", tree);
-	DataNode *data_node;
+	Node *data_node;
 	ScanStatus status;
 	status.index = 0;
 	status.subindex = 0;
@@ -482,16 +486,16 @@ void radix_tree_set(Node *tree, char *string, unsigned int length, void *data)
 	Node * node = radix_tree_seek(tree, &status);
 
 	if (node->type == NODE_TYPE_DATA) {
-		data_node = (DataNode*)node->child;
+		data_node = node->child;
 	} else if (node->type == NODE_TYPE_ARRAY) {
 		data_node = radix_tree_split_node(node, &status);
 	} else {
 		if(node->type == NODE_TYPE_TREE)
 			node = bsearch_insert(node, string[status.index++]);
 		node = radix_tree_build_node(node, string+status.index, length-status.index);
-		data_node = c_new(DataNode, 1);
+		data_node = c_new(Node, 1);
 		radix_tree_init(node, NODE_TYPE_DATA, 0, data_node);
-		radix_tree_init(&data_node->node, NODE_TYPE_LEAF, 0, NULL);
+		radix_tree_init(data_node, NODE_TYPE_LEAF, 0, NULL);
 	}
 	data_node->data = data;
 }
@@ -521,7 +525,7 @@ int radix_tree_contains(Node *tree, char *string, unsigned int length)
 void *radix_tree_try_set(Node *tree, char *string, unsigned int length, void *data)
 {
 	trace("RADIXTREE-TRY-SET(%p)", tree);
-	DataNode *data_node;
+	Node *data_node;
 	ScanStatus status;
 	status.index = 0;
 	status.subindex = 0;
@@ -533,17 +537,17 @@ void *radix_tree_try_set(Node *tree, char *string, unsigned int length, void *da
 	Node * node = radix_tree_seek(tree, &status);
 
 	if (node->type == NODE_TYPE_DATA) {
-		data_node = (DataNode*)node->child;
+		data_node = node->child;
 	} else if (node->type == NODE_TYPE_ARRAY) {
 		data_node = radix_tree_split_node(node, &status);
 	} else {
 		if(node->type == NODE_TYPE_TREE)
 			node = bsearch_insert(node, string[status.index++]);
 		node = radix_tree_build_node(node, string+status.index, length-status.index);
-		data_node = c_new(DataNode, 1);
+		data_node = c_new(Node, 1);
 		data_node->data = NULL;
 		radix_tree_init(node, NODE_TYPE_DATA, 0, data_node);
-		radix_tree_init(&data_node->node, NODE_TYPE_LEAF, 0, NULL);
+		radix_tree_init(data_node, NODE_TYPE_LEAF, 0, NULL);
 	}
 
 	void *previous_data = data_node->data;
@@ -556,7 +560,7 @@ void *radix_tree_try_set(Node *tree, char *string, unsigned int length, void *da
 void radix_tree_remove(Node *tree, char *string, unsigned int length)
 {
 	trace("RADIXTREE-REMOVE(%p)", tree);
-	DataNode *data_node;
+	Node *data_node;
 	ScanStatus status;
 	status.index = 0;
 	status.subindex = 0;
@@ -573,10 +577,10 @@ void radix_tree_remove(Node *tree, char *string, unsigned int length)
 	trace_node("NODE", node);
 	if(status.index == length && node->type == NODE_TYPE_DATA) {
 		//Delete data node, parent node points to datanode's children.
-		data_node = (DataNode*)node->child;
-		node->type = data_node->node.type;
-		node->child = data_node->node.child;
-		node->size = data_node->node.size;
+		data_node = node->child;
+		node->type = data_node->type;
+		node->child = data_node->child;
+		node->size = data_node->size;
 		c_free(data_node);
 		
 		radix_tree_clean_dangling_nodes(node, &status, &meta);
@@ -604,7 +608,7 @@ void init_status(ScanStatus *status, ScanStatus *poststatus, char *string, unsig
 
 void **radix_tree_get_next(Node *tree, char *string, unsigned int length)
 {
-	DataNode *res;
+	Node *res;
 	ScanStatus status;
 	ScanStatus poststatus;
 
@@ -624,18 +628,18 @@ void **radix_tree_get_next(Node *tree, char *string, unsigned int length)
 void radix_tree_dispose(Node *tree)
 {
 	if(tree->type == NODE_TYPE_TREE) {
-		Node *child = (Node *)tree->child;
+		Node *child = tree->child;
 		int i;
 		for(i = 0; i < tree->size; i++) {
 			radix_tree_dispose(child+i);
 		}
 		c_delete(tree->child);
 	} else if(tree->type == NODE_TYPE_ARRAY) {
-		radix_tree_dispose((Node *)tree->child);
-		c_free(((DataNode*)tree->child)->data);
+		radix_tree_dispose(tree->child);
+		c_free(tree->child->array);
 		c_delete(tree->child);
 	} else if(tree->type == NODE_TYPE_DATA) {
-		radix_tree_dispose((Node *)tree->child);
+		radix_tree_dispose(tree->child);
 		c_delete(tree->child);
 	}
 }
@@ -655,7 +659,7 @@ void radix_tree_iterator_dispose(Iterator *iterator)
 
 void **radix_tree_iterator_next(Iterator *iterator)
 {
-	DataNode *res;
+	Node *res;
 	ScanStatus status;
 	ScanStatus poststatus;
 

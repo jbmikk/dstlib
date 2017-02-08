@@ -2,16 +2,13 @@
 #define CSTRUCT
 
 typedef struct _Node {
-    void *child;
+    struct _Node *child;
     char type;
     unsigned char size;
     unsigned char key;
-} Node;
-
-typedef struct _DataNode {
-    Node node;
+    void *array;
     void *data;
-} DataNode;
+} Node;
 
 typedef struct _Iterator {
     Node *root;
