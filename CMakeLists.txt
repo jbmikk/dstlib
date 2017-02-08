@@ -12,6 +12,17 @@ add_custom_target(
         WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
 )
 
+
+# Traces
+# ------
+
+option(ENABLE_RADIXTREE_TRACE "Enable radixtree traces" OFF)
+option(TRACE "Enable all traces" OFF)
+
+if(TRACE)
+        set(ENABLE_RADIXTREE_TRACE ON)
+endif(TRACE)
+
 # Profiling
 
 if(PROFILE)
@@ -19,7 +30,18 @@ if(PROFILE)
 endif(PROFILE)
 
 
+# Flags
+# -----
+
+if(ENABLE_RADIXTREE_TRACE)
+        set(RADIXTREE_TRACE_FLAGS "-DRADIXTREE_TRACE")
+endif(ENABLE_RADIXTREE_TRACE)
+
+set(DSTLIB_FLAGS "${RADIXTREE_TRACE_FLAGS}")
+
+
 # Dstlib
+# ------
 
 file(GLOB SOURCES src/*.c)
 
@@ -27,8 +49,11 @@ add_library(dstlib ${SOURCES})
 
 add_dependencies(dstlib dependencies)
 
+set_target_properties(dstlib PROPERTIES COMPILE_FLAGS "-DLIBRARY ${DSTLIB_FLAGS}")
+
 
 # Tests
+# -----
 
 include_directories("${PROJECT_SOURCE_DIR}/src")
 
