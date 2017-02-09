@@ -70,7 +70,7 @@ Node *radix_tree_seek_step(Node *tree, ScanStatus *status)
 		int array_length = current->size;
 		int j;
 		unsigned int i = status->index;
-		trace("SEEK-ARRY(%p) ", current);
+		trace_node("SEEK-ARRAY", current);
 		for (j = 0; j < array_length && i < status->size; j++, i++) {
 			//Break if a character does not match
 			trace("[%c-%c]", array[j], key[i]);
@@ -90,7 +90,7 @@ Node *radix_tree_seek_step(Node *tree, ScanStatus *status)
 		current = current->child;
 		status->index = i;
 	} else {
-		trace("SEEK-LEAF(%p)", current);
+		trace_node("SEEK-LEAF", current);
 		//Leaf node
 		goto NOTFOUND;
 	}
@@ -113,7 +113,7 @@ Node *radix_tree_seek(Node *tree, ScanStatus *status)
 	while(!status->found) {
 		current = radix_tree_seek_step(current, status);
 	}
-	trace("SEEK-RESULT: %i", status->found);
+	trace("SEEK-STATUS: %i", status->found);
 	return current;
 }
 
