@@ -231,6 +231,8 @@ void test_radix_tree__non_clashing_keys(){
 	radix_tree_set(tree, nzs("green"), in2);
 	out1 = radix_tree_get(tree, nzs("blue"));
 	out2 = radix_tree_get(tree, nzs("green"));
+	t_assert(out1 != NULL);
+	t_assert(out2 != NULL);
 	t_assert(!strcmp(out1, "BLUE"));
 	t_assert(!strcmp(out2, "GREEN"));
 }
@@ -242,6 +244,8 @@ void test_radix_tree__first_clashing_keys(){
 	radix_tree_set(tree, nzs("bobo"), in2);
 	out1 = radix_tree_get(tree, nzs("blue"));
 	out2 = radix_tree_get(tree, nzs("bobo"));
+	t_assert(out1 != NULL);
+	t_assert(out2 != NULL);
 	t_assert(!strcmp(out1, "BLUE"));
 	t_assert(!strcmp(out2, "BOBO"));
 }
@@ -252,8 +256,10 @@ void test_radix_tree__last_clashing_keys(){
 	radix_tree_set(tree, nzs("bobi"), in1);
 	radix_tree_set(tree, nzs("bobo"), in2);
 	out1 = radix_tree_get(tree, nzs("bobi"));
+	t_assert(out1 != NULL);
 	t_assert(!strcmp(out1, "BOBI"));
 	out2 = radix_tree_get(tree, nzs("bobo"));
+	t_assert(out2 != NULL);
 	t_assert(!strcmp(out2, "BOBO"));
 }
 
@@ -264,6 +270,8 @@ void test_radix_tree__add_prefix(){
 	radix_tree_set(tree, nzs("dino"), in2);
 	out1 = radix_tree_get(tree, nzs("dinosaurio"));
 	out2 = radix_tree_get(tree, nzs("dino"));
+	t_assert(out1 != NULL);
+	t_assert(out2 != NULL);
 	t_assert(!strcmp(out1, "DINOSAURIO"));
 	t_assert(!strcmp(out2, "DINO"));
 }
@@ -275,6 +283,8 @@ void test_radix_tree__add_suffix(){
 	radix_tree_set(tree, nzs("dinosaurio"), in1);
 	out1 = radix_tree_get(tree, nzs("dinosaurio"));
 	out2 = radix_tree_get(tree, nzs("dino"));
+	t_assert(out1 != NULL);
+	t_assert(out2 != NULL);
 	t_assert(!strcmp(out1, "DINOSAURIO"));
 	t_assert(!strcmp(out2, "DINO"));
 }
@@ -295,6 +305,10 @@ void test_radix_tree__iterate(){
 	out4 = (char *)radix_tree_iterator_next(&it);
 	out5 = (char *)radix_tree_iterator_next(&it);
 	radix_tree_iterator_dispose(&it);
+	t_assert(out1 != NULL);
+	t_assert(out2 != NULL);
+	t_assert(out3 != NULL);
+	t_assert(out4 != NULL);
 	t_assert(!strcmp(out1, "CASA"));
 	t_assert(!strcmp(out2, "DINO"));
 	t_assert(!strcmp(out3, "DINOSAURIO"));
