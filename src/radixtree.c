@@ -21,6 +21,15 @@
 #define trace_node(M, NODE)
 #endif
 
+static void _scan_status_init(ScanStatus *status, void *key, unsigned char size)
+{
+	status->index = 0;
+	status->subindex = 0;
+	status->found = 0;
+	status->key = key;
+	status->size = size;
+	status->type = S_DEFAULT;
+}
 
 void radix_tree_init(Node *tree, char type, unsigned char size, Node *child)
 {
@@ -456,13 +465,10 @@ void radix_tree_clean_dangling_nodes(Node *node, ScanStatus *status, ScanMetadat
 void *radix_tree_get(Node *tree, char *string, unsigned int length)
 {
 	trace("RADIXTREE-GET(%p)", tree);
+
 	ScanStatus status;
-	status.index = 0;
-	status.subindex = 0;
-	status.found = 0;
-	status.key = string;
-	status.size = length;
-	status.type = S_DEFAULT;
+	_scan_status_init(&status, string, length);
+
 	Node * node = radix_tree_seek(tree, &status);
 
 	if(status.index == length && node->type == NODE_TYPE_DATA) {
@@ -477,13 +483,9 @@ void *radix_tree_get(Node *tree, char *string, unsigned int length)
 static Node *_build_data_node(Node *tree, char *string, unsigned int length)
 {
 	Node *data_node;
+
 	ScanStatus status;
-	status.index = 0;
-	status.subindex = 0;
-	status.found = 0;
-	status.key = string;
-	status.size = length;
-	status.type = S_DEFAULT;
+	_scan_status_init(&status, string, length);
 
 	Node * node = radix_tree_seek(tree, &status);
 
@@ -522,13 +524,10 @@ void radix_tree_set(Node *tree, char *string, unsigned int length, void *data)
 int radix_tree_contains(Node *tree, char *string, unsigned int length)
 {
 	trace("RADIXTREE-CONTAINS(%p)", tree);
+
 	ScanStatus status;
-	status.index = 0;
-	status.subindex = 0;
-	status.found = 0;
-	status.key = string;
-	status.size = length;
-	status.type = S_DEFAULT;
+	_scan_status_init(&status, string, length);
+
 	Node * node = radix_tree_seek(tree, &status);
 
 	if(status.index == length && node->type == NODE_TYPE_DATA) {
@@ -557,13 +556,9 @@ void radix_tree_remove(Node *tree, char *string, unsigned int length)
 {
 	trace("RADIXTREE-REMOVE(%p)", tree);
 	Node *data_node;
+
 	ScanStatus status;
-	status.index = 0;
-	status.subindex = 0;
-	status.found = 0;
-	status.key = string;
-	status.size = length;
-	status.type = S_DEFAULT;
+	_scan_status_init(&status, string, length);
 
 	ScanMetadata meta;
 
