@@ -336,7 +336,7 @@ void radix_tree_compact_nodes(Node *node1, Node *node2, Node *node3)
 			nodes++;
 		} else if(node3->type == NODE_TYPE_TREE && node3->size == 1) {
 			trace("Node 3 is tree");
-			node3_str = &((Node *)node3->child)->key;
+			node3_str = &node3->child->key;
 			node3_size = 1;
 			joined_size += node3_size;
 			nodes++;
@@ -364,7 +364,7 @@ void radix_tree_compact_nodes(Node *node1, Node *node2, Node *node3)
 			target = node1;
 		} else if(node1->type == NODE_TYPE_TREE && node1->size == 1) {
 			trace("Node 1 is tree");
-			node1_str = &((Node *)node1->child)->key;
+			node1_str = &node1->child->key;
 			node1_size = 1;
 			joined_size += node1_size;
 			nodes++;
@@ -383,7 +383,7 @@ void radix_tree_compact_nodes(Node *node1, Node *node2, Node *node3)
 			joined[i] = node1_str[i];
 		}
 		if(node2_size) {
-			joined[i++] = ((Node *)node2->child)->key;
+			joined[i++] = node2->child->key;
 		}
 		int j = 0;
 		for(j; j < node3_size; j++) {
