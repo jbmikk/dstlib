@@ -422,13 +422,14 @@ void radix_tree_compact_nodes(Node *node1, Node *node2, Node *node3)
  */
 void radix_tree_clean_dangling_nodes(Node *node, ScanStatus *status, ScanMetadata *meta)
 {
-	trace_node("NODE", node);
+	trace_node("CLEAN", node);
 	if(node->type == NODE_TYPE_LEAF) {
 		//the child is a leaf
 
 		//Delete node preceeding the leaf
 		Node *previous = meta->previous;
 		if(previous && previous->type == NODE_TYPE_ARRAY) {
+			trace_node("DELETE-ARRAY", previous);
 			Node *leaf = previous->child;
 			c_free(leaf->array);
 			leaf->array = NULL;
@@ -437,6 +438,7 @@ void radix_tree_clean_dangling_nodes(Node *node, ScanStatus *status, ScanMetadat
 			previous->size = 0;
 			scan_metadata_pop(meta);
 		} else if(previous && previous->type == NODE_TYPE_TREE && previous->size == 1) {
+			trace_node("DELETE-TREE", previous);
 			c_delete(previous->child);
 			previous->type = NODE_TYPE_LEAF;
 			previous->size = 0;
