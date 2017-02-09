@@ -176,7 +176,6 @@ void test_radix_tree__set_before_tree(){
 
 	radix_tree_set(tree, nzs("bluer"), in1);
 	radix_tree_set(tree, nzs("bluest"), in2);
-	printf("SET\n");
 	radix_tree_set(tree, nzs("blue"), in3);
 
 	out1 = radix_tree_get(tree, nzs("blue"));
