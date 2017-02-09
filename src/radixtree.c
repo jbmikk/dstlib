@@ -310,7 +310,9 @@ Node * radix_tree_split_node(Node *node, ScanStatus *status)
 void radix_tree_compact_nodes(Node *node1, Node *node2, Node *node3)
 {
 	Node *target = NULL;
+	//TODO: If node3 is not mergeable shouldn't we use node2?
 	Node *cont = node3->child;
+
 	int nodes = 0;
 	int joined_size = 0;
 
