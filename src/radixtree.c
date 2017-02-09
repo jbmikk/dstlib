@@ -622,6 +622,7 @@ void **radix_tree_get_next(Node *tree, char *string, unsigned int length)
 
 void radix_tree_dispose(Node *tree)
 {
+	trace_node("DISPOSE", tree);
 	if(tree->type == NODE_TYPE_TREE) {
 		Node *child = tree->child;
 		int i;
