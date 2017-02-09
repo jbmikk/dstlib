@@ -498,6 +498,7 @@ static Node *_build_data_node(Node *tree, char *string, unsigned int length)
 		radix_tree_init(node, NODE_TYPE_DATA, 0, data_node);
 		radix_tree_init(data_node, NODE_TYPE_LEAF, 0, NULL);
 	}
+	return data_node;
 }
 
 void radix_tree_set(Node *tree, char *string, unsigned int length, void *data)
