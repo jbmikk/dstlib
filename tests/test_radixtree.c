@@ -170,6 +170,21 @@ void test_radix_tree__set2_and_remove1_3key(){
 	t_assert(!strcmp(out2, "GREEN"));
 }
 
+void test_radix_tree__set_before_tree(){
+	char *in1="BLUER", *in2="BLUEST", *in3="BLUE", *out1;
+	Node *tree = &fixture.tree;
+
+	radix_tree_set(tree, nzs("bluer"), in1);
+	radix_tree_set(tree, nzs("bluest"), in2);
+	printf("SET\n");
+	radix_tree_set(tree, nzs("blue"), in3);
+
+	out1 = radix_tree_get(tree, nzs("blue"));
+
+	t_assert(out1 != NULL);
+	t_assert(!strcmp(out1, "BLUE"));
+}
+
 void test_radix_tree__try_set(){
 	char *in1="BLUE", *in2="GREEN", *out1, *out2;
 	Node *tree = &fixture.tree;
@@ -324,6 +339,7 @@ int main(int argc, char** argv) {
 	t_test(test_radix_tree__set2_and_remove1_4key_with_parent_array);
 	t_test(test_radix_tree__set2_and_remove1_4key_deep);
 	t_test(test_radix_tree__set2_and_remove1_3key);
+	t_test(test_radix_tree__set_before_tree);
 	t_test(test_radix_tree__try_set);
 	t_test(test_radix_tree__try_set_at_split_array);
 	t_test(test_radix_tree__remove_non_leaf_key);

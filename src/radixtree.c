@@ -104,6 +104,7 @@ Node *radix_tree_seek(Node *tree, ScanStatus *status)
 	while(!status->found) {
 		current = radix_tree_seek_step(current, status);
 	}
+	trace("SEEK-RESULT: %i", status->found);
 	return current;
 }
 
@@ -247,6 +248,7 @@ Node *radix_tree_build_node(Node *node, char *string, unsigned int length)
 
 /**
  * create split array node in two using a tree node
+ * TODO: Verify tests manage all cases.
  */
 Node * radix_tree_split_node(Node *node, ScanStatus *status)
 {
@@ -490,13 +492,21 @@ static Node *_build_data_node(Node *tree, char *string, unsigned int length)
 	} else if (node->type == NODE_TYPE_ARRAY) {
 		data_node = radix_tree_split_node(node, &status);
 	} else {
-		if(node->type == NODE_TYPE_TREE)
-			node = bsearch_insert(node, string[status.index++]);
-		node = radix_tree_build_node(node, string+status.index, length-status.index);
 		data_node = c_new(Node, 1);
 		data_node->data = NULL;
-		radix_tree_init(node, NODE_TYPE_DATA, 0, data_node);
 		radix_tree_init(data_node, NODE_TYPE_LEAF, 0, NULL);
+
+		if(status.found == 1) {
+			radix_tree_init(data_node, node->type, node->size, node->child);
+			radix_tree_init(node, NODE_TYPE_DATA, 0, data_node);
+		} else {
+			if(node->type == NODE_TYPE_TREE)
+				node = bsearch_insert(node, string[status.index++]);
+			//TODO: Verify what happens if length == 0
+			node = radix_tree_build_node(node, string+status.index, length-status.index);
+			radix_tree_init(node, NODE_TYPE_DATA, 0, data_node);
+			radix_tree_init(data_node, NODE_TYPE_LEAF, 0, NULL);
+		}
 	}
 	return data_node;
 }
