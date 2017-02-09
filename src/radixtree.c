@@ -472,60 +472,8 @@ void *radix_tree_get(Node *tree, char *string, unsigned int length)
 	}
 }
 
-void radix_tree_set(Node *tree, char *string, unsigned int length, void *data)
+static Node *_build_data_node(Node *tree, char *string, unsigned int length)
 {
-	trace("RADIXTREE-SET(%p)", tree);
-	Node *data_node;
-	ScanStatus status;
-	status.index = 0;
-	status.subindex = 0;
-	status.found = 0;
-	status.key = string;
-	status.size = length;
-	status.type = S_DEFAULT;
-
-	Node * node = radix_tree_seek(tree, &status);
-
-	if (node->type == NODE_TYPE_DATA) {
-		data_node = node->child;
-	} else if (node->type == NODE_TYPE_ARRAY) {
-		data_node = radix_tree_split_node(node, &status);
-	} else {
-		if(node->type == NODE_TYPE_TREE)
-			node = bsearch_insert(node, string[status.index++]);
-		node = radix_tree_build_node(node, string+status.index, length-status.index);
-		data_node = c_new(Node, 1);
-		radix_tree_init(node, NODE_TYPE_DATA, 0, data_node);
-		radix_tree_init(data_node, NODE_TYPE_LEAF, 0, NULL);
-	}
-	data_node->data = data;
-}
-
-int radix_tree_contains(Node *tree, char *string, unsigned int length)
-{
-	trace("RADIXTREE-CONTAINS(%p)", tree);
-	ScanStatus status;
-	status.index = 0;
-	status.subindex = 0;
-	status.found = 0;
-	status.key = string;
-	status.size = length;
-	status.type = S_DEFAULT;
-	Node * node = radix_tree_seek(tree, &status);
-
-	if(status.index == length && node->type == NODE_TYPE_DATA) {
-		trace("FOUND %p, %p", node, node->child);
-		return 1;
-	} else {
-		trace("NOTFOUND");
-		return 0;
-	}
-}
-
-//TODO: add missing tests
-void *radix_tree_try_set(Node *tree, char *string, unsigned int length, void *data)
-{
-	trace("RADIXTREE-TRY-SET(%p)", tree);
 	Node *data_node;
 	ScanStatus status;
 	status.index = 0;
@@ -550,6 +498,42 @@ void *radix_tree_try_set(Node *tree, char *string, unsigned int length, void *da
 		radix_tree_init(node, NODE_TYPE_DATA, 0, data_node);
 		radix_tree_init(data_node, NODE_TYPE_LEAF, 0, NULL);
 	}
+}
+
+void radix_tree_set(Node *tree, char *string, unsigned int length, void *data)
+{
+	trace("RADIXTREE-SET(%p)", tree);
+
+	Node *data_node = _build_data_node(tree, string, length);
+	data_node->data = data;
+}
+
+int radix_tree_contains(Node *tree, char *string, unsigned int length)
+{
+	trace("RADIXTREE-CONTAINS(%p)", tree);
+	ScanStatus status;
+	status.index = 0;
+	status.subindex = 0;
+	status.found = 0;
+	status.key = string;
+	status.size = length;
+	status.type = S_DEFAULT;
+	Node * node = radix_tree_seek(tree, &status);
+
+	if(status.index == length && node->type == NODE_TYPE_DATA) {
+		trace("FOUND %p, %p", node, node->child);
+		return 1;
+	} else {
+		trace("NOTFOUND");
+		return 0;
+	}
+}
+
+void *radix_tree_try_set(Node *tree, char *string, unsigned int length, void *data)
+{
+	trace("RADIXTREE-TRY-SET(%p)", tree);
+
+	Node *data_node = _build_data_node(tree, string, length);
 
 	void *previous_data = data_node->data;
 	if(!previous_data) {
