@@ -51,6 +51,8 @@ Node *bsearch_insert(Node *parent, unsigned char key)
 	}
 
 	new_node->key = key;
+	//TODO: should use node_init
+	new_node->data = NULL;
 
 	//assign new children
 	parent->child = new_children;

@@ -13,8 +13,8 @@
 #define trace(M, ...) fprintf(stderr, "RADIXTREE: " M "\n", ##__VA_ARGS__)
 #define trace_node(M, NODE) \
 	trace( \
-		"" M "(%p) TYPE:%i, SIZE:%i, CHILD:%p", \
-		NODE, NODE->type, NODE->size, NODE->child \
+		"" M "(%p) TYPE:%i, SIZE:%i, DATA:%p, CHILD:%p", \
+		NODE, NODE->type, NODE->size, NODE->data, NODE->child \
 	);
 #else
 #define trace(M, ...)
@@ -71,10 +71,6 @@ Node *radix_tree_seek_step(Node *tree, ScanStatus *status)
 		}
 		current = next;
 		status->index++;
-	} else if (current->type == NODE_TYPE_DATA) {
-		trace("SEEK-DATA(%p)", current);
-		//Just skip intermediate data nodes
-		current = current->child;
 	} else if (current->type == NODE_TYPE_ARRAY) {
 		//Match array as far a possible
 		char *key = (char *)status->key;
@@ -167,8 +163,9 @@ Node *radix_tree_seek_metadata(Node *tree, ScanStatus *status, ScanMetadata *met
 	scan_metadata_init(meta);
 
 	while(!status->found) {
-		if (current->type == NODE_TYPE_DATA) {
+		if (current->data) {
 			scan_metadata_init(meta);
+			trace_node("RESET-METADATA", current);
 		} else {
 			scan_metadata_push(meta, current, status->index);
 		}
@@ -186,6 +183,19 @@ Node *radix_tree_scan(Node *node, ScanStatus *status, ScanStatus *post)
 	char *key = (char *)status->key;
 	Node *result = NULL;
 
+	if (node->data) {
+		if(status->type == S_DEFAULT) {
+			// Only return data when status is default
+			post->size = status->index;
+			result = node;
+			goto DATA_FOUND;
+		} else if(status->index >= status->size) {
+			// In FETCHNEXT mode we wait until the whole key was
+			// matched, only then we scan for the next data node
+			status->type = S_DEFAULT;
+		}
+	}
+	
 	if (node->type == NODE_TYPE_TREE) {
 		Node *children = node->child;
 		Node *current = NULL;
@@ -208,21 +218,6 @@ Node *radix_tree_scan(Node *node, ScanStatus *status, ScanStatus *post)
 				break;
 		}
 		status->index--;
-	} else if (node->type == NODE_TYPE_DATA) {
-
-		//if the prefix matches, then it's a match for
-		if(status->type == S_DEFAULT) {
-			post->size = status->index;
-			result = node->child;
-		} else {
-			unsigned int match = status->index >= status->size;
-			if(match) {
-				status->type = S_DEFAULT;
-			}
-			if(node->child->child != NULL) {
-				result = radix_tree_scan(node->child, status, post);
-			} 
-		}
 	} else if (node->type == NODE_TYPE_ARRAY) {
 
 		//new index + key
@@ -236,6 +231,7 @@ Node *radix_tree_scan(Node *node, ScanStatus *status, ScanStatus *post)
 		result = radix_tree_scan(node->child, status, post);
 		status->index -= node->size;
 	} 
+DATA_FOUND:
 	return result;
 }
 
@@ -262,7 +258,7 @@ Node *radix_tree_build_node(Node *node, char *string, unsigned int length)
 		_node_reset(node, NODE_TYPE_TREE, 0, NULL);
 		node = bsearch_insert(node, string[0]);
 	} else {
-		//TODO: add sentinel?
+		trace_node("REUSE-NODE", node);
 	}
 	return node;
 }
@@ -276,9 +272,7 @@ Node * radix_tree_split_node(Node *node, ScanStatus *status)
 	unsigned subindex = status->subindex;
 
 	Node *old = node->child, *prefix, *sufix;
-	Node *data_node = c_new(Node, 1);
-	data_node->data = NULL;
-	data_node->array = NULL;
+	Node *data_node;
 
 	char *old_suffix = old->array+subindex;
 	char *new_suffix = status->key + status->index;
@@ -289,13 +283,13 @@ Node * radix_tree_split_node(Node *node, ScanStatus *status)
 	node = radix_tree_build_node(node, old->array, subindex);
 
 	if (new_suffix_size == 0) {
-                //No new suffix, then we append data node right here
-		_node_init(node, NODE_TYPE_DATA, 0, data_node, NULL);
-		node = data_node;
+                //No new suffix, we add data to current node
+		_node_init(node, 0, 0, NULL, NULL);
+		data_node = node;
 
                 //After the data node we append the old suffix
 		node = radix_tree_build_node(node, old_suffix, old_suffix_size);
-		_node_init(node, old->type, old->size, old->child, NULL);
+		_node_init(node, old->type, old->size, old->child, old->data);
 	} else {
 		//make node point to new tree node
 		_node_init(node, NODE_TYPE_TREE, 0, NULL, NULL);
@@ -303,14 +297,14 @@ Node * radix_tree_split_node(Node *node, ScanStatus *status)
 		//add branch to hold old suffix and delete old data
 		Node *branch1 = bsearch_insert(node, old_suffix[0]);
 		branch1 = radix_tree_build_node(branch1, old_suffix+1, old_suffix_size-1);
-		_node_init(branch1, old->type, old->size, old->child, NULL);
+		_node_init(branch1, old->type, old->size, old->child, old->data);
 
 		//add branch to hold new suffix and return new node
 		Node *branch2 = bsearch_insert(node, new_suffix[0]);
 		branch2 = radix_tree_build_node(branch2, new_suffix+1, new_suffix_size -1);
+		_node_init(branch2, NODE_TYPE_LEAF, 0, NULL, NULL);
 
-		_node_init(branch2, NODE_TYPE_DATA, 0, data_node, NULL);
-		_node_init(data_node, NODE_TYPE_LEAF, 0, NULL, NULL);
+		data_node = branch2;
 	}
 	//delete old array
 	c_free(old->array);
@@ -407,7 +401,8 @@ void radix_tree_compact_nodes(Node *node1, Node *node2, Node *node3)
 		//Build new node
 		trace("new size: %i", joined_size);
 		Node *new_branch = radix_tree_build_node(target, joined, joined_size);
-		_node_init(new_branch, cont->type, cont->size, cont->child, NULL);
+		_node_init(new_branch, cont->type, cont->size, cont->child, cont->data);
+
 		trace_node("CONT", cont);
 		trace_node("NEW", new_branch);
 		trace_node("TARG", target);
@@ -442,6 +437,11 @@ void radix_tree_clean_dangling_nodes(Node *node, ScanStatus *status, ScanMetadat
 
 		//Delete node preceeding the leaf
 		Node *previous = meta->previous;
+
+		if(previous) {
+			trace_node("PREVIOUS", previous);
+		}
+
 		if(previous && previous->type == NODE_TYPE_ARRAY) {
 			trace_node("DELETE-ARRAY", previous);
 			Node *leaf = previous->child;
@@ -466,6 +466,7 @@ void radix_tree_clean_dangling_nodes(Node *node, ScanStatus *status, ScanMetadat
 
 			trace_node("PIVOT", pivot);
 			char *key = (char *)status->key;
+			//TODO: should only delete if it doesn't contain data
 			bsearch_delete(pivot, key[pivot_index]);
 			if (pivot->size == 1) {
 				radix_tree_compact_nodes(meta->previous2, pivot, pivot->child);
@@ -487,9 +488,9 @@ void *radix_tree_get(Node *tree, char *string, unsigned int length)
 
 	Node * node = radix_tree_seek(tree, &status);
 
-	if(status.index == length && node->type == NODE_TYPE_DATA) {
-		trace("FOUND %p, %p", node, node->child);
-		return node->child->data;
+	if(status.found == 1) {
+		trace("FOUND %p", node);
+		return node->data;
 	} else {
 		trace("NOTFOUND");
 		return NULL;
@@ -505,26 +506,18 @@ static Node *_build_data_node(Node *tree, char *string, unsigned int length)
 
 	Node * node = radix_tree_seek(tree, &status);
 
-	if (node->type == NODE_TYPE_DATA) {
-		data_node = node->child;
+	if (status.found == 1) {
+		data_node = node;
 	} else if (node->type == NODE_TYPE_ARRAY) {
 		data_node = radix_tree_split_node(node, &status);
 	} else {
-		data_node = c_new(Node, 1);
-		data_node->data = NULL;
-		_node_init(data_node, NODE_TYPE_LEAF, 0, NULL, NULL);
+		if(node->type == NODE_TYPE_TREE)
+			node = bsearch_insert(node, string[status.index++]);
+		//TODO: Verify what happens if length == 0
+		node = radix_tree_build_node(node, string+status.index, length-status.index);
+		_node_init(node, NODE_TYPE_LEAF, 0, NULL, NULL);
 
-		if(status.found == 1) {
-			_node_init(data_node, node->type, node->size, node->child, NULL);
-			_node_init(node, NODE_TYPE_DATA, 0, data_node, NULL);
-		} else {
-			if(node->type == NODE_TYPE_TREE)
-				node = bsearch_insert(node, string[status.index++]);
-			//TODO: Verify what happens if length == 0
-			node = radix_tree_build_node(node, string+status.index, length-status.index);
-			_node_init(node, NODE_TYPE_DATA, 0, data_node, NULL);
-			_node_init(data_node, NODE_TYPE_LEAF, 0, NULL, NULL);
-		}
+		data_node = node;
 	}
 	return data_node;
 }
@@ -546,8 +539,8 @@ int radix_tree_contains(Node *tree, char *string, unsigned int length)
 
 	Node * node = radix_tree_seek(tree, &status);
 
-	if(status.index == length && node->type == NODE_TYPE_DATA) {
-		trace("FOUND %p, %p", node, node->child);
+	if(status.found == 1) {
+		trace("FOUND %p", node);
 		return 1;
 	} else {
 		trace("NOTFOUND");
@@ -582,14 +575,9 @@ void radix_tree_remove(Node *tree, char *string, unsigned int length)
 
 	trace_node("ROOT", tree);
 	trace_node("NODE", node);
-	if(status.index == length && node->type == NODE_TYPE_DATA) {
-		//Delete data node, parent node points to datanode's children.
-		data_node = node->child;
-		node->type = data_node->type;
-		node->child = data_node->child;
-		node->size = data_node->size;
-		c_free(data_node);
-		
+	trace("STATUS %i, %i, %p", status.index, length, node->data);
+	if(status.found == 1 && node->data) {
+		node->data = NULL;
 		radix_tree_clean_dangling_nodes(node, &status, &meta);
 	}
 }
@@ -645,9 +633,6 @@ void radix_tree_dispose(Node *tree)
 	} else if(tree->type == NODE_TYPE_ARRAY) {
 		radix_tree_dispose(tree->child);
 		c_free(tree->child->array);
-		c_delete(tree->child);
-	} else if(tree->type == NODE_TYPE_DATA) {
-		radix_tree_dispose(tree->child);
 		c_delete(tree->child);
 	}
 }
