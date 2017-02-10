@@ -31,14 +31,26 @@ static void _scan_status_init(ScanStatus *status, void *key, unsigned char size)
 	status->type = S_DEFAULT;
 }
 
+static void _node_reset(Node *node, char type, unsigned char size, Node *child)
+{
+	node->type = type;
+	node->size = size;
+	node->child = child;
+}
+
+static void _node_init(Node *node, char type, unsigned char size, Node *child, void *data)
+{
+	node->type = type;
+	node->size = size;
+	node->child = child;
+	node->data = data;
+}
+
 void radix_tree_init(Node *tree, char type, unsigned char size, Node *child)
 {
-	tree->type = type;
-	tree->size = size;
-	tree->child = child;
+	_node_init(tree, type, size, child, NULL);
 	//TODO: should not leave uninitialized
 	//tree->array = NULL;
-	//tree->data = NULL;
 }
 
 /**
@@ -235,7 +247,7 @@ Node *radix_tree_build_node(Node *node, char *string, unsigned int length)
 	if(length > 1) {
 		Node* array_node = c_new(Node, 1);
 		char *keys = c_malloc_n(length);
-		radix_tree_init(node, NODE_TYPE_ARRAY, length, array_node);
+		_node_reset(node, NODE_TYPE_ARRAY, length, array_node);
 
 		//copy array
 		unsigned int i = 0;
@@ -247,7 +259,7 @@ Node *radix_tree_build_node(Node *node, char *string, unsigned int length)
 		array_node->type = NODE_TYPE_LEAF;
 		node = array_node;
 	} else if (length == 1) {
-		radix_tree_init(node, NODE_TYPE_TREE, 0, NULL);
+		_node_reset(node, NODE_TYPE_TREE, 0, NULL);
 		node = bsearch_insert(node, string[0]);
 	} else {
 		//TODO: add sentinel?
@@ -278,27 +290,27 @@ Node * radix_tree_split_node(Node *node, ScanStatus *status)
 
 	if (new_suffix_size == 0) {
                 //No new suffix, then we append data node right here
-		radix_tree_init(node, NODE_TYPE_DATA, 0, data_node);
+		_node_init(node, NODE_TYPE_DATA, 0, data_node, NULL);
 		node = data_node;
 
                 //After the data node we append the old suffix
 		node = radix_tree_build_node(node, old_suffix, old_suffix_size);
-		radix_tree_init(node, old->type, old->size, old->child);
+		_node_init(node, old->type, old->size, old->child, NULL);
 	} else {
 		//make node point to new tree node
-		radix_tree_init(node, NODE_TYPE_TREE, 0, NULL);
+		_node_init(node, NODE_TYPE_TREE, 0, NULL, NULL);
 
 		//add branch to hold old suffix and delete old data
 		Node *branch1 = bsearch_insert(node, old_suffix[0]);
 		branch1 = radix_tree_build_node(branch1, old_suffix+1, old_suffix_size-1);
-		radix_tree_init(branch1, old->type, old->size, old->child);
+		_node_init(branch1, old->type, old->size, old->child, NULL);
 
 		//add branch to hold new suffix and return new node
 		Node *branch2 = bsearch_insert(node, new_suffix[0]);
 		branch2 = radix_tree_build_node(branch2, new_suffix+1, new_suffix_size -1);
 
-		radix_tree_init(branch2, NODE_TYPE_DATA, 0, data_node);
-		radix_tree_init(data_node, NODE_TYPE_LEAF, 0, NULL);
+		_node_init(branch2, NODE_TYPE_DATA, 0, data_node, NULL);
+		_node_init(data_node, NODE_TYPE_LEAF, 0, NULL, NULL);
 	}
 	//delete old array
 	c_free(old->array);
@@ -395,7 +407,7 @@ void radix_tree_compact_nodes(Node *node1, Node *node2, Node *node3)
 		//Build new node
 		trace("new size: %i", joined_size);
 		Node *new_branch = radix_tree_build_node(target, joined, joined_size);
-		radix_tree_init(new_branch, cont->type, cont->size, cont->child);
+		_node_init(new_branch, cont->type, cont->size, cont->child, NULL);
 		trace_node("CONT", cont);
 		trace_node("NEW", new_branch);
 		trace_node("TARG", target);
@@ -500,18 +512,18 @@ static Node *_build_data_node(Node *tree, char *string, unsigned int length)
 	} else {
 		data_node = c_new(Node, 1);
 		data_node->data = NULL;
-		radix_tree_init(data_node, NODE_TYPE_LEAF, 0, NULL);
+		_node_init(data_node, NODE_TYPE_LEAF, 0, NULL, NULL);
 
 		if(status.found == 1) {
-			radix_tree_init(data_node, node->type, node->size, node->child);
-			radix_tree_init(node, NODE_TYPE_DATA, 0, data_node);
+			_node_init(data_node, node->type, node->size, node->child, NULL);
+			_node_init(node, NODE_TYPE_DATA, 0, data_node, NULL);
 		} else {
 			if(node->type == NODE_TYPE_TREE)
 				node = bsearch_insert(node, string[status.index++]);
 			//TODO: Verify what happens if length == 0
 			node = radix_tree_build_node(node, string+status.index, length-status.index);
-			radix_tree_init(node, NODE_TYPE_DATA, 0, data_node);
-			radix_tree_init(data_node, NODE_TYPE_LEAF, 0, NULL);
+			_node_init(node, NODE_TYPE_DATA, 0, data_node, NULL);
+			_node_init(data_node, NODE_TYPE_LEAF, 0, NULL, NULL);
 		}
 	}
 	return data_node;
