@@ -155,7 +155,7 @@ void scan_metadata_pop(ScanMetadata *meta)
 /**
  * Same as seek, but return tree pointers necessary for removal
  */
-Node *radix_tree_seek_metadata(Node *tree, ScanStatus *status, ScanMetadata *meta)
+static Node *_seek_metadata(Node *tree, ScanStatus *status, ScanMetadata *meta)
 {
 	Node *current = tree;
 	unsigned int i = status->index;
@@ -313,7 +313,7 @@ static Node * _split_node_array(Node *node, ScanStatus *status)
 	return data_node;
 }
 
-void radix_tree_compact_nodes(Node *node1, Node *node2, Node *node3)
+static void _compact_nodes(Node *node1, Node *node2, Node *node3)
 {
 	Node *target = NULL;
 	//TODO: If node3 is not mergeable shouldn't we use node2?
@@ -427,9 +427,9 @@ void radix_tree_compact_nodes(Node *node1, Node *node2, Node *node3)
 }
 
 /**
- * Remove dangling nodes and compact tree
+ * Remove dangling node and compact tree
  */
-void radix_tree_clean_dangling_nodes(Node *node, ScanStatus *status, ScanMetadata *meta)
+static void _pluck_node(Node *node, ScanStatus *status, ScanMetadata *meta)
 {
 	trace_node("CLEAN", node);
 	if(node->type == NODE_TYPE_LEAF) {
@@ -469,13 +469,13 @@ void radix_tree_clean_dangling_nodes(Node *node, ScanStatus *status, ScanMetadat
 			//TODO: should only delete if it doesn't contain data
 			bsearch_delete(pivot, key[pivot_index]);
 			if (pivot->size == 1) {
-				radix_tree_compact_nodes(meta->previous2, pivot, pivot->child);
+				_compact_nodes(meta->previous2, pivot, pivot->child);
 			}
 
 		}
 
 	} else {
-		radix_tree_compact_nodes(meta->previous, NULL, node);
+		_compact_nodes(meta->previous, NULL, node);
 	}
 }
 
@@ -571,14 +571,14 @@ void radix_tree_remove(Node *tree, char *string, unsigned int length)
 
 	ScanMetadata meta;
 
-	Node * node = radix_tree_seek_metadata(tree, &status, &meta);
+	Node * node = _seek_metadata(tree, &status, &meta);
 
 	trace_node("ROOT", tree);
 	trace_node("NODE", node);
 	trace("STATUS %i, %i, %p", status.index, length, node->data);
 	if(status.found == 1 && node->data) {
 		node->data = NULL;
-		radix_tree_clean_dangling_nodes(node, &status, &meta);
+		_pluck_node(node, &status, &meta);
 	}
 }
 
