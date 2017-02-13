@@ -271,7 +271,7 @@ static Node * _split_node_array(Node *node, ScanStatus *status)
 {
 	unsigned subindex = status->subindex;
 
-	Node *old = node->child, *prefix, *sufix;
+	Node *old = node->child;
 	Node *data_node;
 
 	char *old_suffix = old->array+subindex;
