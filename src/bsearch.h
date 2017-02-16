@@ -3,6 +3,7 @@
 
 #include "structs.h"
 
+void bsearch_init(Node *parent);
 Node *bsearch_get(Node *parent, unsigned char key);
 Node *bsearch_insert(Node *parent, unsigned char key);
 int bsearch_delete(Node *parent, unsigned char key);

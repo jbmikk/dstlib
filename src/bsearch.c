@@ -6,6 +6,12 @@
 #include "cmemory.h"
 #include "dbg.h"
 
+void bsearch_init(Node *parent)
+{
+	parent->child = NULL;
+	parent->child_count = 0;
+}
+
 Node *bsearch_get(Node *parent, unsigned char key)
 {
 	Node *children = parent->child;

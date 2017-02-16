@@ -10,7 +10,7 @@ typedef enum {
 	S_FETCHNEXT
 } RadixTreeStatus;
 
-void radix_tree_init(Node *tree, char type, unsigned char size, Node *child);
+void radix_tree_init(Node *tree);
 void *radix_tree_get(Node *tree, char *string, unsigned int length);
 void radix_tree_set(Node *tree, char *string, unsigned int length, void *data);
 int radix_tree_contains(Node *tree, char *string, unsigned int length);

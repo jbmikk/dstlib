@@ -50,11 +50,10 @@ static void _node_set_array(Node *node, unsigned char size, void *array)
 	node->array = array;
 }
 
-void radix_tree_init(Node *tree, char type, unsigned char size, Node *child)
+void radix_tree_init(Node *tree)
 {
-	_node_init(tree, size, child, NULL);
+	_node_init(tree, 0, NULL, NULL);
 	_node_set_array(tree, 0, NULL);
-	//TODO: should not leave uninitialized
 }
 
 /**

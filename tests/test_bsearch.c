@@ -17,7 +17,7 @@ typedef struct {
 BSearchFixture fixture;
 
 void t_setup(){
-	radix_tree_init(&fixture.node, 0, 0, NULL);
+	bsearch_init(&fixture.node);
 }
 void t_teardown(){
 	bsearch_delete_all(&fixture.node);

@@ -18,7 +18,7 @@ typedef struct {
 RadixTreeFixture fixture;
 
 void t_setup(){
-	radix_tree_init(&fixture.tree, 0, 0, NULL);
+	radix_tree_init(&fixture.tree);
 }
 void t_teardown(){
 	radix_tree_dispose(&fixture.tree);
