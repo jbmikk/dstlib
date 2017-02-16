@@ -3,10 +3,10 @@
 
 typedef struct _Node {
 	struct _Node *child;
-	char type;
+	unsigned char child_count;
 	unsigned char size;
 	unsigned char key;
-	void *array;
+	unsigned char *array;
 	void *data;
 } Node;
 

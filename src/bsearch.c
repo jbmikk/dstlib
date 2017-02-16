@@ -11,7 +11,7 @@ Node *bsearch_get(Node *parent, unsigned char key)
 	Node *children = parent->child;
 	Node *next;
 	char left = 0;
-	char right = parent->size-1;
+	char right = parent->child_count-1;
 
 	while(left <= right) {
 		char i = left+((right - left)>>1);
@@ -33,9 +33,9 @@ Node *bsearch_insert(Node *parent, unsigned char key)
 	Node *new_node;
 	Node *src = parent->child;
 	Node *dst;
-	Node *end = src+parent->size;
+	Node *end = src+parent->child_count;
 
-	dst = new_children = c_new(Node, parent->size+1);
+	dst = new_children = c_new(Node, parent->child_count+1);
 	check_mem(new_children);
 
 	if(src != NULL) {
@@ -56,7 +56,7 @@ Node *bsearch_insert(Node *parent, unsigned char key)
 
 	//assign new children
 	parent->child = new_children;
-	parent->size++;
+	parent->child_count++;
 
 	return new_node;
 error:
@@ -67,13 +67,13 @@ int bsearch_delete(Node *parent, unsigned char key)
 {
 	if(bsearch_get(parent, key)!= NULL) {
 		Node *new_children = NULL;
-		if(parent->size > 1) {
-			new_children = c_new(Node, parent->size-1);
+		if(parent->child_count > 1) {
+			new_children = c_new(Node, parent->child_count-1);
 			check_mem(new_children);
 
 			Node *dst = new_children;
 			Node *src = parent->child;
-			Node *end = src+parent->size;
+			Node *end = src+parent->child_count;
 			while(src < end && src->key < key)
 				*dst++ = *src++;
 			src++;
@@ -84,7 +84,7 @@ int bsearch_delete(Node *parent, unsigned char key)
 		//replace parent's children
 		c_free(parent->child);
 		parent->child = new_children;
-		parent->size--;
+		parent->child_count--;
 	}
 	return 0;
 error:
@@ -96,6 +96,6 @@ void bsearch_delete_all(Node *parent)
 	if(parent->child != NULL) {
 		c_free(parent->child);
 		parent->child = NULL;
-		parent->size = 0;
+		parent->child_count = 0;
 	}
 }

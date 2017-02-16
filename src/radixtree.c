@@ -13,8 +13,14 @@
 #define trace(M, ...) fprintf(stderr, "RADIXTREE: " M "\n", ##__VA_ARGS__)
 #define trace_node(M, NODE) \
 	trace( \
-		"" M "(%p) TYPE:%i, SIZE:%i, DATA:%p, CHILD:%p", \
-		NODE, NODE->type, NODE->size, NODE->data, NODE->child \
+		"" M "(%p) [%c:%.*s], DATA:%p, CHILDREN(%i):%p", \
+		(NODE), \
+		(NODE)->key, \
+		(NODE)->size, \
+		(NODE)->array, \
+		(NODE)->data, \
+		(NODE)->child_count, \
+		(NODE)->child \
 	);
 #else
 #define trace(M, ...)
@@ -31,26 +37,24 @@ static void _scan_status_init(ScanStatus *status, void *key, unsigned char size)
 	status->type = S_DEFAULT;
 }
 
-static void _node_reset(Node *node, char type, unsigned char size, Node *child)
+static void _node_init(Node *node, unsigned char count, Node *child, void *data)
 {
-	node->type = type;
-	node->size = size;
-	node->child = child;
-}
-
-static void _node_init(Node *node, char type, unsigned char size, Node *child, void *data)
-{
-	node->type = type;
-	node->size = size;
+	node->child_count = count;
 	node->child = child;
 	node->data = data;
 }
 
+static void _node_set_array(Node *node, unsigned char size, void *array)
+{
+	node->size = size;
+	node->array = array;
+}
+
 void radix_tree_init(Node *tree, char type, unsigned char size, Node *child)
 {
-	_node_init(tree, type, size, child, NULL);
+	_node_init(tree, size, child, NULL);
+	_node_set_array(tree, 0, NULL);
 	//TODO: should not leave uninitialized
-	//tree->array = NULL;
 }
 
 /**
@@ -60,8 +64,7 @@ static Node *_tree_seek_step(Node *tree, ScanStatus *status)
 {
 	Node *current = tree;
 
-	if (current->type == NODE_TYPE_TREE) {
-		trace("SEEK-TREE(%p)", current);
+	if (current->child) {
 		//Move to the next node within the tree
 		char *key = (char *)status->key;
 		Node *next = bsearch_get(current, key[status->index]);
@@ -71,32 +74,32 @@ static Node *_tree_seek_step(Node *tree, ScanStatus *status)
 		}
 		current = next;
 		status->index++;
-	} else if (current->type == NODE_TYPE_ARRAY) {
-		//Match array as far a possible
-		char *key = (char *)status->key;
-		char *array = current->child->array;
-		int array_length = current->size;
-		int j;
-		unsigned int i = status->index;
-		trace_node("SEEK-ARRAY", current);
-		for (j = 0; j < array_length && i < status->size; j++, i++) {
-			//Break if a character does not match
-			trace("[%c-%c]", array[j], key[i]);
-			if(array[j] != key[i]) {
-				status->subindex = j;
-				status->index = i;
+
+		if (current->size > 0) {
+			//Match array as far a possible
+			char *array = current->array;
+			int array_size = current->size;
+			int j;
+			unsigned int i = status->index;
+			trace_node("SEEK-ARRAY", current);
+			for (j = 0; j < array_size && i < status->size; j++, i++) {
+				//Break if a character does not match
+				trace("[%c-%c]", array[j], key[i]);
+				if(array[j] != key[i]) {
+					status->subindex = j;
+					status->index = i;
+					goto NOTFOUND;
+				}
+			}
+			status->subindex = j;
+			status->index = i;
+
+			//Break if it didn't match the whole array
+			if(j < array_size) {
 				goto NOTFOUND;
 			}
 		}
-		//Break if it didn't match the whole array
-		if(j < array_length) {
-			status->subindex = j;
-			status->index = i;
-			goto NOTFOUND;
-		}
-		//The whole array was matched, move to the next node
-		current = current->child;
-		status->index = i;
+
 	} else {
 		trace_node("SEEK-LEAF", current);
 		//Leaf node
@@ -125,31 +128,16 @@ static Node *_tree_seek(Node *tree, ScanStatus *status)
 	return current;
 }
 
-void scan_metadata_init(ScanMetadata *meta) 
+void scan_metadata_init(ScanMetadata *meta, Node *root) 
 {
-	meta->previous3 = NULL;
-	meta->previous2 = NULL;
+	meta->root = root;
 	meta->previous = NULL;
 }
 
 void scan_metadata_push(ScanMetadata *meta, Node *node, int index) 
 {
-	meta->previous3 = meta->previous2;
-	meta->previous2 = meta->previous;
 	meta->previous = node;
-	meta->p_index3 = meta->p_index2;
-	meta->p_index2 = meta->p_index;
 	meta->p_index = index;
-}
-
-void scan_metadata_pop(ScanMetadata *meta) 
-{
-	meta->previous = meta->previous2;
-	meta->previous2 = meta->previous3;
-	meta->previous3 = NULL;
-	meta->p_index = meta->p_index2;
-	meta->p_index2 = meta->p_index3;
-	meta->p_index3 = 0;
 }
 
 /**
@@ -160,15 +148,10 @@ static Node *_seek_metadata(Node *tree, ScanStatus *status, ScanMetadata *meta)
 	Node *current = tree;
 	unsigned int i = status->index;
 
-	scan_metadata_init(meta);
+	scan_metadata_init(meta, tree);
 
 	while(!status->found) {
-		if (current->data) {
-			scan_metadata_init(meta);
-			trace_node("RESET-METADATA", current);
-		} else {
-			scan_metadata_push(meta, current, status->index);
-		}
+		scan_metadata_push(meta, current, status->index);
 
 		current = _tree_seek_step(current, status);
 	}
@@ -196,7 +179,7 @@ static Node *_tree_scan(Node *node, ScanStatus *status, ScanStatus *post)
 		}
 	}
 	
-	if (node->type == NODE_TYPE_TREE) {
+	if (node->child) {
 		Node *children = node->child;
 		Node *current = NULL;
 		unsigned int i = 0;
@@ -206,30 +189,30 @@ static Node *_tree_scan(Node *node, ScanStatus *status, ScanStatus *post)
 			i = (next-children);
 		} 
 
-		//new index + key
-		status->index++;
-		post->key = c_renew(post->key, char, status->index);
-
-		for(; i < node->size && result == NULL; i++) {
+		for(; i < node->child_count && result == NULL; i++) {
 			current = children+i;
-			((char *)post->key)[status->index-1] = current->key;
+
+			unsigned int offset = status->index;
+			status->index += 1 + current->size;
+
+			post->key = c_renew(post->key, char, status->index);
+
+			((char *)post->key)[offset] = current->key;
+
+			if (current->size) {
+				memcpy(
+					post->key + offset + 1,
+					current->array,
+					current->size
+				);
+			}
+
 			result = _tree_scan(current, status, post);
+			status->index -= 1 + current->size;
+
 			if(result != NULL)
 				break;
 		}
-		status->index--;
-	} else if (node->type == NODE_TYPE_ARRAY) {
-
-		//new index + key
-		unsigned int offset = status->index;
-		status->index += node->size;
-		post->key = c_renew(post->key, char, status->index);
-
-		char *array = node->child->array;
-		memcpy(post->key+offset, array, node->size);
-
-		result = _tree_scan(node->child, status, post);
-		status->index -= node->size;
 	} 
 DATA_FOUND:
 	return result;
@@ -240,23 +223,23 @@ DATA_FOUND:
  */
 static Node *_build_node(Node *node, char *string, unsigned int length)
 {
-	if(length > 1) {
-		Node* array_node = c_new(Node, 1);
-		char *keys = c_malloc_n(length);
-		_node_reset(node, NODE_TYPE_ARRAY, length, array_node);
-
-		//copy array
-		unsigned int i = 0;
-		for(i = 0; i < length; i++){
-			keys[i] = string[i];
-		}
-
-		array_node->array = keys;
-		array_node->type = NODE_TYPE_LEAF;
-		node = array_node;
-	} else if (length == 1) {
-		_node_reset(node, NODE_TYPE_TREE, 0, NULL);
+	if (length >= 1) {
 		node = bsearch_insert(node, string[0]);
+
+		_node_init(node, 0, NULL, NULL);
+
+		if(length > 1) {
+			char *keys = c_malloc_n(length-1);
+
+			for(unsigned int i = 0; i < length-1; i++){
+				keys[i] = string[i+1];
+			}
+
+			_node_set_array(node, length-1, keys);
+		} else {
+			_node_set_array(node, 0, NULL);
+		}
+		trace_node("BUILD-NODE", node);
 	} else {
 		trace_node("REUSE-NODE", node);
 	}
@@ -271,159 +254,82 @@ static Node * _split_node_array(Node *node, ScanStatus *status)
 {
 	unsigned subindex = status->subindex;
 
-	Node *old = node->child;
 	Node *data_node;
+	Node old = *node;
 
-	char *old_suffix = old->array+subindex;
+	char *old_suffix = old.array+subindex;
 	char *new_suffix = status->key + status->index;
-	unsigned int old_suffix_size = node->size - subindex;
+	unsigned int old_suffix_size = old.size - subindex;
 	unsigned int new_suffix_size = status->size - status->index;
-
-	//make node point to new prefix array, if necessary
-	node = _build_node(node, old->array, subindex);
 
 	if (new_suffix_size == 0) {
                 //No new suffix, we add data to current node
-		_node_init(node, 0, 0, NULL, NULL);
+		_node_init(node, 0, NULL, NULL);
+
 		data_node = node;
 
                 //After the data node we append the old suffix
-		node = _build_node(node, old_suffix, old_suffix_size);
-		_node_init(node, old->type, old->size, old->child, old->data);
+		Node *branch = _build_node(node, old_suffix, old_suffix_size);
+		_node_init(branch, old.child_count, old.child, old.data);
 	} else {
 		//make node point to new tree node
-		_node_init(node, NODE_TYPE_TREE, 0, NULL, NULL);
+		_node_init(node, 0, NULL, NULL);
 
 		//add branch to hold old suffix and delete old data
-		Node *branch1 = bsearch_insert(node, old_suffix[0]);
-		branch1 = _build_node(branch1, old_suffix+1, old_suffix_size-1);
-		_node_init(branch1, old->type, old->size, old->child, old->data);
+		Node *branch1 = _build_node(node, old_suffix, old_suffix_size);
+		_node_init(branch1, old.child_count, old.child, old.data);
+		trace_node("OLD-BRANCH", branch1);
 
 		//add branch to hold new suffix and return new node
-		Node *branch2 = bsearch_insert(node, new_suffix[0]);
-		branch2 = _build_node(branch2, new_suffix+1, new_suffix_size -1);
-		_node_init(branch2, NODE_TYPE_LEAF, 0, NULL, NULL);
+		Node *branch2 = _build_node(node, new_suffix, new_suffix_size);
 
 		data_node = branch2;
 	}
-	//delete old array
-	c_free(old->array);
-	c_delete(old);
+
+	//TODO: what if subindex == 0?
+	unsigned char *prefix = c_renew(node->array, char, subindex);
+	_node_set_array(node, subindex, prefix);
+	trace_node("PREFIX", node);
 
 	return data_node;
 }
 
-static void _compact_nodes(Node *node1, Node *node2, Node *node3)
+static void _compact_nodes(Node *node)
 {
-	Node *target = NULL;
-	//TODO: If node3 is not mergeable shouldn't we use node2?
-	Node *cont = node3->child;
-
-	int nodes = 0;
-	int joined_size = 0;
-
-	char *node1_str = NULL;
-	int node1_size = 0;
-	int node1_type = 0;
-	Node *node1_old;
-
-	int node2_size = 0;
-	Node *node2_old;
-
-	char *node3_str = NULL;
-	int node3_size = 0;
-	int node3_type = 0;
-	Node *node3_old;
-
-	if(node3) {
-		if(node3->type == NODE_TYPE_ARRAY) {
-			trace("Node 3 is array");
-			node3_str = node3->child->array;
-			node3_size = node3->size;
-			joined_size += node3_size;
-			nodes++;
-		} else if(node3->type == NODE_TYPE_TREE && node3->size == 1) {
-			trace("Node 3 is tree");
-			node3_str = &node3->child->key;
-			node3_size = 1;
-			joined_size += node3_size;
-			nodes++;
-		}
-		node3_type = node3->type;
-		node3_old = node3->child;
+	if (node->child_count != 1 || node->data) {
+		return;
 	}
 
-	if(node2 && node2->type == NODE_TYPE_TREE) {
-		trace("Node 2 is tree");
-		node2_size = 1;
-		joined_size += node2_size;
-		nodes++;
-		target = node2;
-		node2_old = node2->child;
+	Node *child = node->child;
+
+	//Join arrays
+	int joined_size = node->size + 1 + child->size;
+	unsigned char *joined = c_renew(node->array, char, joined_size);
+
+	int i = node->size;
+
+	joined[i++] = child->key;
+
+	int j = 0;
+	for(j; j < child->size; j++) {
+		joined[i+j] = child->array[j];
 	}
 
-	if(node1) {
-		if(node1->type == NODE_TYPE_ARRAY) {
-			trace("Node 1 is array");
-			node1_str = node1->child->array;
-			node1_size = node1->size;
-			joined_size += node1_size;
-			nodes++;
-			target = node1;
-		} else if(node1->type == NODE_TYPE_TREE && node1->size == 1) {
-			trace("Node 1 is tree");
-			node1_str = &node1->child->key;
-			node1_size = 1;
-			joined_size += node1_size;
-			nodes++;
-			target = node1;
-		}
-		node1_type = node3->type;
-		node1_old = node1->child;
+	//Replace child
+	if(child->array) {
+		c_free(child->array);
+		//TODO: conditional set null
+		child->array = NULL;
 	}
 
-	char joined[joined_size];
-	int i = 0;
+	Node cont = *child;
 
-	if(nodes > 1) {
-		//Join arrays
-		for(i; i < node1_size; i++) {
-			joined[i] = node1_str[i];
-		}
-		if(node2_size) {
-			joined[i++] = node2->child->key;
-		}
-		int j = 0;
-		for(j; j < node3_size; j++) {
-			joined[i+j] = node3_str[j];
-		}
+	bsearch_delete(node, child->key);
 
-		//Build new node
-		trace("new size: %i", joined_size);
-		Node *new_branch = _build_node(target, joined, joined_size);
-		_node_init(new_branch, cont->type, cont->size, cont->child, cont->data);
+	trace("new size: %i", joined_size);
 
-		trace_node("CONT", cont);
-		trace_node("NEW", new_branch);
-		trace_node("TARG", target);
-
-		//Cleanup old nodes
-		if(node1_size) {
-			if(node1_type == NODE_TYPE_ARRAY) {
-				c_free(node1_str);
-			}
-			c_delete(node1_old);
-		}
-		if(node2_size) {
-			c_delete(node2_old);
-		}
-		if(node3_size) {
-			if(node3_type == NODE_TYPE_ARRAY) {
-				c_free(node3_str);
-			}
-			c_delete(node3_old);
-		}
-	}
+	_node_init(node, cont.child_count, cont.child, cont.data);
+	_node_set_array(node, joined_size, joined);
 }
 
 /**
@@ -432,50 +338,27 @@ static void _compact_nodes(Node *node1, Node *node2, Node *node3)
 static void _pluck_node(Node *node, ScanStatus *status, ScanMetadata *meta)
 {
 	trace_node("CLEAN", node);
-	if(node->type == NODE_TYPE_LEAF) {
-		//the child is a leaf
+	Node *previous = meta->previous;
 
-		//Delete node preceeding the leaf
-		Node *previous = meta->previous;
+	if(node->child_count == 0 && previous) {
+		trace_node("PREVIOUS", previous);
 
-		if(previous) {
-			trace_node("PREVIOUS", previous);
+		if(node->array) {
+			c_free(node->array);
+			//TODO: conditional set null
+			node->array = NULL;
 		}
 
-		if(previous && previous->type == NODE_TYPE_ARRAY) {
-			trace_node("DELETE-ARRAY", previous);
-			Node *leaf = previous->child;
-			c_free(leaf->array);
-			leaf->array = NULL;
-			c_delete(leaf);
-			previous->type = NODE_TYPE_LEAF;
-			previous->size = 0;
-			scan_metadata_pop(meta);
-		} else if(previous && previous->type == NODE_TYPE_TREE && previous->size == 1) {
-			trace_node("DELETE-TREE", previous);
-			c_delete(previous->child);
-			previous->type = NODE_TYPE_LEAF;
-			previous->size = 0;
-			scan_metadata_pop(meta);
-		}
+		int pivot_index = meta->p_index;
+		char *key = (char *)status->key;
+		bsearch_delete(previous, key[pivot_index]);
 
-		//Remove childless node from pivot
-		if(meta->previous && meta->previous->type == NODE_TYPE_TREE) {
-			Node *pivot = meta->previous;
-			int pivot_index = meta->p_index;
-
-			trace_node("PIVOT", pivot);
-			char *key = (char *)status->key;
-			//TODO: should only delete if it doesn't contain data
-			bsearch_delete(pivot, key[pivot_index]);
-			if (pivot->size == 1) {
-				_compact_nodes(meta->previous2, pivot, pivot->child);
-			}
-
+		if(previous != meta->root) {
+			_compact_nodes(previous);
 		}
 
 	} else {
-		_compact_nodes(meta->previous, NULL, node);
+		_compact_nodes(node);
 	}
 }
 
@@ -508,16 +391,10 @@ static Node *_build_data_node(Node *tree, char *string, unsigned int length)
 
 	if (status.found == 1) {
 		data_node = node;
-	} else if (node->type == NODE_TYPE_ARRAY) {
+	} else if (node->array && status.subindex < node->size) {
 		data_node = _split_node_array(node, &status);
 	} else {
-		if(node->type == NODE_TYPE_TREE)
-			node = bsearch_insert(node, string[status.index++]);
-		//TODO: Verify what happens if length == 0
-		node = _build_node(node, string+status.index, length-status.index);
-		_node_init(node, NODE_TYPE_LEAF, 0, NULL, NULL);
-
-		data_node = node;
+		data_node = _build_node(node, string+status.index, length-status.index);
 	}
 	return data_node;
 }
@@ -623,17 +500,18 @@ void **radix_tree_get_next(Node *tree, char *string, unsigned int length)
 void radix_tree_dispose(Node *tree)
 {
 	trace_node("DISPOSE", tree);
-	if(tree->type == NODE_TYPE_TREE) {
+	if(tree->array) {
+		c_free(tree->array);
+		tree->array = NULL;
+	}
+	if(tree->child) {
 		Node *child = tree->child;
 		int i;
-		for(i = 0; i < tree->size; i++) {
+		for(i = 0; i < tree->child_count; i++) {
 			radix_tree_dispose(child+i);
 		}
 		c_delete(tree->child);
-	} else if(tree->type == NODE_TYPE_ARRAY) {
-		radix_tree_dispose(tree->child);
-		c_free(tree->child->array);
-		c_delete(tree->child);
+		tree->child = NULL;
 	}
 }
 

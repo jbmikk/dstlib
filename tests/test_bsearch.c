@@ -43,7 +43,7 @@ void bsearch__set2_and_get2(){
 	a2 = bsearch_get(&fixture.node, 'a');
 	b2 = bsearch_get(&fixture.node, 'b');
 
-	t_assert(fixture.node.size == 2);
+	t_assert(fixture.node.child_count == 2);
 	t_assert(a2 != NULL);
 	t_assert(a2->child == (void *)&d1);
 	t_assert(b2 != NULL);
@@ -56,7 +56,7 @@ void bsearch__set2_and_get2_ensure_unsigned(){
 	a1 = bsearch_insert(&fixture.node, 10);
 	b1 = bsearch_insert(&fixture.node, 128);
 
-	t_assert(fixture.node.size == 2);
+	t_assert(fixture.node.child_count == 2);
 	t_assert(((Node*)fixture.node.child)->key == 10);
 }
 
@@ -74,7 +74,7 @@ void bsearch__set2_and_delete1(){
 	a2 = bsearch_get(&fixture.node, 'a');
 	b2 = bsearch_get(&fixture.node, 'b');
 
-	t_assert(fixture.node.size == 1);
+	t_assert(fixture.node.child_count == 1);
 	t_assert(a2 == NULL);
 	t_assert(b2 != NULL);
 	t_assert(b2->child == (void *)&d2);
