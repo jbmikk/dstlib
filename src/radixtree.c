@@ -134,10 +134,9 @@ void scan_metadata_init(ScanMetadata *meta, Node *root)
 	meta->previous = NULL;
 }
 
-void scan_metadata_push(ScanMetadata *meta, Node *node, int index) 
+void scan_metadata_push(ScanMetadata *meta, Node *node) 
 {
 	meta->previous = node;
-	meta->p_index = index;
 }
 
 /**
@@ -151,7 +150,7 @@ static Node *_seek_metadata(Node *tree, ScanStatus *status, ScanMetadata *meta)
 	scan_metadata_init(meta, tree);
 
 	while(!status->found) {
-		scan_metadata_push(meta, current, status->index);
+		scan_metadata_push(meta, current);
 
 		current = _tree_seek_step(current, status);
 	}
@@ -349,9 +348,7 @@ static void _pluck_node(Node *node, ScanStatus *status, ScanMetadata *meta)
 			node->array = NULL;
 		}
 
-		int pivot_index = meta->p_index;
-		char *key = (char *)status->key;
-		bsearch_delete(previous, key[pivot_index]);
+		bsearch_delete(previous, node->key);
 
 		if(previous != meta->root) {
 			_compact_nodes(previous);

@@ -12,7 +12,6 @@
 typedef struct _ScanMetadata {
     Node *root;
     Node *previous;
-    unsigned int p_index;
 } ScanMetadata;
 
 #endif	//RADIXTREE_P_H
