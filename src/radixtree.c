@@ -308,7 +308,7 @@ static void _compact_nodes(Node *node)
 	joined[i++] = child->key;
 
 	int j = 0;
-	for(j; j < child->size; j++) {
+	for(; j < child->size; j++) {
 		joined[i+j] = child->array[j];
 	}
 
