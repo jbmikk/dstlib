@@ -119,7 +119,7 @@ NOTFOUND:
 static Node *_tree_seek(Node *tree, ScanStatus *status)
 {
 	Node *current = tree;
-	unsigned int i = status->index;
+
 	while(!status->found) {
 		current = _tree_seek_step(current, status);
 	}
@@ -144,7 +144,6 @@ void scan_metadata_push(ScanMetadata *meta, Node *node)
 static Node *_seek_metadata(Node *tree, ScanStatus *status, ScanMetadata *meta)
 {
 	Node *current = tree;
-	unsigned int i = status->index;
 
 	scan_metadata_init(meta, tree);
 
@@ -435,7 +434,6 @@ void *radix_tree_try_set(Node *tree, char *string, unsigned int length, void *da
 void radix_tree_remove(Node *tree, char *string, unsigned int length)
 {
 	trace("RADIXTREE-REMOVE(%p)", tree);
-	Node *data_node;
 
 	ScanStatus status;
 	_scan_status_init(&status, string, length);
