@@ -316,8 +316,7 @@ static void _compact_nodes(Node *node)
 	//Replace child
 	if(child->array) {
 		c_free(child->array);
-		//TODO: conditional set null
-		child->array = NULL;
+		set_null(child->array);
 	}
 
 	Node cont = *child;
@@ -343,8 +342,7 @@ static void _pluck_node(Node *node, ScanStatus *status, ScanMetadata *meta)
 
 		if(node->array) {
 			c_free(node->array);
-			//TODO: conditional set null
-			node->array = NULL;
+			set_null(node->array);
 		}
 
 		bsearch_delete(previous, node->key);
@@ -498,7 +496,7 @@ void radix_tree_dispose(Node *tree)
 	trace_node("DISPOSE", tree);
 	if(tree->array) {
 		c_free(tree->array);
-		tree->array = NULL;
+		set_null(tree->array);
 	}
 	if(tree->child) {
 		Node *child = tree->child;
@@ -507,7 +505,7 @@ void radix_tree_dispose(Node *tree)
 			radix_tree_dispose(child+i);
 		}
 		c_delete(tree->child);
-		tree->child = NULL;
+		set_null(tree->child);
 	}
 }
 
