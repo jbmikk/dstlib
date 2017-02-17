@@ -5,6 +5,7 @@
 #include "radixtree.h"
 #include "radixtree_p.h"
 #include "test.h"
+#include "arrays.h"
 
 typedef struct {
 	Node tree;
@@ -348,6 +349,42 @@ void test_radix_tree__iterate(){
 	t_assert(out5 == NULL);
 }
 
+void test_radix_tree__iterate_binary(){
+	char *in1="DINOSAURIO", *in2="DINO", *in3="CASA";
+	char *out1, *out2, *out3, *out4;
+	Node *tree = &fixture.tree;
+	Iterator it;
+
+	unsigned char buffer[sizeof(intptr_t)];
+	unsigned int size;
+
+	void *ptr1 = (void*)0xa927d0;
+	void *ptr2 = (void*)0xa92870;
+	void *ptr3 = (void*)0xa92910;
+
+	int_to_array(buffer, &size, (intptr_t)ptr1);
+	radix_tree_set(tree, buffer, size, in1);
+	int_to_array(buffer, &size, (intptr_t)ptr2);
+	radix_tree_set(tree, buffer, size, in2);
+	int_to_array(buffer, &size, (intptr_t)ptr3);
+	radix_tree_set(tree, buffer, size, in3);
+
+	radix_tree_iterator_init(&it, tree);
+	out1 = (char *)radix_tree_iterator_next(&it);
+	out2 = (char *)radix_tree_iterator_next(&it);
+	out3 = (char *)radix_tree_iterator_next(&it);
+	out4 = (char *)radix_tree_iterator_next(&it);
+	radix_tree_iterator_dispose(&it);
+
+	t_assert(out1 != NULL);
+	t_assert(!strcmp(out1, "CASA"));
+	t_assert(out2 != NULL);
+	t_assert(!strcmp(out2, "DINO"));
+	t_assert(out3 != NULL);
+	t_assert(!strcmp(out3, "DINOSAURIO"));
+	t_assert(out4 == NULL);
+}
+
 void test_radix_tree__get_next(){
 	char *in1="DINOSAURIO", *in2="DINO", *in3="CASA", *in4="PIANO";
 	char *out1, *out2, *out3, *out4, *out5;
@@ -438,6 +475,7 @@ int main(int argc, char** argv) {
 	t_test(test_radix_tree__add_prefix);
 	t_test(test_radix_tree__add_suffix);
 	t_test(test_radix_tree__iterate);
+	t_test(test_radix_tree__iterate_binary);
 	t_test(test_radix_tree__get_next);
 	t_test(test_radix_tree__set_and_get_int);
 	t_test(test_radix_tree__get_next_ple);
