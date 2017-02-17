@@ -237,6 +237,25 @@ void test_radix_tree__remove_non_leaf_key(){
 	t_assert(out2 == NULL);
 }
 
+void test_radix_tree__set_long_key(){
+	char *in1="BLUE", *out1;
+	Node *tree = &fixture.tree;
+
+	int length = 1024;
+	char key[length];
+	for(int i = 0; i < length; i++) {
+		key[i] = 'a';
+	}
+
+	radix_tree_set(tree, key, length, in1);
+	out1 = radix_tree_get(tree, key, length);
+
+	t_assert(tree->child_count == 1);
+	t_assert(tree->child->array != NULL);
+	t_assert(tree->child->size == 1023);
+	t_assert(!strcmp(out1, "BLUE"));
+}
+
 void test_radix_tree__non_clashing_keys(){
 	char *in1="BLUE", *in2="GREEN", *out1, *out2;
 	Node *tree = &fixture.tree;
@@ -370,6 +389,7 @@ int main(int argc, char** argv) {
 	t_test(test_radix_tree__try_set);
 	t_test(test_radix_tree__try_set_at_split_array);
 	t_test(test_radix_tree__remove_non_leaf_key);
+	t_test(test_radix_tree__set_long_key);
 	t_test(test_radix_tree__non_clashing_keys);
 	t_test(test_radix_tree__first_clashing_keys);
 	t_test(test_radix_tree__last_clashing_keys);

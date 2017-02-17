@@ -27,7 +27,7 @@
 #define trace_node(M, NODE)
 #endif
 
-static void _scan_status_init(ScanStatus *status, void *key, unsigned char size)
+static void _scan_status_init(ScanStatus *status, void *key, unsigned short size)
 {
 	status->index = 0;
 	status->subindex = 0;
@@ -44,7 +44,7 @@ static void _node_init(Node *node, unsigned char count, Node *child, void *data)
 	node->data = data;
 }
 
-static void _node_set_array(Node *node, unsigned char size, void *array)
+static void _node_set_array(Node *node, unsigned short size, void *array)
 {
 	node->size = size;
 	node->array = array;

@@ -4,22 +4,22 @@
 typedef struct _Node {
 	struct _Node *child;
 	unsigned char child_count;
-	unsigned char size;
 	unsigned char key;
 	unsigned char *array;
+	unsigned short size;
 	void *data;
 } Node;
 
 typedef struct _Iterator {
 	Node *root;
 	void *key;
-	unsigned char size;
+	unsigned short size;
 	void *data;
 } Iterator;
 
 typedef struct _ScanStatus {
 	void *key;
-	unsigned char size;
+	unsigned short size;
 	unsigned int index;
 	unsigned int subindex;
 	unsigned int type;
