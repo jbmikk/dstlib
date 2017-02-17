@@ -3,7 +3,11 @@ project (dstlib)
 
 option(PROFILE "Enable profiling options" OFF)
 
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall")
+
+
 # Dependencies
+# ------------
 
 include_directories("${PROJECT_SOURCE_DIR}/vendor/dbg")
 
