@@ -65,7 +65,7 @@ static Node *_tree_seek_step(Node *tree, ScanStatus *status)
 
 	if (current->child) {
 		//Move to the next node within the tree
-		char *key = (char *)status->key;
+		unsigned char *key = status->key;
 		Node *next = bsearch_get(current, key[status->index]);
 		//Break if there is no node to move to
 		if(next == NULL) {
@@ -160,7 +160,7 @@ static Node *_seek_metadata(Node *tree, ScanStatus *status, ScanMetadata *meta)
  */
 static Node *_tree_scan(Node *node, ScanStatus *status, ScanStatus *post)
 {
-	char *key = (char *)status->key;
+	unsigned char *key = status->key;
 	Node *result = NULL;
 
 	if (node->data) {
@@ -194,7 +194,7 @@ static Node *_tree_scan(Node *node, ScanStatus *status, ScanStatus *post)
 
 			post->key = c_renew(post->key, unsigned char, status->index);
 
-			((char *)post->key)[offset] = current->key;
+			post->key[offset] = current->key;
 
 			if (current->size) {
 				memcpy(
