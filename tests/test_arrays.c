@@ -98,7 +98,6 @@ void int_to_padded_array__one_byte(){
 
 	int symbol = 40;
 	unsigned char buffer[sizeof(int)];
-	unsigned int size;
 
 	int i;
 
@@ -120,7 +119,6 @@ void int_to_padded_array_le__one_byte(){
 
 	int symbol = 40;
 	unsigned char buffer[sizeof(int)];
-	unsigned int size;
 
 	int i;
 

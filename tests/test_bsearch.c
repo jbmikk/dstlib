@@ -51,10 +51,9 @@ void bsearch__set2_and_get2(){
 }
 
 void bsearch__set2_and_get2_ensure_unsigned(){
-	Node *a1, *b1;
 
-	a1 = bsearch_insert(&fixture.node, 10);
-	b1 = bsearch_insert(&fixture.node, 128);
+	bsearch_insert(&fixture.node, 10);
+	bsearch_insert(&fixture.node, 128);
 
 	t_assert(fixture.node.child_count == 2);
 	t_assert(((Node*)fixture.node.child)->key == 10);

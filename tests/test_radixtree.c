@@ -211,7 +211,7 @@ void test_radix_tree__try_set(){
 }
 
 void test_radix_tree__try_set_at_split_array(){
-	char *in1="BLUER", *in2="BLUEST", *out1;
+	char *in1="BLUER", *out1;
 	Node *tree = &fixture.tree;
 
 	radix_tree_set(tree, nzs("bluer"), in1);
@@ -352,8 +352,6 @@ void test_radix_tree__get_next(){
 	char *in1="DINOSAURIO", *in2="DINO", *in3="CASA", *in4="PIANO";
 	char *out1, *out2, *out3, *out4, *out5;
 	Node *tree = &fixture.tree;
-
-	Iterator it;
 
 	radix_tree_set(tree, nzs("dinosaurio"), in1);
 	radix_tree_set(tree, nzs("dino"), in2);
