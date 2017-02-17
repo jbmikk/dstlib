@@ -12,7 +12,7 @@ void bsearch_init(Node *parent)
 	parent->child_count = 0;
 }
 
-Node *bsearch_get(Node *parent, char key)
+Node *bsearch_get(Node *parent, unsigned char key)
 {
 	Node *children = parent->child;
 	Node *next;
@@ -33,7 +33,7 @@ Node *bsearch_get(Node *parent, char key)
 	return NULL;
 }
 
-Node *bsearch_insert(Node *parent, char key)
+Node *bsearch_insert(Node *parent, unsigned char key)
 {
 	Node *new_children;
 	Node *new_node;
@@ -69,7 +69,7 @@ error:
 	return NULL;
 }
 
-int bsearch_delete(Node *parent, char key)
+int bsearch_delete(Node *parent, unsigned char key)
 {
 	if(bsearch_get(parent, key)!= NULL) {
 		Node *new_children = NULL;

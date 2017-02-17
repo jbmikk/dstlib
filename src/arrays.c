@@ -1,6 +1,6 @@
 #include "arrays.h"
 
-void int_to_array(char *array, unsigned int *size, int integer)
+void int_to_array(unsigned char *array, unsigned int *size, int integer)
 {
     int remainder = integer;
     int i;
@@ -17,7 +17,7 @@ void int_to_array(char *array, unsigned int *size, int integer)
     *size = i;
 }
 
-int array_to_int(char *array, unsigned int size)
+int array_to_int(unsigned char *array, unsigned int size)
 {
 	int symbol = 0;
 	int i;
@@ -29,7 +29,7 @@ int array_to_int(char *array, unsigned int size)
 	return symbol;
 }
 
-void int_to_padded_array(char *array, int integer)
+void int_to_padded_array(unsigned char *array, int integer)
 {
 	int remainder = integer;
 	int i;
@@ -43,7 +43,7 @@ void int_to_padded_array(char *array, int integer)
 /*
  * Convert int to padded array in little-endian format
  */
-void int_to_padded_array_le(char *array, int integer)
+void int_to_padded_array_le(unsigned char *array, int integer)
 {
 	int remainder = integer;
 	int i;

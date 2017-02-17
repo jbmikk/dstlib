@@ -242,7 +242,7 @@ void test_radix_tree__set_long_key(){
 	Node *tree = &fixture.tree;
 
 	int length = 1024;
-	char key[length];
+	unsigned char key[length];
 	for(int i = 0; i < length; i++) {
 		key[i] = 'a';
 	}
@@ -382,6 +382,39 @@ void test_radix_tree__set_and_get_int(){
 	t_assert(!strcmp(out1, "BLUE"));
 }
 
+void test_radix_tree__get_next_ple(){
+	char *in1="A", *in2="B", *in3="C", *in4="D", *in5="E";
+	char /* *out1, */ *out2, *out3, *out4, *out5, *out6;
+	Node *tree = &fixture.tree;
+
+	radix_tree_set_ple_int(tree, 20, in1);
+	radix_tree_set_ple_int(tree, 40, in2);
+	radix_tree_set_ple_int(tree, 128, in3);
+	radix_tree_set_ple_int(tree, 255, in4);
+	radix_tree_set_ple_int(tree, 256, in5);
+
+	//out1 = (char *)radix_tree_get_next_ple_int(tree, 0);
+	out2 = (char *)radix_tree_get_next_ple_int(tree, 20);
+	out3 = (char *)radix_tree_get_next_ple_int(tree, 40);
+	out4 = (char *)radix_tree_get_next_ple_int(tree, 128);
+	out5 = (char *)radix_tree_get_next_ple_int(tree, 255);
+	out6 = (char *)radix_tree_get_next_ple_int(tree, 256);
+
+	//TODO: Should be able to get next key to any given value
+	//t_assert(out1 != NULL);
+	//t_assert(!strcmp(out1, "A"));
+	t_assert(out2 != NULL);
+	t_assert(!strcmp(out2, "B"));
+	t_assert(out3 != NULL);
+	t_assert(!strcmp(out3, "C"));
+	t_assert(out4 != NULL);
+	t_assert(!strcmp(out4, "D"));
+	t_assert(out5 != NULL);
+	t_assert(!strcmp(out5, "E"));
+	t_assert(out6 == NULL);
+}
+
+
 int main(int argc, char** argv) {
 	t_init();
 	t_test(test_radix_tree__set_and_get);
@@ -407,6 +440,7 @@ int main(int argc, char** argv) {
 	t_test(test_radix_tree__iterate);
 	t_test(test_radix_tree__get_next);
 	t_test(test_radix_tree__set_and_get_int);
+	t_test(test_radix_tree__get_next_ple);
 	return t_done();
 }
 

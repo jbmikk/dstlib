@@ -11,12 +11,12 @@ typedef enum {
 } RadixTreeStatus;
 
 void radix_tree_init(Node *tree);
-void *radix_tree_get(Node *tree, char *string, unsigned int length);
-void radix_tree_set(Node *tree, char *string, unsigned int length, void *data);
-int radix_tree_contains(Node *tree, char *string, unsigned int length);
-void *radix_tree_try_set(Node *tree, char *string, unsigned int length, void *data);
-void **radix_tree_get_next(Node *tree, char *string, unsigned int length);
-void radix_tree_remove(Node *tree, char *string, unsigned int length);
+void *radix_tree_get(Node *tree, unsigned char *string, unsigned int length);
+void radix_tree_set(Node *tree, unsigned char *string, unsigned int length, void *data);
+int radix_tree_contains(Node *tree, unsigned char *string, unsigned int length);
+void *radix_tree_try_set(Node *tree, unsigned char *string, unsigned int length, void *data);
+void **radix_tree_get_next(Node *tree, unsigned char *string, unsigned int length);
+void radix_tree_remove(Node *tree, unsigned char *string, unsigned int length);
 void radix_tree_dispose(Node *tree);
 
 void radix_tree_iterator_init(Iterator *iterator, Node *tree);
