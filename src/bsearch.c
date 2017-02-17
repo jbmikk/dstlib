@@ -16,11 +16,12 @@ Node *bsearch_get(Node *parent, unsigned char key)
 {
 	Node *children = parent->child;
 	Node *next;
-	char left = 0;
-	char right = parent->child_count-1;
+	int left = 0;
+	int right = parent->child_count-1;
 
+	//TODO: test binary search with more than 128 elements
 	while(left <= right) {
-		char i = left+((right - left)>>1);
+		unsigned int i = left+((right - left)>>1);
 		if(children[i].key < key) {
 			left = i+1;
 		} else if(children[i].key > key) {
