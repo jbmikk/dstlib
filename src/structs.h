@@ -4,8 +4,8 @@
 typedef struct _Node {
 	struct _Node *child;
 	unsigned char child_count;
-	unsigned char key;
-	unsigned char *array;
+	char key;
+	char *array;
 	unsigned short size;
 	void *data;
 } Node;
@@ -18,7 +18,7 @@ typedef struct _Iterator {
 } Iterator;
 
 typedef struct _ScanStatus {
-	void *key;
+	char *key;
 	unsigned short size;
 	unsigned int index;
 	unsigned int subindex;

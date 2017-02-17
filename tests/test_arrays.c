@@ -14,7 +14,7 @@ void t_teardown(){
 void int_to_array__one_byte(){
 
 	int symbol = 40;
-	unsigned char buffer[sizeof(int)];
+	char buffer[sizeof(int)];
 	unsigned int size;
 
 	int_to_array(buffer, &size, symbol);
@@ -26,7 +26,7 @@ void int_to_array__one_byte(){
 void int_to_array__two_bytes(){
 
 	int symbol = 258;
-	unsigned char buffer[sizeof(int)];
+	char buffer[sizeof(int)];
 	unsigned int size;
 
 	int_to_array(buffer, &size, symbol);
@@ -39,19 +39,19 @@ void int_to_array__two_bytes(){
 void int_to_array__negative(){
 
 	int symbol = -1;
-	unsigned char buffer[sizeof(int)];
+	char buffer[sizeof(int)];
 	unsigned int size;
 
 	int_to_array(buffer, &size, symbol);
 
 	t_assert(size == sizeof(int));
-	t_assert(buffer[0] == 0xFF);
+	t_assert(((unsigned char)buffer[0]) == 0xFF);
 }
 
 void array_to_int__one_byte(){
 
 	int symbol = 0;
-	unsigned char buffer[sizeof(int)];
+	char buffer[sizeof(int)];
 	unsigned int size;
 
 	size = 1;
@@ -65,7 +65,7 @@ void array_to_int__one_byte(){
 void array_to_int__two_bytes(){
 
 	int symbol = 0;
-	unsigned char buffer[sizeof(int)];
+	char buffer[sizeof(int)];
 	unsigned int size;
 
 	size = 2;
@@ -80,7 +80,7 @@ void array_to_int__two_bytes(){
 void array_to_int__negative(){
 
 	int symbol = 0;
-	unsigned char buffer[sizeof(int)];
+	char buffer[sizeof(int)];
 	unsigned int size;
 
 	size = sizeof(int);
@@ -97,7 +97,7 @@ void array_to_int__negative(){
 void int_to_padded_array__one_byte(){
 
 	int symbol = 40;
-	unsigned char buffer[sizeof(int)];
+	char buffer[sizeof(int)];
 
 	int i;
 
@@ -118,7 +118,7 @@ void int_to_padded_array__one_byte(){
 void int_to_padded_array_le__one_byte(){
 
 	int symbol = 40;
-	unsigned char buffer[sizeof(int)];
+	char buffer[sizeof(int)];
 
 	int i;
 
