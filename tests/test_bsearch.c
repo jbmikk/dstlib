@@ -50,13 +50,13 @@ void bsearch__set2_and_get2(){
 	t_assert(b2->child == (void *)&d2);
 }
 
-void bsearch__set2_and_get2_ensure_unsigned(){
+void bsearch__set2_and_get2_ensure_signed(){
 
 	bsearch_insert(&fixture.node, 10);
-	bsearch_insert(&fixture.node, 128);
+	bsearch_insert(&fixture.node, -128);
 
 	t_assert(fixture.node.child_count == 2);
-	t_assert(((Node*)fixture.node.child)->key == 10);
+	t_assert(fixture.node.child->key == -128);
 }
 
 void bsearch__set2_and_delete1(){
@@ -83,7 +83,7 @@ int main(int argc, char** argv) {
 	t_init();
 	t_test(bsearch__set_and_get);
 	t_test(bsearch__set2_and_get2);
-	t_test(bsearch__set2_and_get2_ensure_unsigned);
+	t_test(bsearch__set2_and_get2_ensure_signed);
 	t_test(bsearch__set2_and_delete1);
 	//TODO:
 	//delete
