@@ -407,10 +407,10 @@ int radix_tree_contains(Node *tree, unsigned char *string, unsigned int length)
 	ScanStatus status;
 	_scan_status_init(&status, string, length);
 
-	Node * node = _tree_seek(tree, &status);
+	_tree_seek(tree, &status);
 
 	if(status.found == 1) {
-		trace("FOUND %p", node);
+		trace("FOUND");
 		return 1;
 	} else {
 		trace("NOTFOUND");
