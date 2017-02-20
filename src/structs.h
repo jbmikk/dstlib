@@ -26,11 +26,6 @@ typedef struct _ScanStatus {
 	unsigned int found;
 } ScanStatus;
 
-typedef struct _SNode {
-	void *data;
-	struct _SNode *next;
-} SNode;
-
 #define nzs(S) ((unsigned char*)S), (strlen(S))
 
 #endif // CSTRUCT
