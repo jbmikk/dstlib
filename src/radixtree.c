@@ -50,12 +50,6 @@ static void _node_set_array(Node *node, unsigned short size, unsigned char *arra
 	node->array = array;
 }
 
-void radix_tree_init(Node *tree)
-{
-	_node_init(tree, 0, NULL, NULL);
-	_node_set_array(tree, 0, NULL);
-}
-
 /**
  * Seek next node in the tree matching the current scan status
  */
@@ -357,24 +351,6 @@ static void _pluck_node(Node *node, ScanStatus *status, ScanMetadata *meta)
 	}
 }
 
-void *radix_tree_get(Node *tree, unsigned char *string, unsigned short length)
-{
-	trace("RADIXTREE-GET(%p)", tree);
-
-	ScanStatus status;
-	_scan_status_init(&status, string, length);
-
-	Node * node = _tree_seek(tree, &status);
-
-	if(status.found == 1) {
-		trace("FOUND %p", node);
-		return node->data;
-	} else {
-		trace("NOTFOUND");
-		return NULL;
-	}
-}
-
 static Node *_build_data_node(Node *tree, unsigned char *string, unsigned short length)
 {
 	Node *data_node;
@@ -392,6 +368,49 @@ static Node *_build_data_node(Node *tree, unsigned char *string, unsigned short 
 		data_node = _build_node(node, string+status.index, length-status.index);
 	}
 	return data_node;
+}
+
+void init_status(ScanStatus *status, ScanStatus *poststatus, unsigned char *string, unsigned short length)
+{
+	status->index = 0;
+	status->subindex = 0;
+	status->found = 0;
+	status->key = string;
+	status->size = length;
+	if(string != NULL)
+		status->type = S_FETCHNEXT;
+	else
+		status->type = S_DEFAULT;
+
+	poststatus->key = c_new(unsigned char, 1);
+	poststatus->size = 0;
+	poststatus->index = 0;
+	poststatus->subindex = 0;
+	poststatus->found = 0;
+}
+
+void radix_tree_init(Node *tree)
+{
+	_node_init(tree, 0, NULL, NULL);
+	_node_set_array(tree, 0, NULL);
+}
+
+void *radix_tree_get(Node *tree, unsigned char *string, unsigned short length)
+{
+	trace("RADIXTREE-GET(%p)", tree);
+
+	ScanStatus status;
+	_scan_status_init(&status, string, length);
+
+	Node * node = _tree_seek(tree, &status);
+
+	if(status.found == 1) {
+		trace("FOUND %p", node);
+		return node->data;
+	} else {
+		trace("NOTFOUND");
+		return NULL;
+	}
 }
 
 void radix_tree_set(Node *tree, unsigned char *string, unsigned short length, void *data)
@@ -451,25 +470,6 @@ void radix_tree_remove(Node *tree, unsigned char *string, unsigned short length)
 		node->data = NULL;
 		_pluck_node(node, &status, &meta);
 	}
-}
-
-void init_status(ScanStatus *status, ScanStatus *poststatus, unsigned char *string, unsigned short length)
-{
-	status->index = 0;
-	status->subindex = 0;
-	status->found = 0;
-	status->key = string;
-	status->size = length;
-	if(string != NULL)
-		status->type = S_FETCHNEXT;
-	else
-		status->type = S_DEFAULT;
-
-	poststatus->key = c_new(unsigned char, 1);
-	poststatus->size = 0;
-	poststatus->index = 0;
-	poststatus->subindex = 0;
-	poststatus->found = 0;
 }
 
 void **radix_tree_get_next(Node *tree, unsigned char *string, unsigned short length)
