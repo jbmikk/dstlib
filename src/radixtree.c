@@ -27,15 +27,46 @@
 #define trace_node(M, NODE)
 #endif
 
-static void _scan_status_init(ScanStatus *status, unsigned char *key, unsigned short size)
+
+typedef struct _Scan {
+	unsigned char *key;
+	unsigned short size;
+	unsigned int index;
+	unsigned int subindex;
+	unsigned int type;
+	unsigned int found;
+} Scan;
+
+
+static void _scan_init(Scan *scan, unsigned char *key, unsigned short size)
 {
-	status->index = 0;
-	status->subindex = 0;
-	status->found = 0;
-	status->key = key;
-	status->size = size;
-	status->type = S_DEFAULT;
+	scan->index = 0;
+	scan->subindex = 0;
+	scan->found = 0;
+	scan->key = key;
+	scan->size = size;
+	scan->type = S_DEFAULT;
 }
+
+void _scan_init_double(Scan *scan, Scan *post_scan, unsigned char *string, unsigned short length)
+{
+	scan->index = 0;
+	scan->subindex = 0;
+	scan->found = 0;
+	scan->key = string;
+	scan->size = length;
+	if(string != NULL)
+		scan->type = S_FETCHNEXT;
+	else
+		scan->type = S_DEFAULT;
+
+	post_scan->key = c_new(unsigned char, 1);
+	post_scan->size = 0;
+	post_scan->index = 0;
+	post_scan->subindex = 0;
+	post_scan->found = 0;
+}
+
 
 static void _node_init(Node *node, unsigned char count, Node *child, void *data)
 {
@@ -51,41 +82,41 @@ static void _node_set_array(Node *node, unsigned short size, unsigned char *arra
 }
 
 /**
- * Seek next node in the tree matching the current scan status
+ * Seek next node in the tree matching the current scan 
  */
-static Node *_tree_seek_step(Node *tree, ScanStatus *status)
+static Node *_tree_seek_step(Node *tree, Scan *scan)
 {
 	Node *current = tree;
 
 	if (current->child) {
 		//Move to the next node within the tree
-		unsigned char *key = status->key;
-		Node *next = bsearch_get(current, key[status->index]);
+		unsigned char *key = scan->key;
+		Node *next = bsearch_get(current, key[scan->index]);
 		//Break if there is no node to move to
 		if(next == NULL) {
 			goto NOTFOUND;
 		}
 		current = next;
-		status->index++;
+		scan->index++;
 
 		if (current->size > 0) {
 			//Match array as far a possible
 			unsigned char *array = current->array;
 			int array_size = current->size;
 			int j;
-			unsigned int i = status->index;
+			unsigned int i = scan->index;
 			trace_node("SEEK-ARRAY", current);
-			for (j = 0; j < array_size && i < status->size; j++, i++) {
+			for (j = 0; j < array_size && i < scan->size; j++, i++) {
 				//Break if a character does not match
 				trace("[%c-%c]", array[j], key[i]);
 				if(array[j] != key[i]) {
-					status->subindex = j;
-					status->index = i;
+					scan->subindex = j;
+					scan->index = i;
 					goto NOTFOUND;
 				}
 			}
-			status->subindex = j;
-			status->index = i;
+			scan->subindex = j;
+			scan->index = i;
 
 			//Break if it didn't match the whole array
 			if(j < array_size) {
@@ -99,10 +130,10 @@ static Node *_tree_seek_step(Node *tree, ScanStatus *status)
 		goto NOTFOUND;
 	}
 
-	status->found = status->index == status->size;
+	scan->found = scan->index == scan->size;
 	return current;
 NOTFOUND:
-	status->found = -1;
+	scan->found = -1;
 	return current;
 }
 
@@ -110,14 +141,14 @@ NOTFOUND:
  * Seek the node for the given key either for setting or getting a value
  * If the key is not found it returns the closest matching node.
  */
-static Node *_tree_seek(Node *tree, ScanStatus *status)
+static Node *_tree_seek(Node *tree, Scan *scan)
 {
 	Node *current = tree;
 
-	while(!status->found) {
-		current = _tree_seek_step(current, status);
+	while(!scan->found) {
+		current = _tree_seek_step(current, scan);
 	}
-	trace("SEEK-STATUS: %i", status->found);
+	trace("SEEK-STATUS: %i", scan->found);
 	return current;
 }
 
@@ -135,16 +166,16 @@ void scan_metadata_push(ScanMetadata *meta, Node *node)
 /**
  * Same as seek, but return tree pointers necessary for removal
  */
-static Node *_seek_metadata(Node *tree, ScanStatus *status, ScanMetadata *meta)
+static Node *_seek_metadata(Node *tree, Scan *scan, ScanMetadata *meta)
 {
 	Node *current = tree;
 
 	scan_metadata_init(meta, tree);
 
-	while(!status->found) {
+	while(!scan->found) {
 		scan_metadata_push(meta, current);
 
-		current = _tree_seek_step(current, status);
+		current = _tree_seek_step(current, scan);
 	}
 	return current;
 }
@@ -152,21 +183,21 @@ static Node *_seek_metadata(Node *tree, ScanStatus *status, ScanMetadata *meta)
 /**
  * Scan the tree recursively for the next datanode.
  */
-static Node *_tree_scan(Node *node, ScanStatus *status, ScanStatus *post)
+static Node *_tree_scan(Node *node, Scan *scan, Scan *post)
 {
-	unsigned char *key = status->key;
+	unsigned char *key = scan->key;
 	Node *result = NULL;
 
 	if (node->data) {
-		if(status->type == S_DEFAULT) {
-			// Only return data when status is default
-			post->size = status->index;
+		if(scan->type == S_DEFAULT) {
+			// Only return data when scan is default
+			post->size = scan->index;
 			result = node;
 			goto DATA_FOUND;
-		} else if(status->index >= status->size) {
+		} else if(scan->index >= scan->size) {
 			// In FETCHNEXT mode we wait until the whole key was
 			// matched, only then we scan for the next data node
-			status->type = S_DEFAULT;
+			scan->type = S_DEFAULT;
 		}
 	}
 	
@@ -175,18 +206,18 @@ static Node *_tree_scan(Node *node, ScanStatus *status, ScanStatus *post)
 		Node *current = NULL;
 		unsigned int i = 0;
 
-		if (status->type == S_FETCHNEXT && status->size > 0) {
-			Node *next = bsearch_get(node, key[status->index]);
+		if (scan->type == S_FETCHNEXT && scan->size > 0) {
+			Node *next = bsearch_get(node, key[scan->index]);
 			i = (next-children);
 		} 
 
 		for(; i < node->child_count && result == NULL; i++) {
 			current = children+i;
 
-			unsigned int offset = status->index;
-			status->index += 1 + current->size;
+			unsigned int offset = scan->index;
+			scan->index += 1 + current->size;
 
-			post->key = c_renew(post->key, unsigned char, status->index);
+			post->key = c_renew(post->key, unsigned char, scan->index);
 
 			post->key[offset] = current->key;
 
@@ -198,8 +229,8 @@ static Node *_tree_scan(Node *node, ScanStatus *status, ScanStatus *post)
 				);
 			}
 
-			result = _tree_scan(current, status, post);
-			status->index -= 1 + current->size;
+			result = _tree_scan(current, scan, post);
+			scan->index -= 1 + current->size;
 
 			if(result != NULL)
 				break;
@@ -243,17 +274,17 @@ static Node *_build_node(Node *node, unsigned char *string, unsigned short lengt
  * create split array node in two using a tree node
  * TODO: Verify tests manage all cases.
  */
-static Node * _split_node_array(Node *node, ScanStatus *status)
+static Node * _split_node_array(Node *node, Scan *scan)
 {
-	unsigned subindex = status->subindex;
+	unsigned subindex = scan->subindex;
 
 	Node *data_node;
 	Node old = *node;
 
 	unsigned char *old_suffix = old.array+subindex;
-	unsigned char *new_suffix = status->key + status->index;
+	unsigned char *new_suffix = scan->key + scan->index;
 	unsigned int old_suffix_size = old.size - subindex;
-	unsigned int new_suffix_size = status->size - status->index;
+	unsigned int new_suffix_size = scan->size - scan->index;
 
 	if (new_suffix_size == 0) {
                 //No new suffix, we add data to current node
@@ -327,7 +358,7 @@ static void _compact_nodes(Node *node)
 /**
  * Remove dangling node and compact tree
  */
-static void _pluck_node(Node *node, ScanStatus *status, ScanMetadata *meta)
+static void _pluck_node(Node *node, Scan *scan, ScanMetadata *meta)
 {
 	trace_node("CLEAN", node);
 	Node *previous = meta->previous;
@@ -355,38 +386,19 @@ static Node *_build_data_node(Node *tree, unsigned char *string, unsigned short 
 {
 	Node *data_node;
 
-	ScanStatus status;
-	_scan_status_init(&status, string, length);
+	Scan scan;
+	_scan_init(&scan, string, length);
 
-	Node * node = _tree_seek(tree, &status);
+	Node * node = _tree_seek(tree, &scan);
 
-	if (status.found == 1) {
+	if (scan.found == 1) {
 		data_node = node;
-	} else if (node->array && status.subindex < node->size) {
-		data_node = _split_node_array(node, &status);
+	} else if (node->array && scan.subindex < node->size) {
+		data_node = _split_node_array(node, &scan);
 	} else {
-		data_node = _build_node(node, string+status.index, length-status.index);
+		data_node = _build_node(node, string+scan.index, length-scan.index);
 	}
 	return data_node;
-}
-
-void init_status(ScanStatus *status, ScanStatus *poststatus, unsigned char *string, unsigned short length)
-{
-	status->index = 0;
-	status->subindex = 0;
-	status->found = 0;
-	status->key = string;
-	status->size = length;
-	if(string != NULL)
-		status->type = S_FETCHNEXT;
-	else
-		status->type = S_DEFAULT;
-
-	poststatus->key = c_new(unsigned char, 1);
-	poststatus->size = 0;
-	poststatus->index = 0;
-	poststatus->subindex = 0;
-	poststatus->found = 0;
 }
 
 void radix_tree_init(Node *tree)
@@ -399,12 +411,12 @@ void *radix_tree_get(Node *tree, unsigned char *string, unsigned short length)
 {
 	trace("RADIXTREE-GET(%p)", tree);
 
-	ScanStatus status;
-	_scan_status_init(&status, string, length);
+	Scan scan;
+	_scan_init(&scan, string, length);
 
-	Node * node = _tree_seek(tree, &status);
+	Node * node = _tree_seek(tree, &scan);
 
-	if(status.found == 1) {
+	if(scan.found == 1) {
 		trace("FOUND %p", node);
 		return node->data;
 	} else {
@@ -425,12 +437,12 @@ int radix_tree_contains(Node *tree, unsigned char *string, unsigned short length
 {
 	trace("RADIXTREE-CONTAINS(%p)", tree);
 
-	ScanStatus status;
-	_scan_status_init(&status, string, length);
+	Scan scan;
+	_scan_init(&scan, string, length);
 
-	_tree_seek(tree, &status);
+	_tree_seek(tree, &scan);
 
-	if(status.found == 1) {
+	if(scan.found == 1) {
 		trace("FOUND");
 		return 1;
 	} else {
@@ -456,33 +468,33 @@ void radix_tree_remove(Node *tree, unsigned char *string, unsigned short length)
 {
 	trace("RADIXTREE-REMOVE(%p)", tree);
 
-	ScanStatus status;
-	_scan_status_init(&status, string, length);
+	Scan scan;
+	_scan_init(&scan, string, length);
 
 	ScanMetadata meta;
 
-	Node * node = _seek_metadata(tree, &status, &meta);
+	Node * node = _seek_metadata(tree, &scan, &meta);
 
 	trace_node("ROOT", tree);
 	trace_node("NODE", node);
-	trace("STATUS %i, %i, %p", status.index, length, node->data);
-	if(status.found == 1 && node->data) {
+	trace("STATUS %i, %i, %p", scan.index, length, node->data);
+	if(scan.found == 1 && node->data) {
 		node->data = NULL;
-		_pluck_node(node, &status, &meta);
+		_pluck_node(node, &scan, &meta);
 	}
 }
 
 void **radix_tree_get_next(Node *tree, unsigned char *string, unsigned short length)
 {
 	Node *res;
-	ScanStatus status;
-	ScanStatus poststatus;
+	Scan scan;
+	Scan post_scan;
 
-	init_status(&status, &poststatus, string, length);
+	_scan_init_double(&scan, &post_scan, string, length);
 
-	res = _tree_scan(tree, &status, &poststatus);
+	res = _tree_scan(tree, &scan, &post_scan);
 
-	c_delete(poststatus.key);
+	c_delete(post_scan.key);
 
 	if(res != NULL) {
 		return res->data;
@@ -525,19 +537,19 @@ void radix_tree_iterator_dispose(Iterator *iterator)
 void **radix_tree_iterator_next(Iterator *iterator)
 {
 	Node *res;
-	ScanStatus status;
-	ScanStatus poststatus;
+	Scan scan;
+	Scan post_scan;
 
-	init_status(&status, &poststatus, iterator->key, iterator->size);
+	_scan_init_double(&scan, &post_scan, iterator->key, iterator->size);
 
-	res = _tree_scan(iterator->root, &status, &poststatus);
+	res = _tree_scan(iterator->root, &scan, &post_scan);
 
 	if(iterator->key) {
 		c_delete(iterator->key);
 	}
 
-	iterator->key = poststatus.key;
-	iterator->size = poststatus.size;
+	iterator->key = post_scan.key;
+	iterator->size = post_scan.size;
 
 	if(res != NULL) {
 		return res->data;

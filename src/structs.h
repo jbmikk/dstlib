@@ -17,13 +17,4 @@ typedef struct _Iterator {
 	void *data;
 } Iterator;
 
-typedef struct _ScanStatus {
-	unsigned char *key;
-	unsigned short size;
-	unsigned int index;
-	unsigned int subindex;
-	unsigned int type;
-	unsigned int found;
-} ScanStatus;
-
 #endif // CSTRUCT
