@@ -5,8 +5,8 @@ typedef struct _Node {
 	struct _Node *child;
 	unsigned char child_count;
 	unsigned char key;
-	unsigned char *array;
 	unsigned short size;
+	unsigned char *array;
 	void *data;
 } Node;
 
