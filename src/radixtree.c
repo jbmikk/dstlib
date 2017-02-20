@@ -225,6 +225,8 @@ static Node *_build_node(Node *node, unsigned char *string, unsigned short lengt
 
 		_node_init(node, 0, NULL, NULL);
 
+		//TODO: If key length <= sizeof(ptr) don't malloc,
+		// Just turn pointer into a union and store the array inline.
 		if(length > 1) {
 			unsigned char *keys = c_malloc_n(length-1);
 

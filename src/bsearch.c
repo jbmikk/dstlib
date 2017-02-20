@@ -20,6 +20,7 @@ Node *bsearch_get(Node *parent, unsigned char key)
 	int right = parent->child_count-1;
 
 	//TODO: test binary search with more than 128 elements
+	//TODO: At most there will always be 8 iterations, possible to unroll?
 	while(left <= right) {
 		unsigned int i = left+((right - left)>>1);
 		if(children[i].key < key) {
