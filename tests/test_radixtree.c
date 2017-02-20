@@ -7,6 +7,8 @@
 #include "test.h"
 #include "arrays.h"
 
+#define nzs(S) ((unsigned char*)S), (strlen(S))
+
 typedef struct {
 	Node tree;
 	char *str1;
