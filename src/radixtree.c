@@ -85,9 +85,10 @@ static void _node_set_array(Node *node, unsigned short size, unsigned char *arra
 }
 
 /**
- * Seek next node in the tree matching the current scan 
+ * Seek the node for the given key either for setting or getting a value
+ * If the key is not found it returns the closest matching node.
  */
-static Node *_tree_seek_step(Node *tree, Scan *scan)
+static Node *_tree_seek(Node *tree, Scan *scan)
 {
 	Node *current = tree;
 
@@ -97,7 +98,8 @@ static Node *_tree_seek_step(Node *tree, Scan *scan)
 		Node *next = bsearch_get(current, key[scan->index]);
 		//Break if there is no node to move to
 		if(next == NULL) {
-			goto NOTFOUND;
+			scan->found = -1;
+			return current;
 		}
 		current = next;
 		scan->index++;
@@ -115,7 +117,8 @@ static Node *_tree_seek_step(Node *tree, Scan *scan)
 				if(array[j] != key[i]) {
 					scan->subindex = j;
 					scan->index = i;
-					goto NOTFOUND;
+					scan->found = -1;
+					return current;
 				}
 			}
 			scan->subindex = j;
@@ -123,38 +126,25 @@ static Node *_tree_seek_step(Node *tree, Scan *scan)
 
 			//Break if it didn't match the whole array
 			if(j < array_size) {
-				goto NOTFOUND;
+				scan->found = -1;
+				return current;
 			}
 		}
 
 	} else {
 		trace_node("SEEK-LEAF", current);
 		//Leaf node
-		goto NOTFOUND;
+		scan->found = -1;
+		return current;
 	}
 
 	scan->previous = tree;
-	scan->found = scan->index == scan->size;
 
-	return current;
-NOTFOUND:
-	scan->found = -1;
-	return current;
-}
-
-/**
- * Seek the node for the given key either for setting or getting a value
- * If the key is not found it returns the closest matching node.
- */
-static Node *_tree_seek(Node *tree, Scan *scan)
-{
-	Node *current = tree;
-
-	while(!scan->found) {
-		current = _tree_seek_step(current, scan);
+	if(scan->index == scan->size) {
+		scan->found = 1;
+		return current;
 	}
-	trace("SEEK-STATUS: %i", scan->found);
-	return current;
+	return _tree_seek(current, scan);
 }
 
 /**
