@@ -33,7 +33,7 @@ typedef struct _Scan {
 	unsigned short size;
 	unsigned int index;
 	unsigned int subindex;
-	unsigned int type;
+	unsigned int mode;
 	unsigned int found;
 } Scan;
 
@@ -45,7 +45,7 @@ static void _scan_init(Scan *scan, unsigned char *key, unsigned short size)
 	scan->found = 0;
 	scan->key = key;
 	scan->size = size;
-	scan->type = S_DEFAULT;
+	scan->mode = S_DEFAULT;
 }
 
 void _scan_init_double(Scan *scan, Scan *post_scan, unsigned char *string, unsigned short length)
@@ -56,9 +56,9 @@ void _scan_init_double(Scan *scan, Scan *post_scan, unsigned char *string, unsig
 	scan->key = string;
 	scan->size = length;
 	if(string != NULL)
-		scan->type = S_FETCHNEXT;
+		scan->mode = S_FETCHNEXT;
 	else
-		scan->type = S_DEFAULT;
+		scan->mode = S_DEFAULT;
 
 	post_scan->key = c_new(unsigned char, 1);
 	post_scan->size = 0;
@@ -189,7 +189,7 @@ static Node *_tree_scan(Node *node, Scan *scan, Scan *post)
 	Node *result = NULL;
 
 	if (node->data) {
-		if(scan->type == S_DEFAULT) {
+		if(scan->mode == S_DEFAULT) {
 			// Only return data when scan is default
 			post->size = scan->index;
 			result = node;
@@ -197,7 +197,7 @@ static Node *_tree_scan(Node *node, Scan *scan, Scan *post)
 		} else if(scan->index >= scan->size) {
 			// In FETCHNEXT mode we wait until the whole key was
 			// matched, only then we scan for the next data node
-			scan->type = S_DEFAULT;
+			scan->mode = S_DEFAULT;
 		}
 	}
 	
@@ -206,7 +206,7 @@ static Node *_tree_scan(Node *node, Scan *scan, Scan *post)
 		Node *current = NULL;
 		unsigned int i = 0;
 
-		if (scan->type == S_FETCHNEXT && scan->size > 0) {
+		if (scan->mode == S_FETCHNEXT && scan->size > 0) {
 			Node *next = bsearch_get(node, key[scan->index]);
 			i = (next-children);
 		} 
