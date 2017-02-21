@@ -1,5 +1,4 @@
 #include "radixtree.h"
-#include "radixtree_p.h"
 
 #include <stddef.h>
 #include <stdio.h>
@@ -35,10 +34,12 @@ typedef struct _Scan {
 	unsigned int subindex;
 	unsigned int mode;
 	unsigned int found;
+	Node *root;
+	Node *previous;
 } Scan;
 
 
-static void _scan_init(Scan *scan, unsigned char *key, unsigned short size)
+static void _scan_init(Scan *scan, unsigned char *key, unsigned short size, Node *root)
 {
 	scan->index = 0;
 	scan->subindex = 0;
@@ -46,6 +47,8 @@ static void _scan_init(Scan *scan, unsigned char *key, unsigned short size)
 	scan->key = key;
 	scan->size = size;
 	scan->mode = S_DEFAULT;
+	scan->previous = NULL;
+	scan->root = root;
 }
 
 void _scan_init_double(Scan *scan, Scan *post_scan, unsigned char *string, unsigned short length)
@@ -130,7 +133,9 @@ static Node *_tree_seek_step(Node *tree, Scan *scan)
 		goto NOTFOUND;
 	}
 
+	scan->previous = tree;
 	scan->found = scan->index == scan->size;
+
 	return current;
 NOTFOUND:
 	scan->found = -1;
@@ -149,34 +154,6 @@ static Node *_tree_seek(Node *tree, Scan *scan)
 		current = _tree_seek_step(current, scan);
 	}
 	trace("SEEK-STATUS: %i", scan->found);
-	return current;
-}
-
-void scan_metadata_init(ScanMetadata *meta, Node *root) 
-{
-	meta->root = root;
-	meta->previous = NULL;
-}
-
-void scan_metadata_push(ScanMetadata *meta, Node *node) 
-{
-	meta->previous = node;
-}
-
-/**
- * Same as seek, but return tree pointers necessary for removal
- */
-static Node *_seek_metadata(Node *tree, Scan *scan, ScanMetadata *meta)
-{
-	Node *current = tree;
-
-	scan_metadata_init(meta, tree);
-
-	while(!scan->found) {
-		scan_metadata_push(meta, current);
-
-		current = _tree_seek_step(current, scan);
-	}
 	return current;
 }
 
@@ -358,10 +335,10 @@ static void _compact_nodes(Node *node)
 /**
  * Remove dangling node and compact tree
  */
-static void _pluck_node(Node *node, Scan *scan, ScanMetadata *meta)
+static void _pluck_node(Node *node, Scan *scan)
 {
 	trace_node("CLEAN", node);
-	Node *previous = meta->previous;
+	Node *previous = scan->previous;
 
 	if(node->child_count == 0 && previous) {
 		trace_node("PREVIOUS", previous);
@@ -373,7 +350,7 @@ static void _pluck_node(Node *node, Scan *scan, ScanMetadata *meta)
 
 		bsearch_delete(previous, node->key);
 
-		if(previous != meta->root) {
+		if(previous != scan->root) {
 			_compact_nodes(previous);
 		}
 
@@ -387,7 +364,7 @@ static Node *_build_data_node(Node *tree, unsigned char *string, unsigned short 
 	Node *data_node;
 
 	Scan scan;
-	_scan_init(&scan, string, length);
+	_scan_init(&scan, string, length, tree);
 
 	Node * node = _tree_seek(tree, &scan);
 
@@ -412,7 +389,7 @@ void *radix_tree_get(Node *tree, unsigned char *string, unsigned short length)
 	trace("RADIXTREE-GET(%p)", tree);
 
 	Scan scan;
-	_scan_init(&scan, string, length);
+	_scan_init(&scan, string, length, tree);
 
 	Node * node = _tree_seek(tree, &scan);
 
@@ -438,7 +415,7 @@ int radix_tree_contains(Node *tree, unsigned char *string, unsigned short length
 	trace("RADIXTREE-CONTAINS(%p)", tree);
 
 	Scan scan;
-	_scan_init(&scan, string, length);
+	_scan_init(&scan, string, length, tree);
 
 	_tree_seek(tree, &scan);
 
@@ -469,18 +446,16 @@ void radix_tree_remove(Node *tree, unsigned char *string, unsigned short length)
 	trace("RADIXTREE-REMOVE(%p)", tree);
 
 	Scan scan;
-	_scan_init(&scan, string, length);
+	_scan_init(&scan, string, length, tree);
 
-	ScanMetadata meta;
-
-	Node * node = _seek_metadata(tree, &scan, &meta);
+	Node * node = _tree_seek(tree, &scan);
 
 	trace_node("ROOT", tree);
 	trace_node("NODE", node);
 	trace("STATUS %i, %i, %p", scan.index, length, node->data);
 	if(scan.found == 1 && node->data) {
 		node->data = NULL;
-		_pluck_node(node, &scan, &meta);
+		_pluck_node(node, &scan);
 	}
 }
 

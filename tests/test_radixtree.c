@@ -3,7 +3,6 @@
 #include <string.h>
 
 #include "radixtree.h"
-#include "radixtree_p.h"
 #include "test.h"
 #include "arrays.h"
 
