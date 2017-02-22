@@ -160,7 +160,7 @@ static Node *_tree_scan(Node *node, Scan *scan, Scan *post)
 			// Only return data when scan is default
 			post->size = scan->index;
 			result = node;
-			goto DATA_FOUND;
+			goto RETURN_RESULT;
 		} else if(scan->index >= scan->size) {
 			// In FETCHNEXT mode we wait until the whole key was
 			// matched, only then we scan for the next data node
@@ -176,6 +176,10 @@ static Node *_tree_scan(Node *node, Scan *scan, Scan *post)
 
 		if (scan->mode == S_FETCHNEXT && scan->size > 0) {
 			Node *next = bsearch_get_gte(node, key[scan->index]);
+			if(!next) {
+				goto RETURN_RESULT;
+			}
+
 			if(next->key == key[scan->index]) {
 				//Exact child key match
 				unsigned int j = 0;
@@ -225,7 +229,7 @@ static Node *_tree_scan(Node *node, Scan *scan, Scan *post)
 				break;
 		}
 	} 
-DATA_FOUND:
+RETURN_RESULT:
 	return result;
 }
 

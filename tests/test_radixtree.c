@@ -412,7 +412,7 @@ void test_radix_tree__get_next(){
 void test_radix_tree__get_next_full_key_scan(){
 	char *in1="IN1", *in2="IN2", *in3="IN3",
 	     *in4="IN4", *in5="IN5", *in6="IN6";
-	char *out1, *out2, *out3, *out4, *out5, *out6, *out7, *out8;
+	char *out1, *out2, *out3, *out4, *out5, *out6, *out7, *out8, *out9;
 	Node *tree = &fixture.tree;
 
 	radix_tree_set(tree, nzs("accca"), in1);
@@ -430,6 +430,7 @@ void test_radix_tree__get_next_full_key_scan(){
 	out6 = (char *)radix_tree_get_next(tree, nzs("accccb"));
 	out7 = (char *)radix_tree_get_next(tree, nzs("accccbd"));
 	out8 = (char *)radix_tree_get_next(tree, nzs("accccd"));
+	out9 = (char *)radix_tree_get_next(tree, nzs("accccf"));
 
 	t_assert(out1 == NULL);
 	t_assert(out2 != NULL);
@@ -446,6 +447,7 @@ void test_radix_tree__get_next_full_key_scan(){
 	t_assert(!strcmp(out7, "IN6"));
 	t_assert(out8 != NULL);
 	t_assert(!strcmp(out8, "IN6"));
+	t_assert(out9 == NULL);
 }
 
 void test_radix_tree__set_and_get_int(){
