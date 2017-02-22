@@ -35,6 +35,32 @@ Node *bsearch_get(Node *parent, unsigned char key)
 	return NULL;
 }
 
+
+/**
+ * Get closest greater than or equal child
+ */
+Node *bsearch_get_gte(Node *parent, unsigned char key)
+{
+	Node *children = parent->child;
+	Node *next = NULL;
+	int left = 0;
+	int right = parent->child_count-1;
+
+	while(left <= right) {
+		unsigned int i = left+((right - left)>>1);
+		if(children[i].key < key) {
+			left = i+1;
+		} else if(children[i].key > key) {
+			next = &children[i];
+			right = i-1;
+		} else {
+			next = &children[i];
+			break;
+		}
+	}
+	return next;
+}
+
 Node *bsearch_insert(Node *parent, unsigned char key)
 {
 	Node *new_children;
