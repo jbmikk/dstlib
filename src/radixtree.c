@@ -195,51 +195,50 @@ static Node *_tree_scan(Node *node, Scan *scan, Scan *post)
 	}
 	
 	//TODO: Should extend logic from tree_seek?
-	if (node->child) {
-		unsigned int i = 0;
+	unsigned int i = 0;
 
-		if (scan->mode == S_FETCHNEXT && scan->size > 0) {
-			Node *next = bsearch_get_gte(node, key[scan->index]);
-			if(!next) {
-				goto RETURN_RESULT;
+	if (scan->mode == S_FETCHNEXT && scan->size > 0) {
+		Node *next = bsearch_get_gte(node, key[scan->index]);
+		if(!next) {
+			goto RETURN_RESULT;
+		}
+
+		if(next->key == key[scan->index]) {
+			//Exact child key match
+			unsigned int j = 0;
+			unsigned int k = scan->index+1; 
+			unsigned int child_size = next->size;
+			for (; j < child_size && k < scan->size; j++, k++) {
+				//Next if a character does not match
+				if(key[k] > next->array[j]) {
+					next++;
+					break;
+				} else if (key[k] < next->array[j]) {
+					break;
+				}
 			}
-
-			if(next->key == key[scan->index]) {
-				//Exact child key match
-				unsigned int j = 0;
-				unsigned int k = scan->index+1; 
-				unsigned int child_size = next->size;
-				for (; j < child_size && k < scan->size; j++, k++) {
-					//Next if a character does not match
-					if(key[k] > next->array[j]) {
-						next++;
-						break;
-					} else if (key[k] < next->array[j]) {
-						break;
-					}
-				}
-				if(j < child_size) {
-					scan->mode = S_DEFAULT;
-				}
-			} else {
-				//The closest child already has a greater key
+			if(j < child_size) {
 				scan->mode = S_DEFAULT;
 			}
-			i = (next - node->child);
-		} 
-
-		for(; i < node->child_count; i++) {
-			Node *current = node->child + i;
-
-			_push_node_key(scan, post, current);
-			result = _tree_scan(current, scan, post);
-
-			if(result != NULL)
-				break;
-
-			_pop_node_key(scan, post, current);
+		} else {
+			//The closest child already has a greater key
+			scan->mode = S_DEFAULT;
 		}
+		i = (next - node->child);
 	} 
+
+	for(; i < node->child_count; i++) {
+		Node *current = node->child + i;
+
+		_push_node_key(scan, post, current);
+		result = _tree_scan(current, scan, post);
+
+		if(result != NULL)
+			break;
+
+		_pop_node_key(scan, post, current);
+	}
+
 RETURN_RESULT:
 	return result;
 }
