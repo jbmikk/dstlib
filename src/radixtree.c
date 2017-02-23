@@ -30,6 +30,8 @@
 typedef struct _Scan {
 	unsigned char *key;
 	unsigned short size;
+	unsigned char *pkey;
+	unsigned short psize;
 	unsigned int index;
 	unsigned int subindex;
 	unsigned int mode;
@@ -39,37 +41,19 @@ typedef struct _Scan {
 } Scan;
 
 
-static void _scan_init(Scan *scan, unsigned char *key, unsigned short size, Node *root)
+static void _scan_init(Scan *scan, unsigned char *key, unsigned short size, Node *root, unsigned int mode)
 {
 	scan->index = 0;
 	scan->subindex = 0;
 	scan->found = 0;
 	scan->key = key;
 	scan->size = size;
-	scan->mode = S_DEFAULT;
+	scan->pkey = NULL;
+	scan->psize = 0;
+	scan->mode = mode;
 	scan->previous = NULL;
 	scan->root = root;
 }
-
-void _scan_init_double(Scan *scan, Scan *post_scan, unsigned char *string, unsigned short length)
-{
-	scan->index = 0;
-	scan->subindex = 0;
-	scan->found = 0;
-	scan->key = string;
-	scan->size = length;
-	if(string != NULL)
-		scan->mode = S_FETCHNEXT;
-	else
-		scan->mode = S_DEFAULT;
-
-	post_scan->key = c_new(unsigned char, 1);
-	post_scan->size = 0;
-	post_scan->index = 0;
-	post_scan->subindex = 0;
-	post_scan->found = 0;
-}
-
 
 static void _node_init(Node *node, unsigned char count, Node *child, void *data)
 {
@@ -145,31 +129,31 @@ static Node *_tree_seek(Node *tree, Scan *scan)
 	return _tree_seek(current, scan);
 }
 
-static void _push_node_key(Scan *scan, Scan *post, Node *node)
+static void _push_node_key(Scan *scan, Node *node)
 {
 	unsigned int offset = scan->index;
 	scan->index += 1 + node->size;
-	post->size = scan->index;
+	scan->psize = scan->index;
 
-	post->key = c_renew(post->key, unsigned char, post->size);
+	scan->pkey = c_renew(scan->pkey, unsigned char, scan->psize);
 
-	post->key[offset] = node->key;
+	scan->pkey[offset] = node->key;
 
 	if (node->size) {
-		memcpy(post->key + offset + 1, node->array, node->size);
+		memcpy(scan->pkey + offset + 1, node->array, node->size);
 	}
 }
 
-static void _pop_node_key(Scan *scan, Scan *post, Node *node)
+static void _pop_node_key(Scan *scan, Node *node)
 {
 	scan->index -= 1 + node->size;
-	post->size = scan->index;
+	scan->psize = scan->index;
 }
 
 /**
  * Scan the tree recursively for the next datanode.
  */
-static Node *_tree_scan(Node *node, Scan *scan, Scan *post)
+static Node *_tree_scan(Node *node, Scan *scan)
 {
 	unsigned char *key = scan->key;
 	Node *result = NULL;
@@ -222,13 +206,13 @@ static Node *_tree_scan(Node *node, Scan *scan, Scan *post)
 	for(; i < node->child_count; i++) {
 		Node *current = node->child + i;
 
-		_push_node_key(scan, post, current);
-		result = _tree_scan(current, scan, post);
+		_push_node_key(scan, current);
+		result = _tree_scan(current, scan);
 
 		if(result != NULL)
 			break;
 
-		_pop_node_key(scan, post, current);
+		_pop_node_key(scan, current);
 	}
 
 RETURN_RESULT:
@@ -370,7 +354,7 @@ static Node *_build_data_node(Node *tree, unsigned char *string, unsigned short 
 	Node *data_node;
 
 	Scan scan;
-	_scan_init(&scan, string, length, tree);
+	_scan_init(&scan, string, length, tree, S_DEFAULT);
 
 	Node * node = _tree_seek(tree, &scan);
 
@@ -395,7 +379,7 @@ void *radix_tree_get(Node *tree, unsigned char *string, unsigned short length)
 	trace("RADIXTREE-GET(%p)", tree);
 
 	Scan scan;
-	_scan_init(&scan, string, length, tree);
+	_scan_init(&scan, string, length, tree, S_DEFAULT);
 
 	Node * node = _tree_seek(tree, &scan);
 
@@ -421,7 +405,7 @@ int radix_tree_contains(Node *tree, unsigned char *string, unsigned short length
 	trace("RADIXTREE-CONTAINS(%p)", tree);
 
 	Scan scan;
-	_scan_init(&scan, string, length, tree);
+	_scan_init(&scan, string, length, tree, S_DEFAULT);
 
 	_tree_seek(tree, &scan);
 
@@ -452,7 +436,7 @@ void radix_tree_remove(Node *tree, unsigned char *string, unsigned short length)
 	trace("RADIXTREE-REMOVE(%p)", tree);
 
 	Scan scan;
-	_scan_init(&scan, string, length, tree);
+	_scan_init(&scan, string, length, tree, S_DEFAULT);
 
 	Node * node = _tree_seek(tree, &scan);
 
@@ -469,13 +453,17 @@ void **radix_tree_get_next(Node *tree, unsigned char *string, unsigned short len
 {
 	Node *res;
 	Scan scan;
-	Scan post_scan;
 
-	_scan_init_double(&scan, &post_scan, string, length);
+	_scan_init(
+		&scan,
+		string,
+		length,
+		tree,
+		string? S_FETCHNEXT: S_DEFAULT
+	);
+	res = _tree_scan(tree, &scan);
 
-	res = _tree_scan(tree, &scan, &post_scan);
-
-	c_delete(post_scan.key);
+	c_delete(scan.pkey);
 
 	if(res != NULL) {
 		return res->data;
@@ -519,18 +507,23 @@ void **radix_tree_iterator_next(Iterator *iterator)
 {
 	Node *res;
 	Scan scan;
-	Scan post_scan;
 
-	_scan_init_double(&scan, &post_scan, iterator->key, iterator->size);
+	_scan_init(
+		&scan,
+		iterator->key,
+		iterator->size,
+		NULL,
+		iterator->key? S_FETCHNEXT: S_DEFAULT
+	);
 
-	res = _tree_scan(iterator->root, &scan, &post_scan);
+	res = _tree_scan(iterator->root, &scan);
 
 	if(iterator->key) {
 		c_delete(iterator->key);
 	}
 
-	iterator->key = post_scan.key;
-	iterator->size = post_scan.size;
+	iterator->key = scan.pkey;
+	iterator->size = scan.psize;
 
 	if(res != NULL) {
 		return res->data;
