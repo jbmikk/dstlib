@@ -254,10 +254,7 @@ static Node *_build_node(Node *node, unsigned char *string, unsigned short lengt
 		// Just turn pointer into a union and store the array inline.
 		if(length > 1) {
 			_node_set_array(node, length-1);
-
-			for(unsigned int i = 0; i < length-1; i++){
-				node->array[i] = string[i+1];
-			}
+			memcpy(node->array, string+1, length-1);
 		}
 		trace_node("BUILD-NODE", node);
 	} else {
@@ -322,15 +319,13 @@ static void _compact_nodes(Node *node)
 
 	//Join arrays
 	int joined_size = node->size + 1 + child->size;
-	int i = node->size;
+	int end = node->size;
 
 	_node_set_array(node, joined_size);
 
-	node->array[i++] = child->key;
+	node->array[end++] = child->key;
 
-	for(int j = 0; j < child->size; j++) {
-		node->array[i+j] = child->array[j];
-	}
+	memcpy(node->array+end, child->array, child->size);
 
 	//Replace child
 	if(child->array) {
