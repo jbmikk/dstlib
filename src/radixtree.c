@@ -153,6 +153,27 @@ static Node *_tree_seek(Node *tree, Scan *scan)
 	return _tree_seek(current, scan);
 }
 
+static void _push_node_key(Scan *scan, Scan *post, Node *node)
+{
+	unsigned int offset = scan->index;
+	scan->index += 1 + node->size;
+	post->size = scan->index;
+
+	post->key = c_renew(post->key, unsigned char, post->size);
+
+	post->key[offset] = node->key;
+
+	if (node->size) {
+		memcpy(post->key + offset + 1, node->array, node->size);
+	}
+}
+
+static void _pop_node_key(Scan *scan, Scan *post, Node *node)
+{
+	scan->index -= 1 + node->size;
+	post->size = scan->index;
+}
+
 /**
  * Scan the tree recursively for the next datanode.
  */
@@ -164,7 +185,6 @@ static Node *_tree_scan(Node *node, Scan *scan, Scan *post)
 	if (node->data) {
 		if(scan->mode == S_DEFAULT) {
 			// Only return data when scan is default
-			post->size = scan->index;
 			result = node;
 			goto RETURN_RESULT;
 		} else if(scan->index >= scan->size) {
@@ -177,7 +197,6 @@ static Node *_tree_scan(Node *node, Scan *scan, Scan *post)
 	//TODO: Should extend logic from tree_seek?
 	if (node->child) {
 		Node *children = node->child;
-		Node *current = NULL;
 		unsigned int i = 0;
 
 		if (scan->mode == S_FETCHNEXT && scan->size > 0) {
@@ -210,29 +229,16 @@ static Node *_tree_scan(Node *node, Scan *scan, Scan *post)
 			i = (next-children);
 		} 
 
-		for(; i < node->child_count && result == NULL; i++) {
-			current = children+i;
+		for(; i < node->child_count; i++) {
+			Node *current = children+i;
 
-			unsigned int offset = scan->index;
-			scan->index += 1 + current->size;
-
-			post->key = c_renew(post->key, unsigned char, scan->index);
-
-			post->key[offset] = current->key;
-
-			if (current->size) {
-				memcpy(
-					post->key + offset + 1,
-					current->array,
-					current->size
-				);
-			}
-
+			_push_node_key(scan, post, current);
 			result = _tree_scan(current, scan, post);
-			scan->index -= 1 + current->size;
 
 			if(result != NULL)
 				break;
+
+			_pop_node_key(scan, post, current);
 		}
 	} 
 RETURN_RESULT:
