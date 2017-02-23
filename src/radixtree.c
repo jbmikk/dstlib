@@ -98,50 +98,42 @@ static Node *_tree_seek(Node *tree, Scan *scan)
 {
 	Node *current = tree;
 
-	if (current->child) {
-		//Move to the next node within the tree
-		unsigned char *key = scan->key;
-		Node *next = bsearch_get(current, key[scan->index]);
-		//Break if there is no node to move to
-		if(next == NULL) {
-			scan->found = -1;
-			return current;
-		}
-		current = next;
-		scan->index++;
+	//Move to the next node within the tree
+	unsigned char *key = scan->key;
+	Node *next = bsearch_get(current, key[scan->index]);
+	//Break if there is no node to move to
+	if(next == NULL) {
+		scan->found = -1;
+		return current;
+	}
+	current = next;
+	scan->index++;
 
-		if (current->size > 0) {
-			//Match array as far a possible
-			unsigned char *array = current->array;
-			int array_size = current->size;
-			int j;
-			unsigned int i = scan->index;
-			trace_node("SEEK-ARRAY", current);
-			for (j = 0; j < array_size && i < scan->size; j++, i++) {
-				//Break if a character does not match
-				trace("[%c-%c]", array[j], key[i]);
-				if(array[j] != key[i]) {
-					scan->subindex = j;
-					scan->index = i;
-					scan->found = -1;
-					return current;
-				}
-			}
-			scan->subindex = j;
-			scan->index = i;
-
-			//Break if it didn't match the whole array
-			if(j < array_size) {
+	if (current->size > 0) {
+		//Match array as far a possible
+		unsigned char *array = current->array;
+		int array_size = current->size;
+		int j;
+		unsigned int i = scan->index;
+		trace_node("SEEK-ARRAY", current);
+		for (j = 0; j < array_size && i < scan->size; j++, i++) {
+			//Break if a character does not match
+			trace("[%c-%c]", array[j], key[i]);
+			if(array[j] != key[i]) {
+				scan->subindex = j;
+				scan->index = i;
 				scan->found = -1;
 				return current;
 			}
 		}
+		scan->subindex = j;
+		scan->index = i;
 
-	} else {
-		trace_node("SEEK-LEAF", current);
-		//Leaf node
-		scan->found = -1;
-		return current;
+		//Break if it didn't match the whole array
+		if(j < array_size) {
+			scan->found = -1;
+			return current;
+		}
 	}
 
 	scan->previous = tree;
