@@ -606,27 +606,27 @@ void *radix_tree_get_next_ple_int(Node *tree, int number)
 void *radix_tree_get_intptr(Node *tree, intptr_t ptr)
 {
 	unsigned char buffer[sizeof(intptr_t)];
-	int_to_padded_array_le(buffer, ptr);
+	intptr_to_padded_array_le(buffer, ptr);
 	return radix_tree_get(tree, buffer, sizeof(intptr_t));
 }
 
 void radix_tree_set_intptr(Node *tree, intptr_t ptr, void *data)
 {
 	unsigned char buffer[sizeof(intptr_t)];
-	int_to_padded_array_le(buffer, ptr);
+	intptr_to_padded_array_le(buffer, ptr);
 	radix_tree_set(tree, buffer, sizeof(intptr_t), data);
 }
 
 int radix_tree_contains_intptr(Node *tree, intptr_t ptr)
 {
 	unsigned char buffer[sizeof(intptr_t)];
-	int_to_padded_array_le(buffer, ptr);
+	intptr_to_padded_array_le(buffer, ptr);
 	return radix_tree_contains(tree, buffer, sizeof(intptr_t));
 }
 
 void *radix_tree_get_next_intptr(Node *tree, intptr_t ptr)
 {
 	unsigned char buffer[sizeof(intptr_t)];
-	int_to_padded_array_le(buffer, ptr);
+	intptr_to_padded_array_le(buffer, ptr);
 	return radix_tree_get_next(tree, buffer, sizeof(intptr_t));
 }

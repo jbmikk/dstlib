@@ -461,6 +461,17 @@ void test_radix_tree__set_and_get_int(){
 	t_assert(!strcmp(out1, "BLUE"));
 }
 
+void test_radix_tree__set_and_get_intptr(){
+	char *in1="BLUE", *out1, *ptr = NULL;
+	Node *tree = &fixture.tree;
+
+	radix_tree_set_intptr(tree, (intptr_t)&ptr, in1);
+	out1 = radix_tree_get_intptr(tree, (intptr_t)&ptr);
+
+	t_assert(out1 != NULL);
+	t_assert(!strcmp(out1, "BLUE"));
+}
+
 void test_radix_tree__get_next_ple(){
 	char *in1="A", *in2="B", *in3="C", *in4="D", *in5="E";
 	char /* *out1, */ *out2, *out3, *out4, *out5, *out6;
@@ -521,6 +532,7 @@ int main(int argc, char** argv) {
 	t_test(test_radix_tree__get_next);
 	t_test(test_radix_tree__get_next_full_key_scan);
 	t_test(test_radix_tree__set_and_get_int);
+	t_test(test_radix_tree__set_and_get_intptr);
 	t_test(test_radix_tree__get_next_ple);
 	return t_done();
 }

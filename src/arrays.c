@@ -53,3 +53,17 @@ void int_to_padded_array_le(unsigned char *array, int integer)
 		remainder >>= 8;
 	}
 }
+
+/*
+ * Convert int to padded array in little-endian format
+ */
+void intptr_to_padded_array_le(unsigned char *array, intptr_t integer)
+{
+	int remainder = integer;
+	int i;
+
+	for (i = sizeof(intptr_t)-1; i >= 0; i--) {
+		array[i] = remainder & 0xFF;
+		remainder >>= 8;
+	}
+}
