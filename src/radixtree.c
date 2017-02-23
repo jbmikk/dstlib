@@ -93,31 +93,29 @@ static Node *_tree_seek(Node *tree, Scan *scan)
 	current = next;
 	scan->index++;
 
-	if (current->size > 0) {
-		//Match array as far a possible
-		unsigned char *array = current->array;
-		int array_size = current->size;
-		int j;
-		unsigned int i = scan->index;
-		trace_node("SEEK-ARRAY", current);
-		for (j = 0; j < array_size && i < scan->size; j++, i++) {
-			//Break if a character does not match
-			trace("[%c-%c]", array[j], key[i]);
-			if(array[j] != key[i]) {
-				scan->subindex = j;
-				scan->index = i;
-				scan->found = -1;
-				return current;
-			}
-		}
-		scan->subindex = j;
-		scan->index = i;
-
-		//Break if it didn't match the whole array
-		if(j < array_size) {
+	//Match array as far a possible
+	unsigned char *array = current->array;
+	int array_size = current->size;
+	int j;
+	unsigned int i = scan->index;
+	trace_node("SEEK-ARRAY", current);
+	for (j = 0; j < array_size && i < scan->size; j++, i++) {
+		//Break if a character does not match
+		trace("[%c-%c]", array[j], key[i]);
+		if(array[j] != key[i]) {
+			scan->subindex = j;
+			scan->index = i;
 			scan->found = -1;
 			return current;
 		}
+	}
+	scan->subindex = j;
+	scan->index = i;
+
+	//Break if it didn't match the whole array
+	if(j < array_size) {
+		scan->found = -1;
+		return current;
 	}
 
 	scan->previous = tree;
