@@ -189,7 +189,7 @@ static Node *_tree_scan(Node *node, Scan *scan, Scan *post)
 	//TODO: Should extend logic from tree_seek?
 	unsigned int i = 0;
 
-	if (scan->mode == S_FETCHNEXT && scan->size > 0) {
+	if (scan->mode == S_FETCHNEXT) {
 		Node *next = bsearch_get_gte(node, key[scan->index]);
 		if(!next) {
 			goto RETURN_RESULT;
