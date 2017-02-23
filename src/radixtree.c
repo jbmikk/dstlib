@@ -78,10 +78,16 @@ static void _node_init(Node *node, unsigned char count, Node *child, void *data)
 	node->data = data;
 }
 
-static void _node_set_array(Node *node, unsigned short size, unsigned char *array)
+static void _node_array_init(Node *node)
+{
+	node->size = 0;
+	node->array = NULL;
+}
+
+static void _node_set_array(Node *node, unsigned short size)
 {
 	node->size = size;
-	node->array = array;
+	node->array = c_renew(node->array, unsigned char, size);
 }
 
 /**
@@ -242,19 +248,16 @@ static Node *_build_node(Node *node, unsigned char *string, unsigned short lengt
 		node = bsearch_insert(node, string[0]);
 
 		_node_init(node, 0, NULL, NULL);
+		_node_array_init(node);
 
 		//TODO: If key length <= sizeof(ptr) don't malloc,
 		// Just turn pointer into a union and store the array inline.
 		if(length > 1) {
-			unsigned char *keys = c_malloc_n(length-1);
+			_node_set_array(node, length-1);
 
 			for(unsigned int i = 0; i < length-1; i++){
-				keys[i] = string[i+1];
+				node->array[i] = string[i+1];
 			}
-
-			_node_set_array(node, length-1, keys);
-		} else {
-			_node_set_array(node, 0, NULL);
 		}
 		trace_node("BUILD-NODE", node);
 	} else {
@@ -303,9 +306,7 @@ static Node * _split_node_array(Node *node, Scan *scan)
 		data_node = branch2;
 	}
 
-	//TODO: what if subindex == 0?
-	unsigned char *prefix = c_renew(node->array, unsigned char, subindex);
-	_node_set_array(node, subindex, prefix);
+	_node_set_array(node, subindex);
 	trace_node("PREFIX", node);
 
 	return data_node;
@@ -321,15 +322,14 @@ static void _compact_nodes(Node *node)
 
 	//Join arrays
 	int joined_size = node->size + 1 + child->size;
-	unsigned char *joined = c_renew(node->array, unsigned char, joined_size);
-
 	int i = node->size;
 
-	joined[i++] = child->key;
+	_node_set_array(node, joined_size);
 
-	int j = 0;
-	for(; j < child->size; j++) {
-		joined[i+j] = child->array[j];
+	node->array[i++] = child->key;
+
+	for(int j = 0; j < child->size; j++) {
+		node->array[i+j] = child->array[j];
 	}
 
 	//Replace child
@@ -345,7 +345,6 @@ static void _compact_nodes(Node *node)
 	trace("new size: %i", joined_size);
 
 	_node_init(node, cont.child_count, cont.child, cont.data);
-	_node_set_array(node, joined_size, joined);
 }
 
 /**
@@ -397,7 +396,7 @@ static Node *_build_data_node(Node *tree, unsigned char *string, unsigned short 
 void radix_tree_init(Node *tree)
 {
 	_node_init(tree, 0, NULL, NULL);
-	_node_set_array(tree, 0, NULL);
+	_node_array_init(tree);
 }
 
 void *radix_tree_get(Node *tree, unsigned char *string, unsigned short length)
