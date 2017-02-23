@@ -196,7 +196,6 @@ static Node *_tree_scan(Node *node, Scan *scan, Scan *post)
 	
 	//TODO: Should extend logic from tree_seek?
 	if (node->child) {
-		Node *children = node->child;
 		unsigned int i = 0;
 
 		if (scan->mode == S_FETCHNEXT && scan->size > 0) {
@@ -226,11 +225,11 @@ static Node *_tree_scan(Node *node, Scan *scan, Scan *post)
 				//The closest child already has a greater key
 				scan->mode = S_DEFAULT;
 			}
-			i = (next-children);
+			i = (next - node->child);
 		} 
 
 		for(; i < node->child_count; i++) {
-			Node *current = children+i;
+			Node *current = node->child + i;
 
 			_push_node_key(scan, post, current);
 			result = _tree_scan(current, scan, post);
