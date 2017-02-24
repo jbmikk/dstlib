@@ -150,7 +150,6 @@ static void _pop_node_key(Scan *scan, Node *node)
  */
 static Node *_tree_scan(Node *node, Scan *scan)
 {
-	unsigned char *key = scan->key;
 	unsigned int i = 0;
 	Node *result = NULL;
 	Node *next;
@@ -169,24 +168,24 @@ static Node *_tree_scan(Node *node, Scan *scan)
 			goto CONTINUE;
 		}
 
-		next = bsearch_get_gte(node, key[scan->index]);
+		next = bsearch_get_gte(node, scan->key[scan->index]);
 
 		if(!next) {
 			scan->mode = S_DEFAULT;
 			goto RETURN_RESULT;
 		}
 
-		if(next->key == key[scan->index]) {
+		if(next->key == scan->key[scan->index]) {
 			//Exact child key match
 			unsigned int j = 0;
 			unsigned int k = scan->index+1; 
 			unsigned int child_size = next->size;
 			for (; j < child_size && k < scan->size; j++, k++) {
 				//Next if a character does not match
-				if(key[k] > next->array[j]) {
+				if(scan->key[k] > next->array[j]) {
 					next++;
 					break;
-				} else if (key[k] < next->array[j]) {
+				} else if (scan->key[k] < next->array[j]) {
 					break;
 				}
 			}
