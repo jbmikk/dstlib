@@ -38,6 +38,7 @@ typedef struct _Scan {
 	unsigned int found;
 	Node *root;
 	Node *previous;
+	Node *result;
 } Scan;
 
 
@@ -53,6 +54,7 @@ static void _scan_init(Scan *scan, unsigned char *key, unsigned short size, Node
 	scan->mode = mode;
 	scan->previous = NULL;
 	scan->root = root;
+	scan->result = NULL;
 }
 
 static void _node_init(Node *node, unsigned char count, Node *child, void *data)
@@ -148,17 +150,16 @@ static void _pop_node_key(Scan *scan, Node *node)
 /**
  * Scan the tree recursively for the next datanode.
  */
-static Node *_tree_scan(Node *node, Scan *scan)
+static void _tree_scan(Node *node, Scan *scan)
 {
 	unsigned int i = 0;
-	Node *result = NULL;
 	Node *next;
 
 	switch(scan->mode) {
 	case S_DEFAULT:
 		if (node->data) {
-			result = node;
-			goto RETURN_RESULT;
+			scan->result = node;
+			return;
 		}
 		break;
 	case S_FETCHNEXT:
@@ -171,7 +172,7 @@ static Node *_tree_scan(Node *node, Scan *scan)
 
 		if(!next) {
 			scan->mode = S_DEFAULT;
-			goto RETURN_RESULT;
+			return;
 		}
 
 		if(next->key == scan->key[scan->index]) {
@@ -202,16 +203,14 @@ CONTINUE:
 		Node *current = node->child + i;
 
 		_push_node_key(scan, current);
-		result = _tree_scan(current, scan);
 
-		if(result != NULL)
+		_tree_scan(current, scan);
+
+		if(scan->result != NULL)
 			break;
 
 		_pop_node_key(scan, current);
 	}
-
-RETURN_RESULT:
-	return result;
 }
 
 /**
@@ -446,7 +445,6 @@ void radix_tree_remove(Node *tree, unsigned char *string, unsigned short length)
 
 void **radix_tree_get_next(Node *tree, unsigned char *string, unsigned short length)
 {
-	Node *res;
 	Scan scan;
 
 	_scan_init(
@@ -456,12 +454,12 @@ void **radix_tree_get_next(Node *tree, unsigned char *string, unsigned short len
 		tree,
 		string? S_FETCHNEXT: S_DEFAULT
 	);
-	res = _tree_scan(tree, &scan);
+	_tree_scan(tree, &scan);
 
 	c_delete(scan.pkey);
 
-	if(res != NULL) {
-		return res->data;
+	if(scan.result != NULL) {
+		return scan.result->data;
 	} else {
 		return NULL;
 	}
@@ -500,7 +498,6 @@ void radix_tree_iterator_dispose(Iterator *iterator)
 
 void **radix_tree_iterator_next(Iterator *iterator)
 {
-	Node *res;
 	Scan scan;
 
 	_scan_init(
@@ -511,7 +508,7 @@ void **radix_tree_iterator_next(Iterator *iterator)
 		iterator->key? S_FETCHNEXT: S_DEFAULT
 	);
 
-	res = _tree_scan(iterator->root, &scan);
+	_tree_scan(iterator->root, &scan);
 
 	if(iterator->key) {
 		c_delete(iterator->key);
@@ -520,8 +517,8 @@ void **radix_tree_iterator_next(Iterator *iterator)
 	iterator->key = scan.pkey;
 	iterator->size = scan.psize;
 
-	if(res != NULL) {
-		return res->data;
+	if(scan.result != NULL) {
+		return scan.result->data;
 	} else {
 		return NULL;
 	}
