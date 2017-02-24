@@ -151,27 +151,25 @@ static void _pop_node_key(Scan *scan, Node *node)
 static Node *_tree_scan(Node *node, Scan *scan)
 {
 	unsigned char *key = scan->key;
+	unsigned int i = 0;
 	Node *result = NULL;
+	Node *next;
 
-	if (node->data) {
-		if(scan->mode == S_DEFAULT) {
+	switch(scan->mode) {
+	case S_DEFAULT:
+		if (node->data) {
 			// Only return data when scan is default
 			result = node;
 			goto RETURN_RESULT;
 		}
-	}
-	
-	//TODO: Should extend logic from tree_seek?
-	unsigned int i = 0;
-
-	if (scan->mode == S_FETCHNEXT) {
-
+		break;
+	case S_FETCHNEXT:
 		if(scan->index >= scan->size) {
 			scan->mode = S_DEFAULT;
 			goto CONTINUE;
 		}
 
-		Node *next = bsearch_get_gte(node, key[scan->index]);
+		next = bsearch_get_gte(node, key[scan->index]);
 
 		if(!next) {
 			scan->mode = S_DEFAULT;
@@ -200,6 +198,7 @@ static Node *_tree_scan(Node *node, Scan *scan)
 			scan->mode = S_DEFAULT;
 		}
 		i = (next - node->child);
+		break;
 	} 
 
 CONTINUE:
