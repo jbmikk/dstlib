@@ -174,6 +174,7 @@ static Node *_tree_scan(Node *node, Scan *scan)
 		Node *next = bsearch_get_gte(node, key[scan->index]);
 
 		if(!next) {
+			scan->mode = S_DEFAULT;
 			goto RETURN_RESULT;
 		}
 

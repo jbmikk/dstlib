@@ -452,7 +452,8 @@ void test_radix_tree__get_next_full_key_scan(){
 	t_assert(!strcmp(out8, "IN6"));
 	t_assert(out9 == NULL);
 	t_assert(out10 == NULL);
-	t_assert(out11 == NULL);
+	t_assert(out11 != NULL);
+	t_assert(!strcmp(out11, "IN3"));
 }
 
 void test_radix_tree__set_and_get_int(){
