@@ -166,10 +166,14 @@ static Node *_tree_scan(Node *node, Scan *scan)
 
 	if (scan->mode == S_FETCHNEXT) {
 
+		if(scan->index >= scan->size) {
+			scan->mode = S_DEFAULT;
+			goto CONTINUE;
+		}
+
 		Node *next = bsearch_get_gte(node, key[scan->index]);
 
 		if(!next) {
-			scan->mode = S_DEFAULT;
 			goto RETURN_RESULT;
 		}
 
@@ -197,6 +201,7 @@ static Node *_tree_scan(Node *node, Scan *scan)
 		i = (next - node->child);
 	} 
 
+CONTINUE:
 	for(; i < node->child_count; i++) {
 		Node *current = node->child + i;
 
