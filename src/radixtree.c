@@ -157,7 +157,6 @@ static Node *_tree_scan(Node *node, Scan *scan)
 	switch(scan->mode) {
 	case S_DEFAULT:
 		if (node->data) {
-			// Only return data when scan is default
 			result = node;
 			goto RETURN_RESULT;
 		}
@@ -176,12 +175,10 @@ static Node *_tree_scan(Node *node, Scan *scan)
 		}
 
 		if(next->key == scan->key[scan->index]) {
-			//Exact child key match
 			unsigned int j = 0;
 			unsigned int k = scan->index+1; 
 			unsigned int child_size = next->size;
 			for (; j < child_size && k < scan->size; j++, k++) {
-				//Next if a character does not match
 				if(scan->key[k] > next->array[j]) {
 					next++;
 					break;
@@ -193,9 +190,9 @@ static Node *_tree_scan(Node *node, Scan *scan)
 				scan->mode = S_DEFAULT;
 			}
 		} else {
-			//The closest child already has a greater key
 			scan->mode = S_DEFAULT;
 		}
+
 		i = (next - node->child);
 		break;
 	} 
