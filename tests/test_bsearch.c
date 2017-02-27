@@ -75,6 +75,32 @@ void bsearch__get_gte(){
 	t_assert(out5 == NULL);
 }
 
+void bsearch__get_lte(){
+	Node *in1, *in2, *out1, *out2, *out3, *out4, *out5;
+	Node d1, d2;
+
+	in1 = bsearch_insert(&fixture.node, 'b');
+	in1->child = (void *) &d1;
+	in2 = bsearch_insert(&fixture.node, 'd');
+	in2->child = (void *) &d2;
+	out1 = bsearch_get_lte(&fixture.node, 'b');
+	out2 = bsearch_get_lte(&fixture.node, 'd');
+	out3 = bsearch_get_lte(&fixture.node, 'a');
+	out4 = bsearch_get_lte(&fixture.node, 'c');
+	out5 = bsearch_get_lte(&fixture.node, 'e');
+
+	t_assert(out1 != NULL);
+	t_assert(out1->child == (void *)&d1);
+	t_assert(out2 != NULL);
+	t_assert(out2->child == (void *)&d2);
+	t_assert(out3 == NULL);
+	t_assert(out4 != NULL);
+	t_assert(out4->child == (void *)&d1);
+	t_assert(out5 != NULL);
+	t_assert(out5->child == (void *)&d2);
+}
+
+
 void bsearch__set2_and_get2_ensure_unsigned(){
 
 	bsearch_insert(&fixture.node, 10);
@@ -109,6 +135,7 @@ int main(int argc, char** argv) {
 	t_test(bsearch__set_and_get);
 	t_test(bsearch__set2_and_get2);
 	t_test(bsearch__get_gte);
+	t_test(bsearch__get_lte);
 	t_test(bsearch__set2_and_get2_ensure_unsigned);
 	t_test(bsearch__set2_and_delete1);
 
