@@ -214,6 +214,73 @@ CONTINUE:
 }
 
 /**
+ * Scan the tree recursively for the previous datanode.
+ */
+static void _tree_scan_prev(Node *node, Scan *scan)
+{
+	unsigned int i = node->child_count-1;
+	Node *next;
+
+	if (scan->mode == S_FETCHNEXT) {
+		if(scan->index >= scan->size) {
+			scan->mode = S_DEFAULT;
+			return;
+		}
+
+		next = bsearch_get_lte(node, scan->key[scan->index]);
+
+		if(!next) {
+			scan->mode = S_DEFAULT;
+			goto CONTINUE;
+		}
+
+		if(next->key == scan->key[scan->index]) {
+			unsigned int j = 0;
+			unsigned int k = scan->index+1; 
+			unsigned int child_size = next->size;
+			for (; j < child_size && k < scan->size; j++, k++) {
+				if(scan->key[k] < next->array[j]) {
+					break;
+				} else if (scan->key[k] > next->array[j]) {
+					scan->mode = S_DEFAULT;
+					goto SKIP;
+				}
+			}
+			if(j < child_size) {
+				next--;
+				scan->mode = S_DEFAULT;
+			}
+		} else {
+			scan->mode = S_DEFAULT;
+		}
+
+	SKIP:
+		i = (next - node->child);
+	} 
+
+	if(node->child_count > 0) {
+		for(; i < node->child_count; i--) {
+			Node *current = node->child + i;
+
+			_push_node_key(scan, current);
+
+			_tree_scan_prev(current, scan);
+
+			if(scan->result != NULL)
+				break;
+
+			_pop_node_key(scan, current);
+		}
+	}
+CONTINUE:
+	if(scan->mode == S_DEFAULT && scan->result == NULL) {
+		if (node->data) {
+			scan->result = node;
+			return;
+		}
+	}
+}
+/**
  * Add new child node after given node
  */
 static Node *_build_node(Node *node, unsigned char *string, unsigned short length)
@@ -455,6 +522,28 @@ void **radix_tree_get_next(Node *tree, unsigned char *string, unsigned short len
 		string? S_FETCHNEXT: S_DEFAULT
 	);
 	_tree_scan(tree, &scan);
+
+	c_delete(scan.pkey);
+
+	if(scan.result != NULL) {
+		return scan.result->data;
+	} else {
+		return NULL;
+	}
+}
+
+void **radix_tree_get_prev(Node *tree, unsigned char *string, unsigned short length)
+{
+	Scan scan;
+
+	_scan_init(
+		&scan,
+		string,
+		length,
+		tree,
+		string? S_FETCHNEXT: S_DEFAULT
+	);
+	_tree_scan_prev(tree, &scan);
 
 	c_delete(scan.pkey);
 

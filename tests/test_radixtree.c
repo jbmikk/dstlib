@@ -456,6 +456,81 @@ void test_radix_tree__get_next_full_key_scan(){
 	t_assert(!strcmp(out11, "IN3"));
 }
 
+void test_radix_tree__get_prev(){
+	char *in1="DINOSAURIO", *in2="DINO", *in3="CASA", *in4="PIANO";
+	char *out1, *out2, *out3, *out4, *out5;
+	Node *tree = &fixture.tree;
+
+	radix_tree_set(tree, nzs("dinosaurio"), in1);
+	radix_tree_set(tree, nzs("dino"), in2);
+	radix_tree_set(tree, nzs("casa"), in3);
+	radix_tree_set(tree, nzs("piano"), in4);
+
+	out1 = (char *)radix_tree_get_prev(tree, NULL, 0);
+	out2 = (char *)radix_tree_get_prev(tree, nzs("dinosaurio"));
+	out3 = (char *)radix_tree_get_prev(tree, nzs("dino"));
+	out4 = (char *)radix_tree_get_prev(tree, nzs("casa"));
+	out5 = (char *)radix_tree_get_prev(tree, nzs("piano"));
+
+	t_assert(out1 != NULL);
+	t_assert(!strcmp(out1, "PIANO"));
+	t_assert(out2 != NULL);
+	t_assert(!strcmp(out2, "DINO"));
+	t_assert(out3 != NULL);
+	t_assert(!strcmp(out3, "CASA"));
+	t_assert(out4 == NULL);
+	t_assert(out5 != NULL); 
+	t_assert(!strcmp(out5, "DINOSAURIO"));
+}
+
+void test_radix_tree__get_prev_full_key_scan(){
+	char *in1="IN1", *in2="IN2", *in3="IN3",
+	     *in4="IN4", *in5="IN5", *in6="IN6";
+	char *out1, *out2, *out3, *out4, *out5,
+	     *out6, *out7, *out8, *out9, *out10, *out11;
+	Node *tree = &fixture.tree;
+
+	radix_tree_set(tree, nzs("accca"), in1);
+	radix_tree_set(tree, nzs("acccb"), in2);
+	radix_tree_set(tree, nzs("acccc"), in3);
+	radix_tree_set(tree, nzs("accccaaa"), in4);
+	radix_tree_set(tree, nzs("accccbbb"), in5);
+	radix_tree_set(tree, nzs("acccce"), in6);
+
+	out1 = (char *)radix_tree_get_prev(tree, nzs("ammmb"));
+	out2 = (char *)radix_tree_get_prev(tree, nzs("acccb"));
+	out3 = (char *)radix_tree_get_prev(tree, nzs("aaaab"));
+	out4 = (char *)radix_tree_get_prev(tree, nzs("acccc"));
+	out5 = (char *)radix_tree_get_prev(tree, nzs("acccca"));
+	out6 = (char *)radix_tree_get_prev(tree, nzs("accccb"));
+	out7 = (char *)radix_tree_get_prev(tree, nzs("accccbd"));
+	out8 = (char *)radix_tree_get_prev(tree, nzs("accccd"));
+	out9 = (char *)radix_tree_get_prev(tree, nzs("accccf"));
+	out10 = (char *)radix_tree_get_prev(tree, nzs("az"));
+	out11 = (char *)radix_tree_get_prev(tree, nzs("acccbbbbb"));
+
+	t_assert(out1 != NULL);
+	t_assert(!strcmp(out1, "IN6"));
+	t_assert(out2 != NULL);
+	t_assert(!strcmp(out2, "IN1"));
+	t_assert(out3 == NULL);
+	t_assert(out4 != NULL);
+	t_assert(!strcmp(out4, "IN2"));
+	t_assert(out5 != NULL);
+	t_assert(!strcmp(out5, "IN3"));
+	t_assert(out6 != NULL);
+	t_assert(!strcmp(out6, "IN4"));
+	t_assert(out7 != NULL);
+	t_assert(!strcmp(out7, "IN5"));
+	t_assert(out8 != NULL);
+	t_assert(!strcmp(out8, "IN5"));
+	t_assert(out9 != NULL);
+	t_assert(!strcmp(out9, "IN6"));
+	t_assert(out10 != NULL);
+	t_assert(!strcmp(out10, "IN6"));
+	t_assert(out11 != NULL);
+	t_assert(!strcmp(out11, "IN2"));
+}
 void test_radix_tree__set_and_get_int(){
 	char *in1="BLUE", *out1;
 	Node *tree = &fixture.tree;
@@ -537,6 +612,8 @@ int main(int argc, char** argv) {
 	t_test(test_radix_tree__iterate_binary);
 	t_test(test_radix_tree__get_next);
 	t_test(test_radix_tree__get_next_full_key_scan);
+	t_test(test_radix_tree__get_prev);
+	t_test(test_radix_tree__get_prev_full_key_scan);
 	t_test(test_radix_tree__set_and_get_int);
 	t_test(test_radix_tree__set_and_get_intptr);
 	t_test(test_radix_tree__get_next_ple);

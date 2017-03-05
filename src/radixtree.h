@@ -16,6 +16,7 @@ void radix_tree_set(Node *tree, unsigned char *string, unsigned short length, vo
 int radix_tree_contains(Node *tree, unsigned char *string, unsigned short length);
 void *radix_tree_try_set(Node *tree, unsigned char *string, unsigned short length, void *data);
 void **radix_tree_get_next(Node *tree, unsigned char *string, unsigned short length);
+void **radix_tree_get_prev(Node *tree, unsigned char *string, unsigned short length);
 void radix_tree_remove(Node *tree, unsigned char *string, unsigned short length);
 void radix_tree_dispose(Node *tree);
 
