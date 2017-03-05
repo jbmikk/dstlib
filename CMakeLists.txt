@@ -1,20 +1,11 @@
 cmake_minimum_required (VERSION 2.8.0)
 project (dstlib)
 
+include(ExternalProject)
+
 option(PROFILE "Enable profiling options" OFF)
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall")
-
-
-# Dependencies
-# ------------
-
-include_directories("${PROJECT_SOURCE_DIR}/vendor/dbg")
-
-add_custom_target(
-        dependencies ALL sh install.sh
-        WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
-)
 
 
 # Traces
@@ -28,10 +19,26 @@ if(TRACE)
 endif(TRACE)
 
 # Profiling
+# ---------
 
 if(PROFILE)
         set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pg")
 endif(PROFILE)
+
+
+# Include external dbg
+# --------------------
+
+include_directories("${CMAKE_BINARY_DIR}/dbg-prefix/src/dbg")
+
+externalproject_add(
+        dbg
+        GIT_REPOSITORY git@github.com:jbmikk/dbg.git
+        DOWNLOAD_NAME dbg
+        DOWNLOAD_DIR dbg
+        INSTALL_COMMAND ""
+        UPDATE_DISCONNECTED 1
+)
 
 
 # Flags
@@ -51,7 +58,7 @@ file(GLOB SOURCES src/*.c)
 
 add_library(dstlib ${SOURCES})
 
-add_dependencies(dstlib dependencies)
+add_dependencies(dstlib dbg)
 
 set_target_properties(dstlib PROPERTIES COMPILE_FLAGS "-DLIBRARY ${DSTLIB_FLAGS}")
 
