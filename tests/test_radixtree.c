@@ -350,6 +350,16 @@ void test_radix_tree__iterate(){
 	t_assert(out5 == NULL);
 }
 
+void test_radix_tree__iterate_empty(){
+	char *out1;
+	Node *tree = &fixture.tree;
+	Iterator it;
+	radix_tree_iterator_init(&it, tree);
+	out1 = (char *)radix_tree_iterator_next(&it);
+	radix_tree_iterator_dispose(&it);
+	t_assert(out1 == NULL);
+}
+
 void test_radix_tree__iterate_binary(){
 	char *in1="DINOSAURIO", *in2="DINO", *in3="CASA";
 	char *out1, *out2, *out3, *out4;
@@ -609,6 +619,7 @@ int main(int argc, char** argv) {
 	t_test(test_radix_tree__add_prefix);
 	t_test(test_radix_tree__add_suffix);
 	t_test(test_radix_tree__iterate);
+	t_test(test_radix_tree__iterate_empty);
 	t_test(test_radix_tree__iterate_binary);
 	t_test(test_radix_tree__get_next);
 	t_test(test_radix_tree__get_next_full_key_scan);
