@@ -2,24 +2,30 @@
 
 #include "cmemory.h"
 
-SNode *stack_push(SNode *node, void *ptr)
+void stack_init(Stack *stack)
 {
-	SNode *top = c_new(SNode, 1);
+	stack->top = NULL;
+}
+
+StackNode *stack_push(Stack *stack, void *ptr)
+{
+	StackNode *top = c_new(StackNode, 1);
 	top->data = ptr;
-	top->next = node;
+	top->next = stack->top;
+	stack->top = top;
 	return top;
 }
 
-SNode *stack_pop(SNode *node)
+void stack_pop(Stack *stack)
 {
-	SNode *top = node->next;
-	c_delete(node);
-	return top;
+	StackNode *top = stack->top;
+	stack->top = top->next;
+	c_delete(top);
 }
 
-void stack_dispose(SNode *node)
+void stack_dispose(Stack *stack)
 {
-	while(node != NULL) {
-		node = stack_pop(node);
+	while(stack->top) {
+		stack_pop(stack);
 	}
 }

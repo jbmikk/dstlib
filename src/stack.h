@@ -3,13 +3,19 @@
 
 #include "structs.h"
 
-typedef struct _SNode {
+typedef struct _StackNode {
 	void *data;
-	struct _SNode *next;
-} SNode;
+	struct _StackNode *next;
+} StackNode;
 
-SNode *stack_push(SNode *node, void *ptr);
-SNode *stack_pop(SNode *node);
-void stack_dispose(SNode *node);
+typedef struct _Stack {
+	StackNode *top;
+} Stack;
+
+
+void stack_init(Stack *stack);
+StackNode *stack_push(Stack *stack, void *ptr);
+void stack_pop(Stack *stack);
+void stack_dispose(Stack *stack);
 
 #endif //STACK_H

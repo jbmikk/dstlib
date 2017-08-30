@@ -71,6 +71,7 @@ echo ""
 echo "TESTSTLIB:"
 echo "---------"
 
+run_test $MODE $PATTERN ./test_stack
 run_test $MODE $PATTERN ./test_bsearch
 run_test $MODE $PATTERN ./test_radixtree
 run_test $MODE $PATTERN ./test_arrays
