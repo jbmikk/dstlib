@@ -3,12 +3,12 @@
 
 #include "structs.h"
 
-typedef struct _StackNode {
+typedef struct StackNode {
 	void *data;
-	struct _StackNode *next;
+	struct StackNode *next;
 } StackNode;
 
-typedef struct _Stack {
+typedef struct Stack {
 	StackNode *top;
 } Stack;
 

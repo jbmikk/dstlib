@@ -1,9 +1,9 @@
 #ifndef CSTRUCT
 #define CSTRUCT
 
-typedef struct _Node {
+typedef struct Node {
 	//Bsearch
-	struct _Node *child;
+	struct Node *child;
 	unsigned char child_count;
 	unsigned char key;
 
