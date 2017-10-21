@@ -1,17 +1,29 @@
 #ifndef CSTRUCT
 #define CSTRUCT
 
+struct BsearchEntry;
+
+typedef struct Bsearch {
+	struct BsearchEntry *entries;
+	unsigned char count;
+} Bsearch;
+
 typedef struct Node {
-	//Bsearch
-	struct Node *child;
-	unsigned char child_count;
-	unsigned char key;
+	Bsearch children;
 
 	//Radix tree specific
 	unsigned short size;
 	unsigned char *array;
 	void *data;
 } Node;
+
+struct BsearchEntry {
+	unsigned char key;
+	//TODO: remove dependency to Node type.
+	struct Node node;
+};
+
+typedef struct BsearchEntry BsearchEntry;
 
 typedef struct _Iterator {
 	Node *root;

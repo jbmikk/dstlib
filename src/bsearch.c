@@ -6,29 +6,29 @@
 #include "cmemory.h"
 #include "dbg.h"
 
-void bsearch_init(Node *parent)
+void bsearch_init(Bsearch *bsearch)
 {
-	parent->child = NULL;
-	parent->child_count = 0;
+	bsearch->entries = NULL;
+	bsearch->count = 0;
 }
 
-Node *bsearch_get(Node *parent, unsigned char key)
+BsearchEntry *bsearch_get(Bsearch *bsearch, unsigned char key)
 {
-	Node *children = parent->child;
-	Node *next;
+	BsearchEntry *entries = bsearch->entries;
+	BsearchEntry *next;
 	int left = 0;
-	int right = parent->child_count-1;
+	int right = bsearch->count-1;
 
 	//TODO: test binary search with more than 128 elements
 	//TODO: At most there will always be 8 iterations, possible to unroll?
 	while(left <= right) {
 		unsigned int i = left+((right - left)>>1);
-		if(children[i].key < key) {
+		if(entries[i].key < key) {
 			left = i+1;
-		} else if(children[i].key > key) {
+		} else if(entries[i].key > key) {
 			right = i-1;
 		} else {
-			next = &(children[i]);
+			next = &(entries[i]);
 			return next;
 		}
 	}
@@ -39,22 +39,22 @@ Node *bsearch_get(Node *parent, unsigned char key)
 /**
  * Get closest greater than or equal child
  */
-Node *bsearch_get_gte(Node *parent, unsigned char key)
+BsearchEntry *bsearch_get_gte(Bsearch *bsearch, unsigned char key)
 {
-	Node *children = parent->child;
-	Node *next = NULL;
+	BsearchEntry *entries = bsearch->entries;
+	BsearchEntry *next = NULL;
 	int left = 0;
-	int right = parent->child_count-1;
+	int right = bsearch->count - 1;
 
 	while(left <= right) {
 		unsigned int i = left+((right - left)>>1);
-		if(children[i].key < key) {
+		if(entries[i].key < key) {
 			left = i+1;
-		} else if(children[i].key > key) {
-			next = &children[i];
+		} else if(entries[i].key > key) {
+			next = &entries[i];
 			right = i-1;
 		} else {
-			next = &children[i];
+			next = &entries[i];
 			break;
 		}
 	}
@@ -64,38 +64,38 @@ Node *bsearch_get_gte(Node *parent, unsigned char key)
 /**
  * Get closest less than or equal child
  */
-Node *bsearch_get_lte(Node *parent, unsigned char key)
+BsearchEntry *bsearch_get_lte(Bsearch *bsearch, unsigned char key)
 {
-	Node *children = parent->child;
-	Node *next = NULL;
+	BsearchEntry *entries = bsearch->entries;
+	BsearchEntry *next = NULL;
 	int left = 0;
-	int right = parent->child_count-1;
+	int right = bsearch->count - 1;
 
 	while(left <= right) {
 		unsigned int i = left+((right - left)>>1);
-		if(children[i].key < key) {
-			next = &children[i];
+		if(entries[i].key < key) {
+			next = &entries[i];
 			left = i+1;
-		} else if(children[i].key > key) {
+		} else if(entries[i].key > key) {
 			right = i-1;
 		} else {
-			next = &children[i];
+			next = &entries[i];
 			break;
 		}
 	}
 	return next;
 }
 
-Node *bsearch_insert(Node *parent, unsigned char key)
+BsearchEntry *bsearch_insert(Bsearch *bsearch, unsigned char key)
 {
-	Node *new_children;
-	Node *new_node;
-	Node *src = parent->child;
-	Node *dst;
-	Node *end = src+parent->child_count;
+	BsearchEntry *new_entries;
+	BsearchEntry *new_node;
+	BsearchEntry *src = bsearch->entries;
+	BsearchEntry *dst;
+	BsearchEntry *end = src + bsearch->count;
 
-	dst = new_children = c_new(Node, parent->child_count+1);
-	check_mem(new_children);
+	dst = new_entries = c_new(BsearchEntry, bsearch->count + 1);
+	check_mem(new_entries);
 
 	if(src != NULL) {
 		while(src < end && src->key < key)
@@ -104,35 +104,35 @@ Node *bsearch_insert(Node *parent, unsigned char key)
 		while(src < end)
 			*dst++ = *src++;
 
-		c_free(parent->child);
+		c_free(bsearch->entries);
 	} else {
-		new_node = new_children;
+		new_node = new_entries;
 	}
 
 	new_node->key = key;
 	//TODO: should use node_init
-	new_node->data = NULL;
+	new_node->node.data = NULL;
 
 	//assign new children
-	parent->child = new_children;
-	parent->child_count++;
+	bsearch->entries = new_entries;
+	bsearch->count++;
 
 	return new_node;
 error:
 	return NULL;
 }
 
-int bsearch_delete(Node *parent, unsigned char key)
+int bsearch_delete(Bsearch *bsearch, unsigned char key)
 {
-	if(bsearch_get(parent, key)!= NULL) {
-		Node *new_children = NULL;
-		if(parent->child_count > 1) {
-			new_children = c_new(Node, parent->child_count-1);
-			check_mem(new_children);
+	if(bsearch_get(bsearch, key)!= NULL) {
+		BsearchEntry *new_entries = NULL;
+		if(bsearch->count > 1) {
+			new_entries = c_new(BsearchEntry, bsearch->count-1);
+			check_mem(new_entries);
 
-			Node *dst = new_children;
-			Node *src = parent->child;
-			Node *end = src+parent->child_count;
+			BsearchEntry *dst = new_entries;
+			BsearchEntry *src = bsearch->entries;
+			BsearchEntry *end = src + bsearch->count;
 			while(src < end && src->key < key)
 				*dst++ = *src++;
 			src++;
@@ -140,21 +140,21 @@ int bsearch_delete(Node *parent, unsigned char key)
 				*dst++ = *src++;
 		}
 
-		//replace parent's children
-		c_free(parent->child);
-		parent->child = new_children;
-		parent->child_count--;
+		//replace bsearch's entries
+		c_free(bsearch->entries);
+		bsearch->entries = new_entries;
+		bsearch->count--;
 	}
 	return 0;
 error:
 	return -1;
 }
 
-void bsearch_delete_all(Node *parent)
+void bsearch_delete_all(Bsearch *bsearch)
 {
-	if(parent->child != NULL) {
-		c_free(parent->child);
-		parent->child = NULL;
-		parent->child_count = 0;
+	if(bsearch->entries != NULL) {
+		c_free(bsearch->entries);
+		bsearch->entries = NULL;
+		bsearch->count = 0;
 	}
 }

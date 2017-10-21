@@ -6,7 +6,7 @@
 #include "radixtree.h"
 
 typedef struct {
-	Node node;
+	Bsearch bsearch;
 	char *str1;
 	char *str2;
 	char *str3;
@@ -17,117 +17,117 @@ typedef struct {
 BSearchFixture fixture;
 
 void t_setup(){
-	bsearch_init(&fixture.node);
+	bsearch_init(&fixture.bsearch);
 }
 void t_teardown(){
-	bsearch_delete_all(&fixture.node);
+	bsearch_delete_all(&fixture.bsearch);
 }
 
 void bsearch__set_and_get(){
-	Node *a1, *a2;
-	a1 = bsearch_insert(&fixture.node, 'a');
-	a2 = bsearch_get(&fixture.node, 'a');
+	BsearchEntry *a1, *a2;
+	a1 = bsearch_insert(&fixture.bsearch, 'a');
+	a2 = bsearch_get(&fixture.bsearch, 'a');
 	t_assert(a1 != NULL);
 	t_assert(a2 != NULL);
 	t_assert(a1 == a2);
 }
 
 void bsearch__set2_and_get2(){
-	Node *a1, *a2, *b1, *b2;
-	Node d1, d2;
+	BsearchEntry *a1, *a2, *b1, *b2;
+	BsearchEntry d1, d2;
 
-	a1 = bsearch_insert(&fixture.node, 'a');
-	a1->child = (void *) &d1;
-	b1 = bsearch_insert(&fixture.node, 'b');
-	b1->child = (void *) &d2;
-	a2 = bsearch_get(&fixture.node, 'a');
-	b2 = bsearch_get(&fixture.node, 'b');
+	a1 = bsearch_insert(&fixture.bsearch, 'a');
+	a1->node.data = (void *) &d1;
+	b1 = bsearch_insert(&fixture.bsearch, 'b');
+	b1->node.data = (void *) &d2;
+	a2 = bsearch_get(&fixture.bsearch, 'a');
+	b2 = bsearch_get(&fixture.bsearch, 'b');
 
-	t_assert(fixture.node.child_count == 2);
+	t_assert(fixture.bsearch.count == 2);
 	t_assert(a2 != NULL);
-	t_assert(a2->child == (void *)&d1);
+	t_assert(a2->node.data == (void *)&d1);
 	t_assert(b2 != NULL);
-	t_assert(b2->child == (void *)&d2);
+	t_assert(b2->node.data == (void *)&d2);
 }
 
 void bsearch__get_gte(){
-	Node *in1, *in2, *out1, *out2, *out3, *out4, *out5;
-	Node d1, d2;
+	BsearchEntry *in1, *in2, *out1, *out2, *out3, *out4, *out5;
+	BsearchEntry d1, d2;
 
-	in1 = bsearch_insert(&fixture.node, 'b');
-	in1->child = (void *) &d1;
-	in2 = bsearch_insert(&fixture.node, 'd');
-	in2->child = (void *) &d2;
-	out1 = bsearch_get_gte(&fixture.node, 'b');
-	out2 = bsearch_get_gte(&fixture.node, 'd');
-	out3 = bsearch_get_gte(&fixture.node, 'a');
-	out4 = bsearch_get_gte(&fixture.node, 'c');
-	out5 = bsearch_get_gte(&fixture.node, 'e');
+	in1 = bsearch_insert(&fixture.bsearch, 'b');
+	in1->node.data = (void *) &d1;
+	in2 = bsearch_insert(&fixture.bsearch, 'd');
+	in2->node.data = (void *) &d2;
+	out1 = bsearch_get_gte(&fixture.bsearch, 'b');
+	out2 = bsearch_get_gte(&fixture.bsearch, 'd');
+	out3 = bsearch_get_gte(&fixture.bsearch, 'a');
+	out4 = bsearch_get_gte(&fixture.bsearch, 'c');
+	out5 = bsearch_get_gte(&fixture.bsearch, 'e');
 
 	t_assert(out1 != NULL);
-	t_assert(out1->child == (void *)&d1);
+	t_assert(out1->node.data == (void *)&d1);
 	t_assert(out2 != NULL);
-	t_assert(out2->child == (void *)&d2);
+	t_assert(out2->node.data == (void *)&d2);
 	t_assert(out3 != NULL);
-	t_assert(out3->child == (void *)&d1);
+	t_assert(out3->node.data == (void *)&d1);
 	t_assert(out4 != NULL);
-	t_assert(out4->child == (void *)&d2);
+	t_assert(out4->node.data == (void *)&d2);
 	t_assert(out5 == NULL);
 }
 
 void bsearch__get_lte(){
-	Node *in1, *in2, *out1, *out2, *out3, *out4, *out5;
-	Node d1, d2;
+	BsearchEntry *in1, *in2, *out1, *out2, *out3, *out4, *out5;
+	BsearchEntry d1, d2;
 
-	in1 = bsearch_insert(&fixture.node, 'b');
-	in1->child = (void *) &d1;
-	in2 = bsearch_insert(&fixture.node, 'd');
-	in2->child = (void *) &d2;
-	out1 = bsearch_get_lte(&fixture.node, 'b');
-	out2 = bsearch_get_lte(&fixture.node, 'd');
-	out3 = bsearch_get_lte(&fixture.node, 'a');
-	out4 = bsearch_get_lte(&fixture.node, 'c');
-	out5 = bsearch_get_lte(&fixture.node, 'e');
+	in1 = bsearch_insert(&fixture.bsearch, 'b');
+	in1->node.data = (void *) &d1;
+	in2 = bsearch_insert(&fixture.bsearch, 'd');
+	in2->node.data = (void *) &d2;
+	out1 = bsearch_get_lte(&fixture.bsearch, 'b');
+	out2 = bsearch_get_lte(&fixture.bsearch, 'd');
+	out3 = bsearch_get_lte(&fixture.bsearch, 'a');
+	out4 = bsearch_get_lte(&fixture.bsearch, 'c');
+	out5 = bsearch_get_lte(&fixture.bsearch, 'e');
 
 	t_assert(out1 != NULL);
-	t_assert(out1->child == (void *)&d1);
+	t_assert(out1->node.data == (void *)&d1);
 	t_assert(out2 != NULL);
-	t_assert(out2->child == (void *)&d2);
+	t_assert(out2->node.data == (void *)&d2);
 	t_assert(out3 == NULL);
 	t_assert(out4 != NULL);
-	t_assert(out4->child == (void *)&d1);
+	t_assert(out4->node.data == (void *)&d1);
 	t_assert(out5 != NULL);
-	t_assert(out5->child == (void *)&d2);
+	t_assert(out5->node.data == (void *)&d2);
 }
 
 
 void bsearch__set2_and_get2_ensure_unsigned(){
 
-	bsearch_insert(&fixture.node, 10);
-	bsearch_insert(&fixture.node, 128);
+	bsearch_insert(&fixture.bsearch, 10);
+	bsearch_insert(&fixture.bsearch, 128);
 
-	t_assert(fixture.node.child_count == 2);
-	t_assert(((Node*)fixture.node.child)->key == 10);
+	t_assert(fixture.bsearch.count == 2);
+	t_assert(((BsearchEntry*)fixture.bsearch.entries)->key == 10);
 }
 
 void bsearch__set2_and_delete1(){
-	Node *a1, *a2, *b1, *b2;
-	Node d1, d2;
+	BsearchEntry *a1, *a2, *b1, *b2;
+	BsearchEntry d1, d2;
 
-	a1 = bsearch_insert(&fixture.node, 'a');
-	a1->child = (void *) &d1;
-	b1 = bsearch_insert(&fixture.node, 'b');
-	b1->child = (void *) &d2;
+	a1 = bsearch_insert(&fixture.bsearch, 'a');
+	a1->node.data = (void *) &d1;
+	b1 = bsearch_insert(&fixture.bsearch, 'b');
+	b1->node.data = (void *) &d2;
 
-	bsearch_delete(&fixture.node, 'a');
+	bsearch_delete(&fixture.bsearch, 'a');
 
-	a2 = bsearch_get(&fixture.node, 'a');
-	b2 = bsearch_get(&fixture.node, 'b');
+	a2 = bsearch_get(&fixture.bsearch, 'a');
+	b2 = bsearch_get(&fixture.bsearch, 'b');
 
-	t_assert(fixture.node.child_count == 1);
+	t_assert(fixture.bsearch.count == 1);
 	t_assert(a2 == NULL);
 	t_assert(b2 != NULL);
-	t_assert(b2->child == (void *)&d2);
+	t_assert(b2->node.data == (void *)&d2);
 }
 
 int main(int argc, char** argv) {

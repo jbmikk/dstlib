@@ -9,17 +9,17 @@
 #include "arrays.h"
 
 #ifdef RADIXTREE_TRACE
+// Fix (NODE)->key
 #define trace(M, ...) fprintf(stderr, "RADIXTREE: " M "\n", ##__VA_ARGS__)
 #define trace_node(M, NODE) \
 	trace( \
-		"" M "(%p) [%c:%.*s], DATA:%p, CHILDREN(%i):%p", \
+		"" M "(%p) [:%.*s], DATA:%p, CHILDREN(%i):%p", \
 		(NODE), \
-		(NODE)->key, \
 		(NODE)->size, \
 		(NODE)->array, \
 		(NODE)->data, \
-		(NODE)->child_count, \
-		(NODE)->child \
+		(NODE)->children.count, \
+		(NODE)->children.entries \
 	);
 #else
 #define trace(M, ...)
@@ -57,10 +57,10 @@ static void _scan_init(Scan *scan, unsigned char *key, unsigned short size, Node
 	scan->result = NULL;
 }
 
-static void _node_init(Node *node, unsigned char count, Node *child, void *data)
+static void _node_init(Node *node, unsigned char count, BsearchEntry *entries, void *data)
 {
-	node->child_count = count;
-	node->child = child;
+	node->children.count = count;
+	node->children.entries = entries;
 	node->data = data;
 }
 
@@ -85,13 +85,13 @@ static Node *_tree_seek(Node *tree, Scan *scan)
 	Node *current = tree;
 
 	//Move to the next node within the tree
-	Node *next = bsearch_get(current, scan->key[scan->index]);
+	BsearchEntry *entry = bsearch_get(&current->children, scan->key[scan->index]);
 	//Break if there is no node to move to
-	if(next == NULL) {
+	if(entry == NULL) {
 		scan->found = -1;
 		return current;
 	}
-	current = next;
+	current = &entry->node;
 	scan->index++;
 
 	trace_node("SEEK-ARRAY", current);
@@ -126,24 +126,24 @@ static Node *_tree_seek(Node *tree, Scan *scan)
 	return _tree_seek(current, scan);
 }
 
-static void _push_node_key(Scan *scan, Node *node)
+static void _push_node_key(Scan *scan, BsearchEntry *entry)
 {
 	unsigned int offset = scan->index;
-	scan->index += 1 + node->size;
+	scan->index += 1 + entry->node.size;
 	scan->psize = scan->index;
 
 	scan->pkey = c_renew(scan->pkey, unsigned char, scan->psize);
 
-	scan->pkey[offset] = node->key;
+	scan->pkey[offset] = entry->key;
 
-	if (node->size) {
-		memcpy(scan->pkey + offset + 1, node->array, node->size);
+	if (entry->node.size) {
+		memcpy(scan->pkey + offset + 1, entry->node.array, entry->node.size);
 	}
 }
 
-static void _pop_node_key(Scan *scan, Node *node)
+static void _pop_node_key(Scan *scan, BsearchEntry *entry)
 {
-	scan->index -= 1 + node->size;
+	scan->index -= 1 + entry->node.size;
 	scan->psize = scan->index;
 }
 
@@ -153,7 +153,7 @@ static void _pop_node_key(Scan *scan, Node *node)
 static void _tree_scan(Node *node, Scan *scan)
 {
 	unsigned int i = 0;
-	Node *next;
+	BsearchEntry *entry;
 
 	switch(scan->mode) {
 	case S_DEFAULT:
@@ -168,22 +168,22 @@ static void _tree_scan(Node *node, Scan *scan)
 			goto CONTINUE;
 		}
 
-		next = bsearch_get_gte(node, scan->key[scan->index]);
+		entry = bsearch_get_gte(&node->children, scan->key[scan->index]);
 
-		if(!next) {
+		if(!entry) {
 			scan->mode = S_DEFAULT;
 			return;
 		}
 
-		if(next->key == scan->key[scan->index]) {
+		if(entry->key == scan->key[scan->index]) {
 			unsigned int j = 0;
 			unsigned int k = scan->index+1; 
-			unsigned int child_size = next->size;
+			unsigned int child_size = entry->node.size;
 			for (; j < child_size && k < scan->size; j++, k++) {
-				if(scan->key[k] > next->array[j]) {
-					next++;
+				if(scan->key[k] > entry->node.array[j]) {
+					entry++;
 					break;
-				} else if (scan->key[k] < next->array[j]) {
+				} else if (scan->key[k] < entry->node.array[j]) {
 					break;
 				}
 			}
@@ -194,17 +194,17 @@ static void _tree_scan(Node *node, Scan *scan)
 			scan->mode = S_DEFAULT;
 		}
 
-		i = (next - node->child);
+		i = (entry - node->children.entries);
 		break;
 	} 
 
 CONTINUE:
-	for(; i < node->child_count; i++) {
-		Node *current = node->child + i;
+	for(; i < node->children.count; i++) {
+		BsearchEntry *current = node->children.entries + i;
 
 		_push_node_key(scan, current);
 
-		_tree_scan(current, scan);
+		_tree_scan(&current->node, scan);
 
 		if(scan->result != NULL)
 			break;
@@ -218,8 +218,8 @@ CONTINUE:
  */
 static void _tree_scan_prev(Node *node, Scan *scan)
 {
-	unsigned int i = node->child_count-1;
-	Node *next;
+	unsigned int i = node->children.count - 1;
+	BsearchEntry *next;
 
 	if (scan->mode == S_FETCHNEXT) {
 		if(scan->index >= scan->size) {
@@ -227,7 +227,7 @@ static void _tree_scan_prev(Node *node, Scan *scan)
 			return;
 		}
 
-		next = bsearch_get_lte(node, scan->key[scan->index]);
+		next = bsearch_get_lte(&node->children, scan->key[scan->index]);
 
 		if(!next) {
 			scan->mode = S_DEFAULT;
@@ -237,11 +237,11 @@ static void _tree_scan_prev(Node *node, Scan *scan)
 		if(next->key == scan->key[scan->index]) {
 			unsigned int j = 0;
 			unsigned int k = scan->index+1; 
-			unsigned int child_size = next->size;
+			unsigned int child_size = next->node.size;
 			for (; j < child_size && k < scan->size; j++, k++) {
-				if(scan->key[k] < next->array[j]) {
+				if(scan->key[k] < next->node.array[j]) {
 					break;
-				} else if (scan->key[k] > next->array[j]) {
+				} else if (scan->key[k] > next->node.array[j]) {
 					scan->mode = S_DEFAULT;
 					goto SKIP;
 				}
@@ -255,16 +255,16 @@ static void _tree_scan_prev(Node *node, Scan *scan)
 		}
 
 	SKIP:
-		i = (next - node->child);
+		i = (next - node->children.entries);
 	} 
 
-	if(node->child_count > 0) {
-		for(; i < node->child_count; i--) {
-			Node *current = node->child + i;
+	if(node->children.count > 0) {
+		for(; i < node->children.count; i--) {
+			BsearchEntry *current = node->children.entries + i;
 
 			_push_node_key(scan, current);
 
-			_tree_scan_prev(current, scan);
+			_tree_scan_prev(&current->node, scan);
 
 			if(scan->result != NULL)
 				break;
@@ -285,23 +285,25 @@ CONTINUE:
  */
 static Node *_build_node(Node *node, unsigned char *string, unsigned short length)
 {
+	Node *next_node;
 	if (length >= 1) {
-		node = bsearch_insert(node, string[0]);
+		next_node = &bsearch_insert(&node->children, string[0])->node;
 
-		_node_init(node, 0, NULL, NULL);
-		_node_array_init(node);
+		_node_init(next_node, 0, NULL, NULL);
+		_node_array_init(next_node);
 
 		//TODO: If key length <= sizeof(ptr) don't malloc,
 		// Just turn pointer into a union and store the array inline.
 		if(length > 1) {
-			_node_set_array(node, length-1);
-			memcpy(node->array, string+1, length-1);
+			_node_set_array(next_node, length-1);
+			memcpy(next_node->array, string+1, length-1);
 		}
-		trace_node("BUILD-NODE", node);
+		trace_node("BUILD-NODE", next_node);
 	} else {
-		trace_node("REUSE-NODE", node);
+		next_node = node;
+		trace_node("REUSE-NODE", next_node);
 	}
-	return node;
+	return next_node;
 }
 
 /**
@@ -328,14 +330,14 @@ static Node * _split_node_array(Node *node, Scan *scan)
 
                 //After the data node we append the old suffix
 		Node *branch = _build_node(node, old_suffix, old_suffix_size);
-		_node_init(branch, old.child_count, old.child, old.data);
+		_node_init(branch, old.children.count, old.children.entries, old.data);
 	} else {
 		//make node point to new tree node
 		_node_init(node, 0, NULL, NULL);
 
 		//add branch to hold old suffix and delete old data
 		Node *branch1 = _build_node(node, old_suffix, old_suffix_size);
-		_node_init(branch1, old.child_count, old.child, old.data);
+		_node_init(branch1, old.children.count, old.children.entries, old.data);
 		trace_node("OLD-BRANCH", branch1);
 
 		//add branch to hold new suffix and return new node
@@ -352,35 +354,35 @@ static Node * _split_node_array(Node *node, Scan *scan)
 
 static void _compact_nodes(Node *node)
 {
-	if (node->child_count != 1 || node->data) {
+	if (node->children.count != 1 || node->data) {
 		return;
 	}
 
-	Node *child = node->child;
+	BsearchEntry *child = node->children.entries;
 
 	//Join arrays
-	int joined_size = node->size + 1 + child->size;
+	int joined_size = node->size + 1 + child->node.size;
 	int end = node->size;
 
 	_node_set_array(node, joined_size);
 
 	node->array[end++] = child->key;
 
-	memcpy(node->array+end, child->array, child->size);
+	memcpy(node->array+end, child->node.array, child->node.size);
 
 	//Replace child
-	if(child->array) {
-		c_free(child->array);
-		set_null(child->array);
+	if(child->node.array) {
+		c_free(child->node.array);
+		set_null(child->node.array);
 	}
 
-	Node cont = *child;
+	Node cont = child->node;
 
-	bsearch_delete(node, child->key);
+	bsearch_delete(&node->children, child->key);
 
 	trace("new size: %i", joined_size);
 
-	_node_init(node, cont.child_count, cont.child, cont.data);
+	_node_init(node, cont.children.count, cont.children.entries, cont.data);
 }
 
 /**
@@ -388,10 +390,10 @@ static void _compact_nodes(Node *node)
  */
 static void _pluck_node(Node *node, Scan *scan)
 {
-	trace_node("CLEAN", node);
 	Node *previous = scan->previous;
+	trace_node("CLEAN", node);
 
-	if(node->child_count == 0 && previous) {
+	if(node->children.count == 0 && previous) {
 		trace_node("PREVIOUS", previous);
 
 		if(node->array) {
@@ -399,7 +401,8 @@ static void _pluck_node(Node *node, Scan *scan)
 			set_null(node->array);
 		}
 
-		bsearch_delete(previous, node->key);
+		char bkey = scan->key[scan->index - scan->subindex - 1];
+		bsearch_delete(&previous->children, bkey);
 
 		if(previous != scan->root) {
 			_compact_nodes(previous);
@@ -561,14 +564,14 @@ void radix_tree_dispose(Node *tree)
 		c_free(tree->array);
 		set_null(tree->array);
 	}
-	if(tree->child) {
-		Node *child = tree->child;
+	if(tree->children.entries) {
+		BsearchEntry *entry = tree->children.entries;
 		int i;
-		for(i = 0; i < tree->child_count; i++) {
-			radix_tree_dispose(child+i);
+		for(i = 0; i < tree->children.count; i++) {
+			radix_tree_dispose(&(entry + i)->node);
 		}
-		c_delete(tree->child);
-		set_null(tree->child);
+		c_delete(tree->children.entries);
+		set_null(tree->children.entries);
 	}
 }
 

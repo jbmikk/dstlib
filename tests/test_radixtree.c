@@ -33,9 +33,9 @@ void test_radix_tree__set_and_get(){
 	radix_tree_set(tree, nzs("blue"), in1);
 	out1 = radix_tree_get(tree, nzs("blue"));
 
-	t_assert(tree->child_count == 1);
-	t_assert(tree->child->array != NULL);
-	t_assert(tree->child->size == 3);
+	t_assert(tree->children.count == 1);
+	t_assert(tree->children.entries->node.array != NULL);
+	t_assert(tree->children.entries->node.size == 3);
 	t_assert(!strcmp(out1, "BLUE"));
 }
 
@@ -48,9 +48,9 @@ void test_radix_tree__set_and_contains(){
 	out1 = radix_tree_contains(tree, nzs("blue"));
 	out2 = radix_tree_contains(tree, nzs("green"));
 
-	t_assert(tree->child_count == 1);
-	t_assert(tree->child->array != NULL);
-	t_assert(tree->child->size == 3);
+	t_assert(tree->children.count == 1);
+	t_assert(tree->children.entries->node.array != NULL);
+	t_assert(tree->children.entries->node.size == 3);
 	t_assert(out1 == 1);
 	t_assert(out2 == 0);
 }
@@ -62,7 +62,7 @@ void test_radix_tree__set_and_get_1key(){
 	radix_tree_set(tree, nzs("b"), in1);
 	out1 = radix_tree_get(tree, nzs("b"));
 
-	t_assert(tree->child_count == 1);
+	t_assert(tree->children.count == 1);
 	t_assert(tree->array == NULL);
 	t_assert(tree->size == 0);
 	t_assert(!strcmp(out1, "BLUE"));
@@ -76,7 +76,7 @@ void test_radix_tree__set_and_remove_1key(){
 	radix_tree_remove(tree, nzs("b"));
 	out1 = radix_tree_get(tree, nzs("b"));
 
-	t_assert(tree->child_count == 0);
+	t_assert(tree->children.count == 0);
 	t_assert(tree->array == NULL);
 	t_assert(tree->size == 0);
 	t_assert(out1 == NULL);
@@ -92,7 +92,7 @@ void test_radix_tree__set2_and_remove1_1key(){
 	out1 = radix_tree_get(tree, nzs("b"));
 	out2 = radix_tree_get(tree, nzs("g"));
 
-	t_assert(tree->child_count == 1);
+	t_assert(tree->children.count == 1);
 	t_assert(tree->array == 0);
 	t_assert(tree->size == 0);
 	t_assert(out1 == NULL);
@@ -107,7 +107,7 @@ void test_radix_tree__set_and_remove_4key(){
 	radix_tree_remove(tree, nzs("blue"));
 	out1= radix_tree_get(tree, nzs("blue"));
 
-	t_assert(tree->child_count == 0);
+	t_assert(tree->children.count == 0);
 	t_assert(tree->array == NULL);
 	t_assert(tree->size == 0);
 	t_assert(out1 == NULL);
@@ -123,9 +123,9 @@ void test_radix_tree__set2_and_remove1_4key(){
 	out1 = radix_tree_get(tree, nzs("blue"));
 	out2 = radix_tree_get(tree, nzs("green"));
 
-	t_assert(tree->child_count == 1);
-	t_assert(tree->child->array != NULL);
-	t_assert(tree->child->size == 4);
+	t_assert(tree->children.count == 1);
+	t_assert(tree->children.entries->node.array != NULL);
+	t_assert(tree->children.entries->node.size == 4);
 	t_assert(out1 == NULL);
 	t_assert(out2 != NULL);
 	t_assert(!strcmp(out2, "GREEN"));
@@ -141,9 +141,9 @@ void test_radix_tree__set2_and_remove1_4key_with_parent_array(){
 	out1 = radix_tree_get(tree, nzs("lightblue"));
 	out2 = radix_tree_get(tree, nzs("lightgreen"));
 
-	t_assert(tree->child_count == 1);
-	t_assert(tree->child->array != NULL);
-	t_assert(tree->child->size == 9);
+	t_assert(tree->children.count == 1);
+	t_assert(tree->children.entries->node.array != NULL);
+	t_assert(tree->children.entries->node.size == 9);
 	t_assert(out1 == NULL);
 	t_assert(!strcmp(out2, "GREEN"));
 }
@@ -160,9 +160,9 @@ void test_radix_tree__set2_and_remove1_4key_deep(){
 	out2 = radix_tree_get(tree, nzs("lightgreen"));
 	out6 = radix_tree_get(tree, nzs("lig"));
 
-	t_assert(tree->child_count == 1);
-	t_assert(tree->child->array != NULL);
-	t_assert(tree->child->size == 2);
+	t_assert(tree->children.count == 1);
+	t_assert(tree->children.entries->node.array != NULL);
+	t_assert(tree->children.entries->node.size == 2);
 	t_assert(out1== NULL);
 	t_assert(!strcmp(out2, "GREEN"));
 	t_assert(!strcmp(out6, "LIG"));
@@ -178,9 +178,9 @@ void test_radix_tree__set2_and_remove1_3key(){
 	out1 = radix_tree_get(tree, nzs("lbl"));
 	out2 = radix_tree_get(tree, nzs("lgr"));
 
-	t_assert(tree->child_count == 1);
-	t_assert(tree->child->array != NULL);
-	t_assert(tree->child->size == 2);
+	t_assert(tree->children.count == 1);
+	t_assert(tree->children.entries->node.array != NULL);
+	t_assert(tree->children.entries->node.size == 2);
 	t_assert(out1 == NULL);
 	t_assert(!strcmp(out2, "GREEN"));
 }
@@ -232,9 +232,9 @@ void test_radix_tree__remove_non_leaf_key(){
 	out1 = radix_tree_get(tree, nzs("lightgreen"));
 	out2 = radix_tree_get(tree, nzs("light"));
 
-	t_assert(tree->child_count == 1);
-	t_assert(tree->child->array != NULL);
-	t_assert(tree->child->size == 9);
+	t_assert(tree->children.count == 1);
+	t_assert(tree->children.entries->node.array != NULL);
+	t_assert(tree->children.entries->node.size == 9);
 	t_assert(!strcmp(out1, "LIGHTGREEN"));
 	t_assert(out2 == NULL);
 }
@@ -252,9 +252,9 @@ void test_radix_tree__set_long_key(){
 	radix_tree_set(tree, key, length, in1);
 	out1 = radix_tree_get(tree, key, length);
 
-	t_assert(tree->child_count == 1);
-	t_assert(tree->child->array != NULL);
-	t_assert(tree->child->size == 1023);
+	t_assert(tree->children.count == 1);
+	t_assert(tree->children.entries->node.array != NULL);
+	t_assert(tree->children.entries->node.size == 1023);
 	t_assert(!strcmp(out1, "BLUE"));
 }
 
