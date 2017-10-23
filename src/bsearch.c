@@ -12,7 +12,7 @@ struct BsearchScan {
 	struct BsearchEntry *next;
 };
 
-void _scan(struct BsearchScan *scan, Bsearch *bsearch, unsigned char key)
+static void _scan(struct BsearchScan *scan, Bsearch *bsearch, unsigned char key)
 {
 	BsearchEntry *entries = bsearch->entries;
 	int left = 0;
