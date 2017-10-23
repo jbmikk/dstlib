@@ -71,7 +71,7 @@ BsearchEntry *bsearch_get_lte(Bsearch *bsearch, unsigned char key)
 BsearchEntry *bsearch_insert(Bsearch *bsearch, unsigned char key)
 {
 	BsearchEntry *new_entries;
-	BsearchEntry *new_node;
+	BsearchEntry *new_entry;
 	BsearchEntry *src = bsearch->entries;
 	BsearchEntry *dst;
 	BsearchEntry *end = src + bsearch->count;
@@ -82,24 +82,24 @@ BsearchEntry *bsearch_insert(Bsearch *bsearch, unsigned char key)
 	if(src != NULL) {
 		while(src < end && src->key < key)
 			*dst++ = *src++;
-		new_node = dst++;
+		new_entry = dst++;
 		while(src < end)
 			*dst++ = *src++;
 
 		c_free(bsearch->entries);
 	} else {
-		new_node = new_entries;
+		new_entry = new_entries;
 	}
 
-	new_node->key = key;
+	new_entry->key = key;
 	//TODO: should use node_init
-	new_node->node.data = NULL;
+	new_entry->node.data = NULL;
 
 	//assign new children
 	bsearch->entries = new_entries;
 	bsearch->count++;
 
-	return new_node;
+	return new_entry;
 error:
 	return NULL;
 }
