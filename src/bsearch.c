@@ -6,16 +6,15 @@
 #include "cmemory.h"
 #include "dbg.h"
 
-void bsearch_init(Bsearch *bsearch)
-{
-	bsearch->entries = NULL;
-	bsearch->count = 0;
-}
+struct BsearchScan {
+	struct BsearchEntry *prev;
+	struct BsearchEntry *equal;
+	struct BsearchEntry *next;
+};
 
-BsearchEntry *bsearch_get(Bsearch *bsearch, unsigned char key)
+void _scan(struct BsearchScan *scan, Bsearch *bsearch, unsigned char key)
 {
 	BsearchEntry *entries = bsearch->entries;
-	BsearchEntry *next;
 	int left = 0;
 	int right = bsearch->count-1;
 
@@ -24,41 +23,39 @@ BsearchEntry *bsearch_get(Bsearch *bsearch, unsigned char key)
 	while(left <= right) {
 		unsigned int i = left+((right - left)>>1);
 		if(entries[i].key < key) {
+			scan->prev = &entries[i];
 			left = i+1;
 		} else if(entries[i].key > key) {
+			scan->next = &entries[i];
 			right = i-1;
 		} else {
-			next = &(entries[i]);
-			return next;
+			scan->equal = &entries[i];
+			break;
 		}
 	}
-	return NULL;
 }
 
+void bsearch_init(Bsearch *bsearch)
+{
+	bsearch->entries = NULL;
+	bsearch->count = 0;
+}
+
+BsearchEntry *bsearch_get(Bsearch *bsearch, unsigned char key)
+{
+	struct BsearchScan scan = {NULL, NULL, NULL};
+	_scan(&scan, bsearch, key);
+	return scan.equal;
+}
 
 /**
  * Get closest greater than or equal child
  */
 BsearchEntry *bsearch_get_gte(Bsearch *bsearch, unsigned char key)
 {
-	BsearchEntry *entries = bsearch->entries;
-	BsearchEntry *next = NULL;
-	int left = 0;
-	int right = bsearch->count - 1;
-
-	while(left <= right) {
-		unsigned int i = left+((right - left)>>1);
-		if(entries[i].key < key) {
-			left = i+1;
-		} else if(entries[i].key > key) {
-			next = &entries[i];
-			right = i-1;
-		} else {
-			next = &entries[i];
-			break;
-		}
-	}
-	return next;
+	struct BsearchScan scan = {NULL, NULL, NULL};
+	_scan(&scan, bsearch, key);
+	return scan.equal? scan.equal: scan.next;
 }
 
 /**
@@ -66,24 +63,9 @@ BsearchEntry *bsearch_get_gte(Bsearch *bsearch, unsigned char key)
  */
 BsearchEntry *bsearch_get_lte(Bsearch *bsearch, unsigned char key)
 {
-	BsearchEntry *entries = bsearch->entries;
-	BsearchEntry *next = NULL;
-	int left = 0;
-	int right = bsearch->count - 1;
-
-	while(left <= right) {
-		unsigned int i = left+((right - left)>>1);
-		if(entries[i].key < key) {
-			next = &entries[i];
-			left = i+1;
-		} else if(entries[i].key > key) {
-			right = i-1;
-		} else {
-			next = &entries[i];
-			break;
-		}
-	}
-	return next;
+	struct BsearchScan scan = {NULL, NULL, NULL};
+	_scan(&scan, bsearch, key);
+	return scan.equal? scan.equal: scan.prev;
 }
 
 BsearchEntry *bsearch_insert(Bsearch *bsearch, unsigned char key)
