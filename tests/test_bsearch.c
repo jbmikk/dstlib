@@ -130,6 +130,34 @@ void bsearch__set2_and_delete1(){
 	t_assert(b2->node.data == (void *)&d2);
 }
 
+void bsearch__set3_and_delete1(){
+	BsearchEntry *a1, *a2, *b1, *b2, *c1, *c2;
+	BsearchEntry d1, d2, d3;
+
+	a1 = bsearch_insert(&fixture.bsearch, 'a');
+	a1->node.data = (void *) &d1;
+	b1 = bsearch_insert(&fixture.bsearch, 'b');
+	b1->node.data = (void *) &d2;
+	c1 = bsearch_insert(&fixture.bsearch, 'c');
+	c1->node.data = (void *) &d3;
+
+	bsearch_delete(&fixture.bsearch, 'b');
+
+	a2 = bsearch_get(&fixture.bsearch, 'a');
+	b2 = bsearch_get(&fixture.bsearch, 'b');
+	c2 = bsearch_get(&fixture.bsearch, 'c');
+
+	t_assert(fixture.bsearch.count == 2);
+
+	t_assert(a2 != NULL);
+	t_assert(a2->node.data == (void *)&d1);
+
+	t_assert(b2 == NULL);
+
+	t_assert(c2 != NULL);
+	t_assert(c2->node.data == (void *)&d3);
+}
+
 int main(int argc, char** argv) {
 	t_init();
 	t_test(bsearch__set_and_get);
@@ -138,6 +166,7 @@ int main(int argc, char** argv) {
 	t_test(bsearch__get_lte);
 	t_test(bsearch__set2_and_get2_ensure_unsigned);
 	t_test(bsearch__set2_and_delete1);
+	t_test(bsearch__set3_and_delete1);
 
 	//TODO:
 	//delete

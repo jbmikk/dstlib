@@ -106,7 +106,9 @@ error:
 
 int bsearch_delete(Bsearch *bsearch, unsigned char key)
 {
-	if(bsearch_get(bsearch, key)!= NULL) {
+	struct BsearchScan scan = {NULL, NULL, NULL};
+	_scan(&scan, bsearch, key);
+	if(scan.equal) {
 		BsearchEntry *new_entries = NULL;
 		if(bsearch->count > 1) {
 			new_entries = c_new(BsearchEntry, bsearch->count-1);
@@ -114,12 +116,15 @@ int bsearch_delete(Bsearch *bsearch, unsigned char key)
 
 			BsearchEntry *dst = new_entries;
 			BsearchEntry *src = bsearch->entries;
-			BsearchEntry *end = src + bsearch->count;
-			while(src < end && src->key < key)
-				*dst++ = *src++;
-			src++;
-			while(src < end)
-				*dst++ = *src++;
+
+			unsigned int index = scan.equal - src;
+
+			memcpy(dst, src, index * sizeof(BsearchEntry));
+			memmove(
+				dst + index,
+				src + index + 1,
+				(bsearch->count - index -1) * sizeof(BsearchEntry)
+			);
 		}
 
 		//replace bsearch's entries
