@@ -96,6 +96,7 @@ void test_radix_tree__set2_and_remove1_1key(){
 	t_assert(tree->array == 0);
 	t_assert(tree->size == 0);
 	t_assert(out1 == NULL);
+	t_assert(out2 != NULL);
 	t_assert(!strcmp(out2, "GREEN"));
 }
 

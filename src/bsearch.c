@@ -109,28 +109,26 @@ int bsearch_delete(Bsearch *bsearch, unsigned char key)
 	struct BsearchScan scan = {NULL, NULL, NULL};
 	_scan(&scan, bsearch, key);
 	if(scan.equal) {
-		BsearchEntry *new_entries = NULL;
-		if(bsearch->count > 1) {
-			new_entries = c_new(BsearchEntry, bsearch->count-1);
-			check_mem(new_entries);
+		unsigned int index = scan.equal - bsearch->entries;
 
-			BsearchEntry *dst = new_entries;
-			BsearchEntry *src = bsearch->entries;
+		memmove(
+			bsearch->entries + index,
+			bsearch->entries + index + 1,
+			(bsearch->count - (index + 1)) * sizeof(BsearchEntry)
+		);
 
-			unsigned int index = scan.equal - src;
-
-			memcpy(dst, src, index * sizeof(BsearchEntry));
-			memmove(
-				dst + index,
-				src + index + 1,
-				(bsearch->count - index -1) * sizeof(BsearchEntry)
-			);
-		}
-
-		//replace bsearch's entries
-		c_free(bsearch->entries);
-		bsearch->entries = new_entries;
 		bsearch->count--;
+
+		// TODO: Realloc call may be avoidable. We can just leave the 
+		// memory allocated and only call realloc on insert.
+		bsearch->entries = realloc(
+			bsearch->entries,
+			bsearch->count * sizeof(BsearchEntry)
+		);
+
+		if(bsearch->count) {
+			check_mem(bsearch->entries);
+		}
 	}
 	return 0;
 error:
