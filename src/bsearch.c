@@ -70,36 +70,38 @@ BsearchEntry *bsearch_get_lte(Bsearch *bsearch, unsigned char key)
 
 BsearchEntry *bsearch_insert(Bsearch *bsearch, unsigned char key)
 {
-	BsearchEntry *new_entries;
-	BsearchEntry *new_entry;
-	BsearchEntry *src = bsearch->entries;
-	BsearchEntry *dst;
-	BsearchEntry *end = src + bsearch->count;
+	unsigned int index = 0;
+	struct BsearchScan scan = {NULL, NULL, NULL};
+	_scan(&scan, bsearch, key);
 
-	dst = new_entries = c_new(BsearchEntry, bsearch->count + 1);
-	check_mem(new_entries);
+	if(!scan.equal) {
+		if(scan.next) {
+			index = scan.next - bsearch->entries;
+		} else {
+			index = bsearch->count;
+		}
+		bsearch->count++;
+		bsearch->entries = realloc(
+			bsearch->entries,
+			bsearch->count * sizeof(BsearchEntry)
+		);
+		check_mem(bsearch->entries);
 
-	if(src != NULL) {
-		while(src < end && src->key < key)
-			*dst++ = *src++;
-		new_entry = dst++;
-		while(src < end)
-			*dst++ = *src++;
+		memmove(
+			bsearch->entries + index + 1,
+			bsearch->entries + index,
+			(bsearch->count - (index + 1)) * sizeof(BsearchEntry)
+		);
 
-		c_free(bsearch->entries);
+		bsearch->entries[index].key = key;
+		//TODO: should use node_init
+		bsearch->entries[index].node.data = NULL;
 	} else {
-		new_entry = new_entries;
+		return NULL;
 	}
 
-	new_entry->key = key;
-	//TODO: should use node_init
-	new_entry->node.data = NULL;
-
-	//assign new children
-	bsearch->entries = new_entries;
-	bsearch->count++;
-
-	return new_entry;
+	return bsearch->entries + index;
+//TODO: Should change interface, possible to return NULL without errors.
 error:
 	return NULL;
 }
