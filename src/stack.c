@@ -7,10 +7,9 @@ void stack_init(Stack *stack)
 	stack->top = NULL;
 }
 
-StackNode *stack_push(Stack *stack, void *ptr)
+StackNode *stack_push(Stack *stack, unsigned int size)
 {
-	StackNode *top = c_new(StackNode, 1);
-	top->data = ptr;
+	StackNode *top = c_malloc_n(size); \
 	top->next = stack->top;
 	stack->top = top;
 	return top;

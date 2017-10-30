@@ -11,21 +11,23 @@ void t_setup(){
 void t_teardown(){
 }
 
+DEFINE_STACK(int, Int, int);
+
 void stack_push_pop(){
 
 	int value = 1000;
 
-	Stack stack;
+	StackInt stack;
 
-	stack_init(&stack);
-	t_assert(stack.top == NULL);
+	stack_int_init(&stack);
+	t_assert(stack.stack.top == NULL);
 
-	stack_push(&stack, &value);
-	t_assert(stack.top != NULL);
-	t_assert(*(int *)stack.top->data == 1000);
+	stack_int_push(&stack, value);
+	t_assert(stack.stack.top != NULL);
+	t_assert(((StackNodeInt *)stack.stack.top)->data == 1000);
 
-	stack_pop(&stack);
-	t_assert(stack.top == NULL);
+	stack_int_pop(&stack);
+	t_assert(stack.stack.top == NULL);
 }
 
 void stack_dispose_many_nodes(){
@@ -34,18 +36,18 @@ void stack_dispose_many_nodes(){
 	int value2 = 2000;
 	int value3 = 3000;
 
-	Stack stack;
+	StackInt stack;
 
-	stack_init(&stack);
+	stack_int_init(&stack);
 
-	stack_push(&stack, &value);
-	stack_push(&stack, &value2);
-	stack_push(&stack, &value3);
-	t_assert(stack.top != NULL);
-	t_assert(*(int *)stack.top->data == 3000);
+	stack_int_push(&stack, value);
+	stack_int_push(&stack, value2);
+	stack_int_push(&stack, value3);
+	t_assert(stack.stack.top != NULL);
+	t_assert(((StackNodeInt *)stack.stack.top)->data == 3000);
 
-	stack_dispose(&stack);
-	t_assert(stack.top == NULL);
+	stack_int_dispose(&stack);
+	t_assert(stack.stack.top == NULL);
 }
 
 int main(int argc, char** argv){
