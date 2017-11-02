@@ -48,7 +48,7 @@ void stack_##LOWER##_push(struct STACK_TYPE(UPPER) *stack, TYPE data) { \
 }
 
 #define STACK_POP(TYPE, UPPER, LOWER) \
-void stack_##TYPE##_pop(struct STACK_TYPE(UPPER) *stack) { \
+void stack_##LOWER##_pop(struct STACK_TYPE(UPPER) *stack) { \
 	stack_pop(&stack->stack); \
 }
 
