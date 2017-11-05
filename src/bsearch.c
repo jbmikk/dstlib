@@ -13,9 +13,9 @@ struct BsearchScan {
 	struct BsearchEntry *next;
 };
 
-static void _scan(struct BsearchScan *scan, Bsearch *bsearch, unsigned char key)
+static void _scan(struct BsearchScan *scan, Bsearch *bsearch, unsigned int size, unsigned char key)
 {
-	BsearchEntry *entries = bsearch->entries;
+	char *entries = (char *)bsearch->entries;
 	int left = 0;
 	int right = bsearch->count-1;
 
@@ -23,7 +23,7 @@ static void _scan(struct BsearchScan *scan, Bsearch *bsearch, unsigned char key)
 	//TODO: At most there will always be 8 iterations, possible to unroll?
 	while(left <= right) {
 		unsigned int i = left+((right - left)>>1);
-		BsearchEntry *entry = &entries[i];
+		BsearchEntry *entry = (BsearchEntry *)&entries[i * size];
 		if(entry->key < key) {
 			scan->prev = entry;
 			left = i+1;
@@ -41,15 +41,14 @@ static void _scan(struct BsearchScan *scan, Bsearch *bsearch, unsigned char key)
 /**
  * Ensure previous and next entries are defined if available.
  */
-static void _scan_out(struct BsearchScan *scan, Bsearch *bsearch)
+static void _scan_out(struct BsearchScan *scan, Bsearch *bsearch, unsigned int size)
 {
 	if(scan->equal) {
-		int index = scan->equal - bsearch->entries;
-		if(index > 0) {
-			scan->prev = scan->equal - 1;
+		if(scan->equal > bsearch->entries) {
+			scan->prev = scan->equal - size;
 		}
-		if(index < bsearch->count - 1) {
-			scan->next = scan->equal + 1;
+		if(scan->equal < bsearch->entries + ((bsearch->count - 1) * size)) {
+			scan->next = scan->equal + size;
 		}
 	}
 }
@@ -69,115 +68,129 @@ void bsearch_dispose(Bsearch *bsearch)
 	bsearch->count = 0;
 }
 
-BsearchEntry *bsearch_get(Bsearch *bsearch, unsigned char key)
+unsigned int bsearch_count(Bsearch *bsearch)
+{
+	return bsearch->count;
+}
+
+BsearchEntry *bsearch_first(Bsearch *bsearch)
+{
+	return bsearch->entries;
+}
+
+BsearchEntry *bsearch_get(Bsearch *bsearch, unsigned int size, unsigned char key)
 {
 	struct BsearchScan scan = {NULL, NULL, NULL};
-	_scan(&scan, bsearch, key);
+	_scan(&scan, bsearch, size, key);
 	return scan.equal;
 }
 
 /**
  * Get closest greater than or equal child
  */
-BsearchEntry *bsearch_get_gte(Bsearch *bsearch, unsigned char key)
+BsearchEntry *bsearch_get_gte(Bsearch *bsearch, unsigned int size, unsigned char key)
 {
 	struct BsearchScan scan = {NULL, NULL, NULL};
-	_scan(&scan, bsearch, key);
+	_scan(&scan, bsearch, size, key);
 	return scan.equal? scan.equal: scan.next;
 }
 
 /**
  * Get closest less than or equal child
  */
-BsearchEntry *bsearch_get_lte(Bsearch *bsearch, unsigned char key)
+BsearchEntry *bsearch_get_lte(Bsearch *bsearch, unsigned int size, unsigned char key)
 {
 	struct BsearchScan scan = {NULL, NULL, NULL};
-	_scan(&scan, bsearch, key);
+	_scan(&scan, bsearch, size, key);
 	return scan.equal? scan.equal: scan.prev;
 }
 
 /**
  * Get closest greater than key
  */
-BsearchEntry *bsearch_get_gt(Bsearch *bsearch, unsigned char key)
+BsearchEntry *bsearch_get_gt(Bsearch *bsearch, unsigned int size, unsigned char key)
 {
 	struct BsearchScan scan = {NULL, NULL, NULL};
-	_scan(&scan, bsearch, key);
-	_scan_out(&scan, bsearch);
+	_scan(&scan, bsearch, size, key);
+	_scan_out(&scan, bsearch, size);
 	return scan.next;
 }
 
 /**
  * Get closest less than key
  */
-BsearchEntry *bsearch_get_lt(Bsearch *bsearch, unsigned char key)
+BsearchEntry *bsearch_get_lt(Bsearch *bsearch, unsigned int size, unsigned char key)
 {
 	struct BsearchScan scan = {NULL, NULL, NULL};
-	_scan(&scan, bsearch, key);
-	_scan_out(&scan, bsearch);
+	_scan(&scan, bsearch, size, key);
+	_scan_out(&scan, bsearch, size);
 	return scan.prev;
 }
 
-BsearchEntry *bsearch_insert(Bsearch *bsearch, unsigned char key)
+BsearchEntry *bsearch_insert(Bsearch *bsearch, unsigned int size, unsigned char key)
 {
+	char * entries = (char *)bsearch->entries;
 	unsigned int index = 0;
+	unsigned int count = bsearch->count * size;
 	struct BsearchScan scan = {NULL, NULL, NULL};
-	_scan(&scan, bsearch, key);
+	_scan(&scan, bsearch, size, key);
 
 	if(!scan.equal) {
 		if(scan.next) {
-			index = scan.next - bsearch->entries;
+			index = ((char *)scan.next) - entries;
 		} else {
-			index = bsearch->count;
+			index = count;
 		}
-		bsearch->count++;
-		bsearch->entries = realloc(
-			bsearch->entries,
-			bsearch->count * sizeof(BsearchEntry)
+		entries = realloc(
+			entries,
+			count + size
 		);
-		check_mem(bsearch->entries);
+		check_mem(entries);
 
 		memmove(
-			bsearch->entries + index + 1,
-			bsearch->entries + index,
-			(bsearch->count - (index + 1)) * sizeof(BsearchEntry)
+			entries + index + size,
+			entries + index,
+			count - index
 		);
 
-		bsearch->entries[index].key = key;
-		//TODO: should use node_init
-		bsearch->entries[index].node.data = NULL;
+		bsearch->count++;
+		bsearch->entries = (BsearchEntry *)entries;
+
+		BsearchEntry *entry = (BsearchEntry *)&entries[index];
+		entry->key = key;
+		return entry;
 	} else {
 		return NULL;
 	}
 
-	return bsearch->entries + index;
 //TODO: Should change interface, possible to return NULL without errors.
 error:
 	return NULL;
 }
 
-int bsearch_delete(Bsearch *bsearch, unsigned char key)
+int bsearch_delete(Bsearch *bsearch, unsigned int size, unsigned char key)
 {
 	struct BsearchScan scan = {NULL, NULL, NULL};
-	_scan(&scan, bsearch, key);
+	_scan(&scan, bsearch, size, key);
 	if(scan.equal) {
-		unsigned int index = scan.equal - bsearch->entries;
+		char *entries = (char *)bsearch->entries;
+		unsigned int index = ((char *)scan.equal) - entries;
+		unsigned int count = bsearch->count * size;
 
 		memmove(
-			bsearch->entries + index,
-			bsearch->entries + index + 1,
-			(bsearch->count - (index + 1)) * sizeof(BsearchEntry)
+			scan.equal,
+			scan.equal + size,
+			count - index - size
 		);
-
-		bsearch->count--;
 
 		// TODO: Realloc call may be avoidable. We can just leave the 
 		// memory allocated and only call realloc on insert.
 		bsearch->entries = realloc(
-			bsearch->entries,
-			bsearch->count * sizeof(BsearchEntry)
+			entries,
+			count - size
 		);
 
+		bsearch->count--;
 		if(bsearch->count) {
 			check_mem(bsearch->entries);
 		}
@@ -194,13 +207,13 @@ void bsearch_delete_all(Bsearch *bsearch)
 	bsearch->count = 0;
 }
 
-void bsearch_cursor_init(BsearchCursor *cur, Bsearch *bsearch)
+void bsearch_cursor_init(BsearchCursor *cur, Bsearch *bsearch, unsigned int size)
 {
 	cur->bsearch = bsearch;
-	cur->step = 1;
+	cur->step = size;
 	if(bsearch->entries) {
-		cur->current = bsearch->entries - 1;
-		cur->last = bsearch->entries - 1 + bsearch->count;
+		cur->current = bsearch->entries - size;
+		cur->last = bsearch->entries + (bsearch->count - 1) * size;
 	} else {
 		cur->current = NULL;
 		cur->last = NULL;
@@ -230,25 +243,27 @@ _Bool bsearch_cursor_next(BsearchCursor *cur)
 	return not_last;
 }
 
-void bsearch_cursor_move(BsearchCursor *cur, unsigned char key)
+void bsearch_cursor_move(BsearchCursor *cur, unsigned int size, unsigned char key)
 {
-	cur->current = bsearch_get(cur->bsearch, key);
+	cur->current = bsearch_get(cur->bsearch, size, key);
 }
 
-void bsearch_cursor_move_lt(BsearchCursor *cur, unsigned char key)
+void bsearch_cursor_move_lt(BsearchCursor *cur, unsigned int size, unsigned char key)
 {
-	cur->current = bsearch_get_lt(cur->bsearch, key);
+	cur->current = bsearch_get_lt(cur->bsearch, size, key);
 	if(!cur->current && cur->bsearch->entries) {
-		cur->current = cur->bsearch->entries - 1;
+		char *entries = (char *)cur->bsearch->entries;
+		cur->current = (BsearchEntry *)(entries - size);
 	}
 }
 
-void bsearch_cursor_move_gt(BsearchCursor *cur, unsigned char key)
+void bsearch_cursor_move_gt(BsearchCursor *cur, unsigned int size, unsigned char key)
 {
-	cur->current = bsearch_get_gt(cur->bsearch, key);
+	cur->current = bsearch_get_gt(cur->bsearch, size, key);
 	if(!cur->current && cur->bsearch->entries) {
 		// This equals initial value in reverse mode.
-		cur->current = cur->bsearch->entries + cur->bsearch->count;
+		char *entries = (char *)cur->bsearch->entries;
+		cur->current = (BsearchEntry *)(entries + (cur->bsearch->count * size));
 	}
 }
 

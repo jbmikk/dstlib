@@ -1,9 +1,36 @@
 #ifndef RADIXTREE_H
 #define	RADIXTREE_H
 
-#include "structs.h"
-
 #include <stdint.h>
+#include "bsearch.h"
+
+struct Node;
+
+struct BSEARCH_ENTRY_TYPE(Node);
+
+BSEARCH_STRUCT(struct Node, Node, node)
+	
+typedef struct Node {
+	BsearchNode children;
+
+	//Radix tree specific
+	unsigned short size;
+	unsigned char *array;
+	void *data;
+} Node;
+
+BSEARCH_ENTRY_STRUCT(struct Node, Node, node)
+BSEARCH_CURSOR_STRUCT(struct Node, Node, node)
+
+DEFINE_BSEARCH_FUNCTIONS(struct Node, Node, node, PROTOTYPE)
+
+
+typedef struct _Iterator {
+	Node *root;
+	unsigned char *key;
+	unsigned short size;
+	void *data;
+} Iterator;
 
 typedef enum {
 	S_DEFAULT = 0,

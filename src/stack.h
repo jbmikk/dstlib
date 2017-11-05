@@ -1,8 +1,6 @@
 #ifndef STACK_H
 #define STACK_H
 
-#include "structs.h"
-
 #include "stddef.h"
 
 typedef struct StackNode {
