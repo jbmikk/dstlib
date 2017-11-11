@@ -22,14 +22,15 @@ static void _scan(struct BsearchScan *scan, Bsearch *bsearch, unsigned char key)
 	//TODO: At most there will always be 8 iterations, possible to unroll?
 	while(left <= right) {
 		unsigned int i = left+((right - left)>>1);
-		if(entries[i].key < key) {
-			scan->prev = &entries[i];
+		BsearchEntry *entry = &entries[i];
+		if(entry->key < key) {
+			scan->prev = entry;
 			left = i+1;
-		} else if(entries[i].key > key) {
-			scan->next = &entries[i];
+		} else if(entry->key > key) {
+			scan->next = entry;
 			right = i-1;
 		} else {
-			scan->equal = &entries[i];
+			scan->equal = entry;
 			break;
 		}
 	}
