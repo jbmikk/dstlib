@@ -57,10 +57,9 @@ static void _scan_init(Scan *scan, unsigned char *key, unsigned short size, Node
 	scan->result = NULL;
 }
 
-static void _node_init(Node *node, unsigned char count, BsearchEntry *entries, void *data)
+static void _node_init(Node *node, Bsearch children, void *data)
 {
-	node->children.count = count;
-	node->children.entries = entries;
+	node->children = children;
 	node->data = data;
 }
 
@@ -289,7 +288,7 @@ static Node *_build_node(Node *node, unsigned char *string, unsigned short lengt
 	if (length >= 1) {
 		next_node = &bsearch_insert(&node->children, string[0])->node;
 
-		_node_init(next_node, 0, NULL, NULL);
+		_node_init(next_node, (Bsearch){NULL, 0}, NULL);
 		_node_array_init(next_node);
 
 		//TODO: If key length <= sizeof(ptr) don't malloc,
@@ -324,20 +323,20 @@ static Node * _split_node_array(Node *node, Scan *scan)
 
 	if (new_suffix_size == 0) {
                 //No new suffix, we add data to current node
-		_node_init(node, 0, NULL, NULL);
+		_node_init(node, (Bsearch){NULL, 0}, NULL);
 
 		data_node = node;
 
                 //After the data node we append the old suffix
 		Node *branch = _build_node(node, old_suffix, old_suffix_size);
-		_node_init(branch, old.children.count, old.children.entries, old.data);
+		_node_init(branch, old.children, old.data);
 	} else {
 		//make node point to new tree node
-		_node_init(node, 0, NULL, NULL);
+		_node_init(node, (Bsearch){NULL, 0}, NULL);
 
 		//add branch to hold old suffix and delete old data
 		Node *branch1 = _build_node(node, old_suffix, old_suffix_size);
-		_node_init(branch1, old.children.count, old.children.entries, old.data);
+		_node_init(branch1, old.children, old.data);
 		trace_node("OLD-BRANCH", branch1);
 
 		//add branch to hold new suffix and return new node
@@ -382,7 +381,7 @@ static void _compact_nodes(Node *node)
 
 	trace("new size: %i", joined_size);
 
-	_node_init(node, cont.children.count, cont.children.entries, cont.data);
+	_node_init(node, cont.children, cont.data);
 }
 
 /**
@@ -434,7 +433,7 @@ static Node *_build_data_node(Node *tree, unsigned char *string, unsigned short 
 
 void radix_tree_init(Node *tree)
 {
-	_node_init(tree, 0, NULL, NULL);
+	_node_init(tree, (Bsearch){NULL, 0}, NULL);
 	_node_array_init(tree);
 }
 
