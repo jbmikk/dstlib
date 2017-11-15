@@ -2,6 +2,7 @@
 
 #include <stddef.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include "cmemory.h"
@@ -72,7 +73,7 @@ static void _node_array_init(Node *node)
 static void _node_set_array(Node *node, unsigned short size)
 {
 	node->size = size;
-	node->array = c_renew(node->array, unsigned char, size);
+	node->array = realloc(node->array, sizeof(unsigned char) * size);
 }
 
 /**
@@ -131,7 +132,7 @@ static void _push_node_key(Scan *scan, BsearchEntry *entry)
 	scan->index += 1 + entry->node.size;
 	scan->psize = scan->index;
 
-	scan->pkey = c_renew(scan->pkey, unsigned char, scan->psize);
+	scan->pkey = realloc(scan->pkey, sizeof(unsigned char) * scan->psize);
 
 	scan->pkey[offset] = entry->key;
 
@@ -371,7 +372,7 @@ static void _compact_nodes(Node *node)
 
 	//Replace child
 	if(child->node.array) {
-		c_free(child->node.array);
+		free(child->node.array);
 		set_null(child->node.array);
 	}
 
@@ -396,7 +397,7 @@ static void _pluck_node(Node *node, Scan *scan)
 		trace_node("PREVIOUS", previous);
 
 		if(node->array) {
-			c_free(node->array);
+			free(node->array);
 			set_null(node->array);
 		}
 
@@ -525,7 +526,7 @@ void **radix_tree_get_next(Node *tree, unsigned char *string, unsigned short len
 	);
 	_tree_scan(tree, &scan);
 
-	c_delete(scan.pkey);
+	free(scan.pkey);
 
 	if(scan.result != NULL) {
 		return scan.result->data;
@@ -547,7 +548,7 @@ void **radix_tree_get_prev(Node *tree, unsigned char *string, unsigned short len
 	);
 	_tree_scan_prev(tree, &scan);
 
-	c_delete(scan.pkey);
+	free(scan.pkey);
 
 	if(scan.result != NULL) {
 		return scan.result->data;
@@ -560,7 +561,7 @@ void radix_tree_dispose(Node *tree)
 {
 	trace_node("DISPOSE", tree);
 	if(tree->array) {
-		c_free(tree->array);
+		free(tree->array);
 		set_null(tree->array);
 	}
 	if(tree->children.entries) {
@@ -569,7 +570,7 @@ void radix_tree_dispose(Node *tree)
 		for(i = 0; i < tree->children.count; i++) {
 			radix_tree_dispose(&(entry + i)->node);
 		}
-		c_delete(tree->children.entries);
+		free(tree->children.entries);
 		set_null(tree->children.entries);
 	}
 }
@@ -584,7 +585,7 @@ void radix_tree_iterator_init(Iterator *iterator, Node *tree)
 
 void radix_tree_iterator_dispose(Iterator *iterator)
 {
-	c_delete(iterator->key);
+	free(iterator->key);
 }
 
 void **radix_tree_iterator_next(Iterator *iterator)
@@ -602,7 +603,7 @@ void **radix_tree_iterator_next(Iterator *iterator)
 	_tree_scan(iterator->root, &scan);
 
 	if(iterator->key) {
-		c_delete(iterator->key);
+		free(iterator->key);
 	}
 
 	iterator->key = scan.pkey;

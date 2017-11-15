@@ -2,8 +2,8 @@
 
 #include <stddef.h>
 #include <stdio.h>
+#include <stdlib.h>
 
-#include "cmemory.h"
 #include "dbg.h"
 
 struct BsearchScan {
@@ -141,7 +141,7 @@ error:
 void bsearch_delete_all(Bsearch *bsearch)
 {
 	if(bsearch->entries != NULL) {
-		c_free(bsearch->entries);
+		free(bsearch->entries);
 		bsearch->entries = NULL;
 		bsearch->count = 0;
 	}

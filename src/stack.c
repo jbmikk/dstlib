@@ -1,6 +1,7 @@
 #include "stack.h"
 
-#include "cmemory.h"
+#include <stdlib.h>
+
 
 void stack_init(Stack *stack)
 {
@@ -9,7 +10,7 @@ void stack_init(Stack *stack)
 
 StackNode *stack_push(Stack *stack, unsigned int size)
 {
-	StackNode *top = c_malloc_n(size); \
+	StackNode *top = malloc(size); \
 	top->next = stack->top;
 	stack->top = top;
 	return top;
@@ -19,7 +20,7 @@ void stack_pop(Stack *stack)
 {
 	StackNode *top = stack->top;
 	stack->top = top->next;
-	c_delete(top);
+	free(top);
 }
 
 void stack_dispose(Stack *stack)
