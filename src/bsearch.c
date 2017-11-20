@@ -5,6 +5,7 @@
 #include <stdlib.h>
 
 #include "dbg.h"
+#include "cmemory.h"
 
 struct BsearchScan {
 	struct BsearchEntry *prev;
@@ -145,4 +146,45 @@ void bsearch_delete_all(Bsearch *bsearch)
 		bsearch->entries = NULL;
 		bsearch->count = 0;
 	}
+}
+
+void bsearch_iterator_init(BsearchIterator *it, Bsearch *bsearch, _Bool inverse)
+{
+	it->bsearch = bsearch;
+	it->step = 1;
+	if(bsearch->entries) {
+		it->current = bsearch->entries - 1;
+		it->last = bsearch->entries - 1 + bsearch->count;
+	} else {
+		it->current = NULL;
+		it->last = NULL;
+	}
+}
+
+void bsearch_iterator_revert(BsearchIterator *it)
+{
+	BsearchEntry *temp = it->current;
+	if(it->current) {
+		it->current = it->last + it->step;
+		it->last = temp + it->step;
+	}
+	it->step = -it->step;
+}
+
+void bsearch_iterator_dispose(BsearchIterator *it)
+{
+	set_null(it->current);
+	set_null(it->last);
+}
+
+_Bool bsearch_iterator_next(BsearchIterator *it)
+{
+	_Bool not_last = it->current != it->last;
+	it->current += it->step;
+	return not_last;
+}
+
+BsearchEntry *bsearch_iterator_current(BsearchIterator *it)
+{
+	return it->current;
 }

@@ -206,6 +206,133 @@ void bsearch__set3_and_delete1(){
 	t_assert(c2->node.data == (void *)&d3);
 }
 
+void bsearch_iterator__iterate_zero(){
+	BsearchIterator it;
+
+	bsearch_iterator_init(&it, &fixture.bsearch, false);
+	bool first = bsearch_iterator_next(&it);
+
+	bsearch_iterator_dispose(&it);
+
+	t_assert(!first);
+}
+
+void bsearch_iterator__iterate_one(){
+	BsearchEntry *a1, *b1;
+	BsearchEntry d1;
+	BsearchIterator it;
+
+	a1 = bsearch_insert(&fixture.bsearch, 'a');
+	a1->node.data = (void *) &d1;
+
+	bsearch_iterator_init(&it, &fixture.bsearch, false);
+	bool first = bsearch_iterator_next(&it);
+	b1 = bsearch_iterator_current(&it);
+	bool second = bsearch_iterator_next(&it);
+
+	bsearch_iterator_dispose(&it);
+
+	t_assert(first);
+	t_assert(!second);
+
+	t_assert(b1 != NULL);
+	t_assert(b1->node.data == (void *)&d1);
+}
+
+void bsearch_iterator__iterate_two(){
+	BsearchEntry *a1, *a2, *b1, *b2;
+	BsearchEntry d1, d2;
+	BsearchIterator it;
+
+	a1 = bsearch_insert(&fixture.bsearch, 'a');
+	a1->node.data = (void *) &d1;
+	a2 = bsearch_insert(&fixture.bsearch, 'b');
+	a2->node.data = (void *) &d2;
+
+	bsearch_iterator_init(&it, &fixture.bsearch, false);
+	bool first = bsearch_iterator_next(&it);
+	b1 = bsearch_iterator_current(&it);
+	bool second = bsearch_iterator_next(&it);
+	b2 = bsearch_iterator_current(&it);
+	bool third = bsearch_iterator_next(&it);
+
+	bsearch_iterator_dispose(&it);
+
+	t_assert(first);
+	t_assert(second);
+	t_assert(!third);
+
+	t_assert(b1 != NULL);
+	t_assert(b1->node.data == (void *)&d1);
+	t_assert(b2 != NULL);
+	t_assert(b2->node.data == (void *)&d2);
+}
+
+void bsearch_iterator__iterate_revert_zero(){
+	BsearchIterator it;
+
+	bsearch_iterator_init(&it, &fixture.bsearch, false);
+	bsearch_iterator_revert(&it);
+	bool first = bsearch_iterator_next(&it);
+
+	bsearch_iterator_dispose(&it);
+
+	t_assert(!first);
+}
+
+void bsearch_iterator__iterate_revert_one(){
+	BsearchEntry *a1, *b1;
+	BsearchEntry d1;
+	BsearchIterator it;
+
+	a1 = bsearch_insert(&fixture.bsearch, 'a');
+	a1->node.data = (void *) &d1;
+
+	bsearch_iterator_init(&it, &fixture.bsearch, false);
+	bsearch_iterator_revert(&it);
+	bool first = bsearch_iterator_next(&it);
+	b1 = bsearch_iterator_current(&it);
+	bool second = bsearch_iterator_next(&it);
+
+	bsearch_iterator_dispose(&it);
+
+	t_assert(first);
+	t_assert(!second);
+
+	t_assert(b1 != NULL);
+	t_assert(b1->node.data == (void *)&d1);
+}
+
+void bsearch_iterator__iterate_revert_two(){
+	BsearchEntry *a1, *a2, *b1, *b2;
+	BsearchEntry d1, d2;
+	BsearchIterator it;
+
+	a1 = bsearch_insert(&fixture.bsearch, 'a');
+	a1->node.data = (void *) &d1;
+	a2 = bsearch_insert(&fixture.bsearch, 'b');
+	a2->node.data = (void *) &d2;
+
+	bsearch_iterator_init(&it, &fixture.bsearch, false);
+	bsearch_iterator_revert(&it);
+	bool first = bsearch_iterator_next(&it);
+	b1 = bsearch_iterator_current(&it);
+	bool second = bsearch_iterator_next(&it);
+	b2 = bsearch_iterator_current(&it);
+	bool third = bsearch_iterator_next(&it);
+
+	bsearch_iterator_dispose(&it);
+
+	t_assert(first);
+	t_assert(second);
+	t_assert(!third);
+
+	t_assert(b1 != NULL);
+	t_assert(b1->node.data == (void *)&d2);
+	t_assert(b2 != NULL);
+	t_assert(b2->node.data == (void *)&d1);
+}
+
 int main(int argc, char** argv) {
 	t_init();
 	t_test(bsearch__set_and_get);
@@ -217,6 +344,12 @@ int main(int argc, char** argv) {
 	t_test(bsearch__set2_and_get2_ensure_unsigned);
 	t_test(bsearch__set2_and_delete1);
 	t_test(bsearch__set3_and_delete1);
+	t_test(bsearch_iterator__iterate_zero);
+	t_test(bsearch_iterator__iterate_one);
+	t_test(bsearch_iterator__iterate_two);
+	t_test(bsearch_iterator__iterate_revert_zero);
+	t_test(bsearch_iterator__iterate_revert_one);
+	t_test(bsearch_iterator__iterate_revert_two);
 	//TODO:
 	//delete
 	//set_and_out_of_memory

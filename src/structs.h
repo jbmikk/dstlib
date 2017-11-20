@@ -25,6 +25,13 @@ struct BsearchEntry {
 
 typedef struct BsearchEntry BsearchEntry;
 
+typedef struct BsearchIterator {
+	Bsearch *bsearch;
+	BsearchEntry *current;
+	BsearchEntry *last;
+	int step;
+} BsearchIterator;
+
 typedef struct _Iterator {
 	Node *root;
 	unsigned char *key;
