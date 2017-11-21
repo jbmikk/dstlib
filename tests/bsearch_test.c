@@ -20,7 +20,7 @@ void t_setup(){
 	bsearch_init(&fixture.bsearch);
 }
 void t_teardown(){
-	bsearch_delete_all(&fixture.bsearch);
+	bsearch_dispose(&fixture.bsearch);
 }
 
 void bsearch__set_and_get(){

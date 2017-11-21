@@ -150,11 +150,9 @@ error:
 
 void bsearch_delete_all(Bsearch *bsearch)
 {
-	if(bsearch->entries != NULL) {
-		free(bsearch->entries);
-		bsearch->entries = NULL;
-		bsearch->count = 0;
-	}
+	free(bsearch->entries);
+	bsearch->entries = NULL;
+	bsearch->count = 0;
 }
 
 void bsearch_iterator_init(BsearchIterator *it, Bsearch *bsearch, _Bool inverse)
