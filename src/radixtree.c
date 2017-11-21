@@ -570,8 +570,7 @@ void radix_tree_dispose(Node *tree)
 		for(i = 0; i < tree->children.count; i++) {
 			radix_tree_dispose(&(entry + i)->node);
 		}
-		free(tree->children.entries);
-		set_null(tree->children.entries);
+		bsearch_dispose(&tree->children);
 	}
 }
 

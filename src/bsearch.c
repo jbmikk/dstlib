@@ -43,6 +43,15 @@ void bsearch_init(Bsearch *bsearch)
 	bsearch->count = 0;
 }
 
+void bsearch_dispose(Bsearch *bsearch)
+{
+	free(bsearch->entries);
+	set_null(bsearch->entries);
+	// TODO: Is it necessary? We should have a generic conditional macro
+	// for clean up purposes. Something like: optional(x = NULL);
+	bsearch->count = 0;
+}
+
 BsearchEntry *bsearch_get(Bsearch *bsearch, unsigned char key)
 {
 	struct BsearchScan scan = {NULL, NULL, NULL};

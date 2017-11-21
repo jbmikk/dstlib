@@ -5,6 +5,7 @@
 #include <stdbool.h>
 
 void bsearch_init(Bsearch *bsearch);
+void bsearch_dispose(Bsearch *bsearch);
 BsearchEntry *bsearch_get(Bsearch *bsearch, unsigned char key);
 BsearchEntry *bsearch_insert(Bsearch *bsearch, unsigned char key);
 BsearchEntry *bsearch_get_gte(Bsearch *bsearch, unsigned char key);
