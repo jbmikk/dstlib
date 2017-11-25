@@ -25,12 +25,12 @@ struct BsearchEntry {
 
 typedef struct BsearchEntry BsearchEntry;
 
-typedef struct BsearchIterator {
+typedef struct BsearchCursor {
 	Bsearch *bsearch;
 	BsearchEntry *current;
 	BsearchEntry *last;
 	int step;
-} BsearchIterator;
+} BsearchCursor;
 
 typedef struct _Iterator {
 	Node *root;

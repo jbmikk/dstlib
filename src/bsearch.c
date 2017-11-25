@@ -155,43 +155,43 @@ void bsearch_delete_all(Bsearch *bsearch)
 	bsearch->count = 0;
 }
 
-void bsearch_iterator_init(BsearchIterator *it, Bsearch *bsearch, _Bool inverse)
+void bsearch_cursor_init(BsearchCursor *cur, Bsearch *bsearch, _Bool inverse)
 {
-	it->bsearch = bsearch;
-	it->step = 1;
+	cur->bsearch = bsearch;
+	cur->step = 1;
 	if(bsearch->entries) {
-		it->current = bsearch->entries - 1;
-		it->last = bsearch->entries - 1 + bsearch->count;
+		cur->current = bsearch->entries - 1;
+		cur->last = bsearch->entries - 1 + bsearch->count;
 	} else {
-		it->current = NULL;
-		it->last = NULL;
+		cur->current = NULL;
+		cur->last = NULL;
 	}
 }
 
-void bsearch_iterator_revert(BsearchIterator *it)
+void bsearch_cursor_revert(BsearchCursor *cur)
 {
-	BsearchEntry *temp = it->current;
-	if(it->current) {
-		it->current = it->last + it->step;
-		it->last = temp + it->step;
+	BsearchEntry *temp = cur->current;
+	if(cur->current) {
+		cur->current = cur->last + cur->step;
+		cur->last = temp + cur->step;
 	}
-	it->step = -it->step;
+	cur->step = -cur->step;
 }
 
-void bsearch_iterator_dispose(BsearchIterator *it)
+void bsearch_cursor_dispose(BsearchCursor *cur)
 {
-	set_null(it->current);
-	set_null(it->last);
+	set_null(cur->current);
+	set_null(cur->last);
 }
 
-_Bool bsearch_iterator_next(BsearchIterator *it)
+_Bool bsearch_cursor_next(BsearchCursor *cur)
 {
-	_Bool not_last = it->current != it->last;
-	it->current += it->step;
+	_Bool not_last = cur->current != cur->last;
+	cur->current += cur->step;
 	return not_last;
 }
 
-BsearchEntry *bsearch_iterator_current(BsearchIterator *it)
+BsearchEntry *bsearch_cursor_current(BsearchCursor *cur)
 {
-	return it->current;
+	return cur->current;
 }
