@@ -209,7 +209,7 @@ void bsearch__set3_and_delete1(){
 void bsearch_cursor__iterate_zero(){
 	BsearchCursor cur;
 
-	bsearch_cursor_init(&cur, &fixture.bsearch, false);
+	bsearch_cursor_init(&cur, &fixture.bsearch);
 	bool first = bsearch_cursor_next(&cur);
 
 	bsearch_cursor_dispose(&cur);
@@ -225,7 +225,7 @@ void bsearch_cursor__iterate_one(){
 	a1 = bsearch_insert(&fixture.bsearch, 'a');
 	a1->node.data = (void *) &d1;
 
-	bsearch_cursor_init(&cur, &fixture.bsearch, false);
+	bsearch_cursor_init(&cur, &fixture.bsearch);
 	bool first = bsearch_cursor_next(&cur);
 	b1 = bsearch_cursor_current(&cur);
 	bool second = bsearch_cursor_next(&cur);
@@ -249,7 +249,7 @@ void bsearch_cursor__iterate_two(){
 	a2 = bsearch_insert(&fixture.bsearch, 'b');
 	a2->node.data = (void *) &d2;
 
-	bsearch_cursor_init(&cur, &fixture.bsearch, false);
+	bsearch_cursor_init(&cur, &fixture.bsearch);
 	bool first = bsearch_cursor_next(&cur);
 	b1 = bsearch_cursor_current(&cur);
 	bool second = bsearch_cursor_next(&cur);
@@ -271,7 +271,7 @@ void bsearch_cursor__iterate_two(){
 void bsearch_cursor__iterate_revert_zero(){
 	BsearchCursor cur;
 
-	bsearch_cursor_init(&cur, &fixture.bsearch, false);
+	bsearch_cursor_init(&cur, &fixture.bsearch);
 	bsearch_cursor_revert(&cur);
 	bool first = bsearch_cursor_next(&cur);
 
@@ -288,7 +288,7 @@ void bsearch_cursor__iterate_revert_one(){
 	a1 = bsearch_insert(&fixture.bsearch, 'a');
 	a1->node.data = (void *) &d1;
 
-	bsearch_cursor_init(&cur, &fixture.bsearch, false);
+	bsearch_cursor_init(&cur, &fixture.bsearch);
 	bsearch_cursor_revert(&cur);
 	bool first = bsearch_cursor_next(&cur);
 	b1 = bsearch_cursor_current(&cur);
@@ -313,7 +313,7 @@ void bsearch_cursor__iterate_revert_two(){
 	a2 = bsearch_insert(&fixture.bsearch, 'b');
 	a2->node.data = (void *) &d2;
 
-	bsearch_cursor_init(&cur, &fixture.bsearch, false);
+	bsearch_cursor_init(&cur, &fixture.bsearch);
 	bsearch_cursor_revert(&cur);
 	bool first = bsearch_cursor_next(&cur);
 	b1 = bsearch_cursor_current(&cur);

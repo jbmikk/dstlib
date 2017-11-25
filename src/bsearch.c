@@ -155,7 +155,7 @@ void bsearch_delete_all(Bsearch *bsearch)
 	bsearch->count = 0;
 }
 
-void bsearch_cursor_init(BsearchCursor *cur, Bsearch *bsearch, _Bool inverse)
+void bsearch_cursor_init(BsearchCursor *cur, Bsearch *bsearch)
 {
 	cur->bsearch = bsearch;
 	cur->step = 1;
