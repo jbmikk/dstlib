@@ -149,6 +149,56 @@ void bsearch__get_lte(){
 }
 
 
+void bsearch__get_gt(){
+	BsearchEntry *in1, *in2, *out1, *out2, *out3, *out4, *out5;
+	BsearchEntry d1, d2;
+
+	in1 = bsearch_insert(&fixture.bsearch, 'b');
+	in1->node.data = (void *) &d1;
+	in2 = bsearch_insert(&fixture.bsearch, 'd');
+	in2->node.data = (void *) &d2;
+	out1 = bsearch_get_gt(&fixture.bsearch, 'b');
+	out2 = bsearch_get_gt(&fixture.bsearch, 'd');
+	out3 = bsearch_get_gt(&fixture.bsearch, 'a');
+	out4 = bsearch_get_gt(&fixture.bsearch, 'c');
+	out5 = bsearch_get_gt(&fixture.bsearch, 'e');
+
+	t_assert(out1 != NULL);
+	t_assert(out1->node.data == (void *)&d2);
+	t_assert(out2 == NULL);
+	t_assert(out3 != NULL);
+	t_assert(out3->node.data == (void *)&d1);
+	t_assert(out4 != NULL);
+	t_assert(out4->node.data == (void *)&d2);
+	t_assert(out5 == NULL);
+}
+
+
+void bsearch__get_lt(){
+	BsearchEntry *in1, *in2, *out1, *out2, *out3, *out4, *out5;
+	BsearchEntry d1, d2;
+
+	in1 = bsearch_insert(&fixture.bsearch, 'b');
+	in1->node.data = (void *) &d1;
+	in2 = bsearch_insert(&fixture.bsearch, 'd');
+	in2->node.data = (void *) &d2;
+	out1 = bsearch_get_lt(&fixture.bsearch, 'b');
+	out2 = bsearch_get_lt(&fixture.bsearch, 'd');
+	out3 = bsearch_get_lt(&fixture.bsearch, 'a');
+	out4 = bsearch_get_lt(&fixture.bsearch, 'c');
+	out5 = bsearch_get_lt(&fixture.bsearch, 'e');
+
+	t_assert(out1 == NULL);
+	t_assert(out2 != NULL);
+	t_assert(out2->node.data == (void *)&d1);
+	t_assert(out3 == NULL);
+	t_assert(out4 != NULL);
+	t_assert(out4->node.data == (void *)&d1);
+	t_assert(out5 != NULL);
+	t_assert(out5->node.data == (void *)&d2);
+}
+
+
 void bsearch__set2_and_get2_ensure_unsigned(){
 
 	bsearch_insert(&fixture.bsearch, 10);
@@ -341,6 +391,8 @@ int main(int argc, char** argv) {
 	t_test(bsearch__set_third_in_the_middle);
 	t_test(bsearch__get_gte);
 	t_test(bsearch__get_lte);
+	t_test(bsearch__get_gt);
+	t_test(bsearch__get_lt);
 	t_test(bsearch__set2_and_get2_ensure_unsigned);
 	t_test(bsearch__set2_and_delete1);
 	t_test(bsearch__set3_and_delete1);

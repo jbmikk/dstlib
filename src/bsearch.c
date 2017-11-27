@@ -37,6 +37,23 @@ static void _scan(struct BsearchScan *scan, Bsearch *bsearch, unsigned char key)
 	}
 }
 
+
+/**
+ * Ensure previous and next entries are defined if available.
+ */
+static void _scan_out(struct BsearchScan *scan, Bsearch *bsearch)
+{
+	if(scan->equal) {
+		int index = scan->equal - bsearch->entries;
+		if(index > 0) {
+			scan->prev = scan->equal - 1;
+		}
+		if(index < bsearch->count - 1) {
+			scan->next = scan->equal + 1;
+		}
+	}
+}
+
 void bsearch_init(Bsearch *bsearch)
 {
 	bsearch->entries = NULL;
@@ -77,6 +94,28 @@ BsearchEntry *bsearch_get_lte(Bsearch *bsearch, unsigned char key)
 	struct BsearchScan scan = {NULL, NULL, NULL};
 	_scan(&scan, bsearch, key);
 	return scan.equal? scan.equal: scan.prev;
+}
+
+/**
+ * Get closest greater than key
+ */
+BsearchEntry *bsearch_get_gt(Bsearch *bsearch, unsigned char key)
+{
+	struct BsearchScan scan = {NULL, NULL, NULL};
+	_scan(&scan, bsearch, key);
+	_scan_out(&scan, bsearch);
+	return scan.next;
+}
+
+/**
+ * Get closest less than key
+ */
+BsearchEntry *bsearch_get_lt(Bsearch *bsearch, unsigned char key)
+{
+	struct BsearchScan scan = {NULL, NULL, NULL};
+	_scan(&scan, bsearch, key);
+	_scan_out(&scan, bsearch);
+	return scan.prev;
 }
 
 BsearchEntry *bsearch_insert(Bsearch *bsearch, unsigned char key)
