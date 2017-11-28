@@ -230,6 +230,28 @@ _Bool bsearch_cursor_next(BsearchCursor *cur)
 	return not_last;
 }
 
+void bsearch_cursor_move(BsearchCursor *cur, unsigned char key)
+{
+	cur->current = bsearch_get(cur->bsearch, key);
+}
+
+void bsearch_cursor_move_lt(BsearchCursor *cur, unsigned char key)
+{
+	cur->current = bsearch_get_lt(cur->bsearch, key);
+	if(!cur->current && cur->bsearch->entries) {
+		cur->current = cur->bsearch->entries - 1;
+	}
+}
+
+void bsearch_cursor_move_gt(BsearchCursor *cur, unsigned char key)
+{
+	cur->current = bsearch_get_gt(cur->bsearch, key);
+	if(!cur->current && cur->bsearch->entries) {
+		// This equals initial value in reverse mode.
+		cur->current = cur->bsearch->entries + cur->bsearch->count;
+	}
+}
+
 BsearchEntry *bsearch_cursor_current(BsearchCursor *cur)
 {
 	return cur->current;

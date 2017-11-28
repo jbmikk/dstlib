@@ -166,8 +166,11 @@ static int lmemcmp(unsigned char *a1, unsigned int l1, unsigned char *a2, unsign
  */
 static void _tree_scan(Node *node, Scan *scan)
 {
-	unsigned int i = 0;
+	bool has_next;
+	BsearchCursor cur;
 	BsearchEntry *entry;
+
+	bsearch_cursor_init(&cur, &node->children);
 
 	switch(scan->mode) {
 	case S_DEFAULT:
@@ -175,19 +178,23 @@ static void _tree_scan(Node *node, Scan *scan)
 			scan->result = node;
 			return;
 		}
+		has_next = bsearch_cursor_next(&cur);
 		break;
 	case S_FETCHNEXT:
 		if(scan->index >= scan->size) {
 			scan->mode = S_DEFAULT;
+			has_next = bsearch_cursor_next(&cur);
 			goto CONTINUE;
 		}
 
-		entry = bsearch_get_gte(&node->children, scan->key[scan->index]);
+		bsearch_cursor_move_lt(&cur, scan->key[scan->index]);
 
-		if(!entry) {
+		has_next = bsearch_cursor_next(&cur);
+		if(!has_next) {
 			scan->mode = S_DEFAULT;
 			return;
 		}
+		entry = bsearch_cursor_current(&cur);
 
 		if(entry->key == scan->key[scan->index]) {
 
@@ -202,20 +209,19 @@ static void _tree_scan(Node *node, Scan *scan)
 				scan->mode = S_DEFAULT;
 			}
 			if(result > 0) {
-				entry++;
+				has_next = bsearch_cursor_next(&cur);
 			}
 
 		} else {
 			scan->mode = S_DEFAULT;
 		}
 
-		i = (entry - node->children.entries);
 		break;
 	} 
 
 CONTINUE:
-	for(; i < node->children.count; i++) {
-		BsearchEntry *current = node->children.entries + i;
+	while(has_next) {
+		BsearchEntry *current = bsearch_cursor_current(&cur);
 
 		_push_node_key(scan, current);
 
@@ -225,7 +231,9 @@ CONTINUE:
 			break;
 
 		_pop_node_key(scan, current);
+		has_next = bsearch_cursor_next(&cur);
 	}
+	bsearch_cursor_dispose(&cur);
 }
 
 /**
@@ -233,8 +241,12 @@ CONTINUE:
  */
 static void _tree_scan_prev(Node *node, Scan *scan)
 {
-	unsigned int i = node->children.count - 1;
+	bool has_next;
+	BsearchCursor cur;
 	BsearchEntry *next;
+
+	bsearch_cursor_init(&cur, &node->children);
+	bsearch_cursor_revert(&cur);
 
 	if (scan->mode == S_FETCHNEXT) {
 		if(scan->index >= scan->size) {
@@ -242,12 +254,15 @@ static void _tree_scan_prev(Node *node, Scan *scan)
 			return;
 		}
 
-		next = bsearch_get_lte(&node->children, scan->key[scan->index]);
+		bsearch_cursor_move_gt(&cur, scan->key[scan->index]);
 
-		if(!next) {
+		has_next = bsearch_cursor_next(&cur);
+		if(!has_next) {
 			scan->mode = S_DEFAULT;
 			goto CONTINUE;
 		}
+
+		next = bsearch_cursor_current(&cur);
 
 		if(next->key == scan->key[scan->index]) {
 
@@ -263,21 +278,21 @@ static void _tree_scan_prev(Node *node, Scan *scan)
 				goto SKIP;
 			}
 			if(result != 0) {
+				has_next = bsearch_cursor_next(&cur);
 				scan->mode = S_DEFAULT;
-				next--;
 			}
 
 		} else {
 			scan->mode = S_DEFAULT;
 		}
+	} else {
+		has_next = bsearch_cursor_next(&cur);
+	}
 
-	SKIP:
-		i = (next - node->children.entries);
-	} 
-
+SKIP:
 	if(node->children.count > 0) {
-		for(; i < node->children.count; i--) {
-			BsearchEntry *current = node->children.entries + i;
+		while(has_next) {
+			BsearchEntry *current = bsearch_cursor_current(&cur);
 
 			_push_node_key(scan, current);
 
@@ -287,7 +302,9 @@ static void _tree_scan_prev(Node *node, Scan *scan)
 				break;
 
 			_pop_node_key(scan, current);
+			has_next = bsearch_cursor_next(&cur);
 		}
+		bsearch_cursor_dispose(&cur);
 	}
 CONTINUE:
 	if(scan->mode == S_DEFAULT && scan->result == NULL) {
@@ -581,14 +598,14 @@ void radix_tree_dispose(Node *tree)
 		free(tree->array);
 		set_null(tree->array);
 	}
-	if(tree->children.entries) {
-		BsearchEntry *entry = tree->children.entries;
-		int i;
-		for(i = 0; i < tree->children.count; i++) {
-			radix_tree_dispose(&(entry + i)->node);
-		}
-		bsearch_dispose(&tree->children);
+	BsearchCursor cur;
+	bsearch_cursor_init(&cur, &tree->children);
+	while(bsearch_cursor_next(&cur)) {
+		BsearchEntry *entry = bsearch_cursor_current(&cur);
+		radix_tree_dispose(&entry->node);
 	}
+	bsearch_cursor_dispose(&cur);
+	bsearch_dispose(&tree->children);
 }
 
 void radix_tree_iterator_init(Iterator *iterator, Node *tree)

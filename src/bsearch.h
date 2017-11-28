@@ -19,6 +19,9 @@ void bsearch_cursor_init(BsearchCursor *cur, Bsearch *bsearch);
 void bsearch_cursor_revert(BsearchCursor *cur);
 void bsearch_cursor_dispose(BsearchCursor *cur);
 bool bsearch_cursor_next(BsearchCursor *cur);
+void bsearch_cursor_move(BsearchCursor *cur, unsigned char key);
+void bsearch_cursor_move_lt(BsearchCursor *cur, unsigned char key);
+void bsearch_cursor_move_gt(BsearchCursor *cur, unsigned char key);
 BsearchEntry *bsearch_cursor_current(BsearchCursor *cur);
 
 #endif	//BSEARCH_H
