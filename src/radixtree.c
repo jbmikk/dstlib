@@ -147,6 +147,20 @@ static void _pop_node_key(Scan *scan, BsearchEntry *entry)
 	scan->psize = scan->index;
 }
 
+static int lmemcmp(unsigned char *a1, unsigned int l1, unsigned char *a2, unsigned int l2)
+{
+	unsigned int i = 0;
+	for (; i < l1 && i < l2; i++) {
+		if(a1[i] > a2[i]) {
+			return 1;
+		}
+		if(a1[i] < a2[i]) {
+			return -1;
+		}
+	}
+	return i < l2? -1: 0;
+}
+
 /**
  * Scan the tree recursively for the next datanode.
  */
@@ -176,20 +190,21 @@ static void _tree_scan(Node *node, Scan *scan)
 		}
 
 		if(entry->key == scan->key[scan->index]) {
-			unsigned int j = 0;
-			unsigned int k = scan->index+1; 
-			unsigned int child_size = entry->node.size;
-			for (; j < child_size && k < scan->size; j++, k++) {
-				if(scan->key[k] > entry->node.array[j]) {
-					entry++;
-					break;
-				} else if (scan->key[k] < entry->node.array[j]) {
-					break;
-				}
-			}
-			if(j < child_size) {
+
+			int result = lmemcmp(
+				scan->key + scan->index + 1,
+				scan->size - (scan->index + 1),
+				entry->node.array,
+				entry->node.size
+			);
+
+			if(result != 0) {
 				scan->mode = S_DEFAULT;
 			}
+			if(result > 0) {
+				entry++;
+			}
+
 		} else {
 			scan->mode = S_DEFAULT;
 		}
@@ -235,21 +250,23 @@ static void _tree_scan_prev(Node *node, Scan *scan)
 		}
 
 		if(next->key == scan->key[scan->index]) {
-			unsigned int j = 0;
-			unsigned int k = scan->index+1; 
-			unsigned int child_size = next->node.size;
-			for (; j < child_size && k < scan->size; j++, k++) {
-				if(scan->key[k] < next->node.array[j]) {
-					break;
-				} else if (scan->key[k] > next->node.array[j]) {
-					scan->mode = S_DEFAULT;
-					goto SKIP;
-				}
-			}
-			if(j < child_size) {
-				next--;
+
+			int result = lmemcmp(
+				scan->key + scan->index + 1,
+				scan->size - (scan->index + 1),
+				next->node.array,
+				next->node.size
+			);
+
+			if(result > 0) {
 				scan->mode = S_DEFAULT;
+				goto SKIP;
 			}
+			if(result != 0) {
+				scan->mode = S_DEFAULT;
+				next--;
+			}
+
 		} else {
 			scan->mode = S_DEFAULT;
 		}
