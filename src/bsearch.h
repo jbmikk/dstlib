@@ -3,6 +3,8 @@
 
 #include <stdbool.h>
 
+#include "generics.h"
+
 struct BsearchEntry;
 
 typedef struct Bsearch {
@@ -48,46 +50,42 @@ BsearchEntry *bsearch_cursor_current(BsearchCursor *cur);
 #define PROTOTYPE(BLOCK) ;
 #define IMPLEMENTATION(BLOCK) BLOCK
 
-#define BSEARCH_ENTRY_TYPE(NAME) BsearchEntry##NAME
-#define BSEARCH_TYPE(NAME) Bsearch##NAME
-#define BSEARCH_CURSOR_TYPE(NAME) BsearchCursor##NAME
-
 #define BSEARCH_ENTRY_STRUCT(TYPE, UPPER, LOWER) \
-typedef struct BSEARCH_ENTRY_TYPE(UPPER) { \
+typedef struct S(BsearchEntry, UPPER) { \
 	BsearchEntry entry; \
 	TYPE LOWER; \
-} BSEARCH_ENTRY_TYPE(UPPER);
+} S(BsearchEntry, UPPER);
 
 #define BSEARCH_STRUCT(TYPE, UPPER, LOWER) \
-typedef struct BSEARCH_TYPE(UPPER) { \
+typedef struct S(Bsearch, UPPER) { \
 	Bsearch bsearch; \
-} BSEARCH_TYPE(UPPER);
+} S(Bsearch, UPPER);
 
 #define BSEARCH_CURSOR_STRUCT(TYPE, UPPER, LOWER) \
-typedef struct BSEARCH_CURSOR_TYPE(UPPER) { \
+typedef struct S(BsearchCursor, UPPER) { \
 	BsearchCursor cursor; \
-} BSEARCH_CURSOR_TYPE(UPPER);
+} S(BsearchCursor, UPPER);
 
 
 #define BSEARCH_INIT(TYPE, UPPER, LOWER, BODY) \
-void bsearch_##LOWER##_init(struct BSEARCH_TYPE(UPPER) *bsearch) BODY({ \
+void bsearch_##LOWER##_init(struct S(Bsearch, UPPER) *bsearch) BODY({ \
 	bsearch_init(&bsearch->bsearch); \
 })
 
 #define BSEARCH_DISPOSE(TYPE, UPPER, LOWER, BODY) \
-void bsearch_##LOWER##_dispose(struct BSEARCH_TYPE(UPPER) *bsearch) BODY({ \
+void bsearch_##LOWER##_dispose(struct S(Bsearch, UPPER) *bsearch) BODY({ \
 	bsearch_dispose(&bsearch->bsearch); \
 })
 
 #define BSEARCH_INSERT(TYPE, UPPER, LOWER, BODY) \
-BSEARCH_ENTRY_TYPE(UPPER) *bsearch_##LOWER##_insert( \
-	struct BSEARCH_TYPE(UPPER) *bsearch, \
+S(BsearchEntry, UPPER) *bsearch_##LOWER##_insert( \
+	struct S(Bsearch, UPPER) *bsearch, \
 	unsigned char key, \
 	TYPE LOWER \
 ) BODY({ \
-	struct BSEARCH_ENTRY_TYPE(UPPER) *entry = (struct BSEARCH_ENTRY_TYPE(UPPER) *)bsearch_insert( \
+	struct S(BsearchEntry, UPPER) *entry = (struct S(BsearchEntry, UPPER) *)bsearch_insert( \
 		&bsearch->bsearch, \
-		sizeof(struct BSEARCH_ENTRY_TYPE(UPPER)), \
+		sizeof(struct S(BsearchEntry, UPPER)), \
 		key \
 	); \
 	if(entry) { \
@@ -98,164 +96,164 @@ BSEARCH_ENTRY_TYPE(UPPER) *bsearch_##LOWER##_insert( \
 
 #define BSEARCH_COUNT(TYPE, UPPER, LOWER, BODY) \
 unsigned int bsearch_##LOWER##_count( \
-	struct BSEARCH_TYPE(UPPER) *bsearch \
+	struct S(Bsearch, UPPER) *bsearch \
 ) BODY({ \
 	return bsearch_count(&bsearch->bsearch); \
 })
 
 #define BSEARCH_FIRST(TYPE, UPPER, LOWER, BODY) \
-BSEARCH_ENTRY_TYPE(UPPER) *bsearch_##LOWER##_first( \
-	struct BSEARCH_TYPE(UPPER) *bsearch \
+S(BsearchEntry, UPPER) *bsearch_##LOWER##_first( \
+	struct S(Bsearch, UPPER) *bsearch \
 ) BODY({ \
-	return (BSEARCH_ENTRY_TYPE(UPPER) *)bsearch_first(&bsearch->bsearch); \
+	return (S(BsearchEntry, UPPER) *)bsearch_first(&bsearch->bsearch); \
 })
 
 #define BSEARCH_GET(TYPE, UPPER, LOWER, BODY) \
-BSEARCH_ENTRY_TYPE(UPPER) *bsearch_##LOWER##_get( \
-	struct BSEARCH_TYPE(UPPER) *bsearch, \
+S(BsearchEntry, UPPER) *bsearch_##LOWER##_get( \
+	struct S(Bsearch, UPPER) *bsearch, \
 	unsigned char key \
 ) BODY({ \
-	return (BSEARCH_ENTRY_TYPE(UPPER) *)bsearch_get( \
+	return (S(BsearchEntry, UPPER) *)bsearch_get( \
 		&bsearch->bsearch, \
-		sizeof(struct BSEARCH_ENTRY_TYPE(UPPER)), \
+		sizeof(struct S(BsearchEntry, UPPER)), \
 		key \
 	); \
 })
 
 #define BSEARCH_GET_GTE(TYPE, UPPER, LOWER, BODY) \
-BSEARCH_ENTRY_TYPE(UPPER) *bsearch_##LOWER##_get_gte( \
-	struct BSEARCH_TYPE(UPPER) *bsearch, \
+S(BsearchEntry, UPPER) *bsearch_##LOWER##_get_gte( \
+	struct S(Bsearch, UPPER) *bsearch, \
 	unsigned char key \
 ) BODY({ \
-	return (BSEARCH_ENTRY_TYPE(UPPER) *)bsearch_get_gte( \
+	return (S(BsearchEntry, UPPER) *)bsearch_get_gte( \
 		&bsearch->bsearch, \
-		sizeof(struct BSEARCH_ENTRY_TYPE(UPPER)), \
+		sizeof(struct S(BsearchEntry, UPPER)), \
 		key \
 	); \
 })
 
 #define BSEARCH_GET_LTE(TYPE, UPPER, LOWER, BODY) \
-BSEARCH_ENTRY_TYPE(UPPER) *bsearch_##LOWER##_get_lte( \
-	struct BSEARCH_TYPE(UPPER) *bsearch, \
+S(BsearchEntry, UPPER) *bsearch_##LOWER##_get_lte( \
+	struct S(Bsearch, UPPER) *bsearch, \
 	unsigned char key \
 ) BODY({ \
-	return (BSEARCH_ENTRY_TYPE(UPPER) *)bsearch_get_lte( \
+	return (S(BsearchEntry, UPPER) *)bsearch_get_lte( \
 		&bsearch->bsearch, \
-		sizeof(struct BSEARCH_ENTRY_TYPE(UPPER)), \
+		sizeof(struct S(BsearchEntry, UPPER)), \
 		key \
 	); \
 })
 
 #define BSEARCH_GET_GT(TYPE, UPPER, LOWER, BODY) \
-BSEARCH_ENTRY_TYPE(UPPER) *bsearch_##LOWER##_get_gt( \
-	struct BSEARCH_TYPE(UPPER) *bsearch, \
+S(BsearchEntry, UPPER) *bsearch_##LOWER##_get_gt( \
+	struct S(Bsearch, UPPER) *bsearch, \
 	unsigned char key \
 ) BODY({ \
-	return (BSEARCH_ENTRY_TYPE(UPPER) *)bsearch_get_gt( \
+	return (S(BsearchEntry, UPPER) *)bsearch_get_gt( \
 		&bsearch->bsearch, \
-		sizeof(struct BSEARCH_ENTRY_TYPE(UPPER)), \
+		sizeof(struct S(BsearchEntry, UPPER)), \
 		key \
 	); \
 })
 
 #define BSEARCH_GET_LT(TYPE, UPPER, LOWER, BODY) \
-BSEARCH_ENTRY_TYPE(UPPER) *bsearch_##LOWER##_get_lt( \
-	struct BSEARCH_TYPE(UPPER) *bsearch, \
+S(BsearchEntry, UPPER) *bsearch_##LOWER##_get_lt( \
+	struct S(Bsearch, UPPER) *bsearch, \
 	unsigned char key \
 ) BODY({ \
-	return (BSEARCH_ENTRY_TYPE(UPPER) *)bsearch_get_lt( \
+	return (S(BsearchEntry, UPPER) *)bsearch_get_lt( \
 		&bsearch->bsearch, \
-		sizeof(struct BSEARCH_ENTRY_TYPE(UPPER)), \
+		sizeof(struct S(BsearchEntry, UPPER)), \
 		key \
 	); \
 })
 
 #define BSEARCH_DELETE(TYPE, UPPER, LOWER, BODY) \
 int bsearch_##LOWER##_delete( \
-	struct BSEARCH_TYPE(UPPER) *bsearch, \
+	struct S(Bsearch, UPPER) *bsearch, \
 	unsigned char key \
 ) BODY({ \
 	return bsearch_delete( \
 		&bsearch->bsearch, \
-		sizeof(struct BSEARCH_ENTRY_TYPE(UPPER)), \
+		sizeof(struct S(BsearchEntry, UPPER)), \
 		key \
 	); \
 })
 
 #define BSEARCH_CURSOR_INIT(TYPE, UPPER, LOWER, BODY) \
 void bsearch_cursor_##LOWER##_init( \
-	struct BSEARCH_CURSOR_TYPE(UPPER) *cursor, \
-	struct BSEARCH_TYPE(UPPER) *bsearch \
+	struct S(BsearchCursor, UPPER) *cursor, \
+	struct S(Bsearch, UPPER) *bsearch \
 ) BODY({ \
 	bsearch_cursor_init( \
 		&cursor->cursor, \
 		&bsearch->bsearch, \
-		sizeof(struct BSEARCH_ENTRY_TYPE(UPPER)) \
+		sizeof(struct S(BsearchEntry, UPPER)) \
 	); \
 })
 
 #define BSEARCH_CURSOR_REVERT(TYPE, UPPER, LOWER, BODY) \
 void bsearch_cursor_##LOWER##_revert( \
-	struct BSEARCH_CURSOR_TYPE(UPPER) *cursor \
+	struct S(BsearchCursor, UPPER) *cursor \
 ) BODY({ \
 	bsearch_cursor_revert(&cursor->cursor); \
 })
 
 #define BSEARCH_CURSOR_DISPOSE(TYPE, UPPER, LOWER, BODY) \
 void bsearch_cursor_##LOWER##_dispose( \
-	struct BSEARCH_CURSOR_TYPE(UPPER) *cursor \
+	struct S(BsearchCursor, UPPER) *cursor \
 ) BODY({ \
 	bsearch_cursor_dispose(&cursor->cursor); \
 })
 
 #define BSEARCH_CURSOR_NEXT(TYPE, UPPER, LOWER, BODY) \
 bool bsearch_cursor_##LOWER##_next( \
-	struct BSEARCH_CURSOR_TYPE(UPPER) *cursor \
+	struct S(BsearchCursor, UPPER) *cursor \
 ) BODY({ \
 	return bsearch_cursor_next(&cursor->cursor); \
 })
 
 #define BSEARCH_CURSOR_MOVE(TYPE, UPPER, LOWER, BODY) \
 void bsearch_cursor_##LOWER##_move( \
-	struct BSEARCH_CURSOR_TYPE(UPPER) *cursor, \
+	struct S(BsearchCursor, UPPER) *cursor, \
 	unsigned char key \
 ) BODY({ \
 	bsearch_cursor_move( \
 		&cursor->cursor, \
-		sizeof(struct BSEARCH_ENTRY_TYPE(UPPER)), \
+		sizeof(struct S(BsearchEntry, UPPER)), \
 		key \
 	); \
 })
 
 #define BSEARCH_CURSOR_MOVE_LT(TYPE, UPPER, LOWER, BODY) \
 void bsearch_cursor_##LOWER##_move_lt( \
-	struct BSEARCH_CURSOR_TYPE(UPPER) *cursor, \
+	struct S(BsearchCursor, UPPER) *cursor, \
 	unsigned char key \
 ) BODY({ \
 	bsearch_cursor_move_lt( \
 		&cursor->cursor, \
-		sizeof(struct BSEARCH_ENTRY_TYPE(UPPER)), \
+		sizeof(struct S(BsearchEntry, UPPER)), \
 		key \
 	); \
 })
 
 #define BSEARCH_CURSOR_MOVE_GT(TYPE, UPPER, LOWER, BODY) \
 void bsearch_cursor_##LOWER##_move_gt( \
-	struct BSEARCH_CURSOR_TYPE(UPPER) *cursor, \
+	struct S(BsearchCursor, UPPER) *cursor, \
 	unsigned char key \
 ) BODY({ \
 	bsearch_cursor_move_gt( \
 		&cursor->cursor, \
-		sizeof(struct BSEARCH_ENTRY_TYPE(UPPER)), \
+		sizeof(struct S(BsearchEntry, UPPER)), \
 		key \
 	); \
 })
 
 #define BSEARCH_CURSOR_CURRENT(TYPE, UPPER, LOWER, BODY) \
-BSEARCH_ENTRY_TYPE(UPPER) *bsearch_cursor_##LOWER##_current( \
-	struct BSEARCH_CURSOR_TYPE(UPPER) *cursor \
+S(BsearchEntry, UPPER) *bsearch_cursor_##LOWER##_current( \
+	struct S(BsearchCursor, UPPER) *cursor \
 ) BODY({ \
-	return (BSEARCH_ENTRY_TYPE(UPPER) *)bsearch_cursor_current( \
+	return (S(BsearchEntry, UPPER) *)bsearch_cursor_current( \
 		&cursor->cursor \
 	); \
 })

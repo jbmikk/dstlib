@@ -6,7 +6,7 @@
 
 struct Node;
 
-struct BSEARCH_ENTRY_TYPE(Node);
+struct S(BsearchEntry, Node);
 
 BSEARCH_STRUCT(struct Node, Node, node)
 	
