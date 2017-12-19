@@ -9,7 +9,7 @@
 #define nzs(S) ((unsigned char*)S), (strlen(S))
 
 typedef struct {
-	Node tree;
+	RTree tree;
 	char *str1;
 	char *str2;
 	char *str3;
@@ -28,14 +28,14 @@ void t_teardown(){
 
 void test_radix_tree__set_and_get(){
 	char *in1="BLUE", *out1;
-	Node *tree = &fixture.tree;
+	RTree *tree = &fixture.tree;
 
 	radix_tree_set(tree, nzs("blue"), in1);
 	out1 = radix_tree_get(tree, nzs("blue"));
 
-	t_assert(bmap_node_count(&tree->children) == 1);
-	t_assert(bmap_node_first(&tree->children)->node.array != NULL);
-	t_assert(bmap_node_first(&tree->children)->node.size == 3);
+	t_assert(bmap_node_count(&tree->root.children) == 1);
+	t_assert(bmap_node_first(&tree->root.children)->node.array != NULL);
+	t_assert(bmap_node_first(&tree->root.children)->node.size == 3);
 	t_assert(out1 != NULL);
 	t_assert(!strcmp(out1, "BLUE"));
 }
@@ -43,49 +43,49 @@ void test_radix_tree__set_and_get(){
 void test_radix_tree__set_and_contains(){
 	char *in1="BLUE";
 	int out1 = 0, out2 = 0;
-	Node *tree = &fixture.tree;
+	RTree *tree = &fixture.tree;
 
 	radix_tree_set(tree, nzs("blue"), in1);
 	out1 = radix_tree_contains(tree, nzs("blue"));
 	out2 = radix_tree_contains(tree, nzs("green"));
 
-	t_assert(bmap_node_count(&tree->children) == 1);
-	t_assert(bmap_node_first(&tree->children)->node.array != NULL);
-	t_assert(bmap_node_first(&tree->children)->node.size == 3);
+	t_assert(bmap_node_count(&tree->root.children) == 1);
+	t_assert(bmap_node_first(&tree->root.children)->node.array != NULL);
+	t_assert(bmap_node_first(&tree->root.children)->node.size == 3);
 	t_assert(out1 == 1);
 	t_assert(out2 == 0);
 }
 
 void test_radix_tree__set_and_get_1key(){
 	char *in1="BLUE", *out1;
-	Node *tree = &fixture.tree;
+	RTree *tree = &fixture.tree;
 
 	radix_tree_set(tree, nzs("b"), in1);
 	out1 = radix_tree_get(tree, nzs("b"));
 
-	t_assert(bmap_node_count(&tree->children) == 1);
-	t_assert(tree->array == NULL);
-	t_assert(tree->size == 0);
+	t_assert(bmap_node_count(&tree->root.children) == 1);
+	t_assert(tree->root.array == NULL);
+	t_assert(tree->root.size == 0);
 	t_assert(!strcmp(out1, "BLUE"));
 }
 
 void test_radix_tree__set_and_remove_1key(){
 	char *in1="BLUE", *out1;
-	Node *tree = &fixture.tree;
+	RTree *tree = &fixture.tree;
 
 	radix_tree_set(tree, nzs("b"), in1);
 	radix_tree_remove(tree, nzs("b"));
 	out1 = radix_tree_get(tree, nzs("b"));
 
-	t_assert(bmap_node_count(&tree->children) == 0);
-	t_assert(tree->array == NULL);
-	t_assert(tree->size == 0);
+	t_assert(bmap_node_count(&tree->root.children) == 0);
+	t_assert(tree->root.array == NULL);
+	t_assert(tree->root.size == 0);
 	t_assert(out1 == NULL);
 }
 
 void test_radix_tree__set2_and_remove1_1key(){
 	char *in1="BLUE", *in2="GREEN", *out1, *out2;
-	Node *tree = &fixture.tree;
+	RTree *tree = &fixture.tree;
 
 	radix_tree_set(tree, nzs("b"), in1);
 	radix_tree_set(tree, nzs("g"), in2);
@@ -93,9 +93,9 @@ void test_radix_tree__set2_and_remove1_1key(){
 	out1 = radix_tree_get(tree, nzs("b"));
 	out2 = radix_tree_get(tree, nzs("g"));
 
-	t_assert(bmap_node_count(&tree->children) == 1);
-	t_assert(tree->array == 0);
-	t_assert(tree->size == 0);
+	t_assert(bmap_node_count(&tree->root.children) == 1);
+	t_assert(tree->root.array == 0);
+	t_assert(tree->root.size == 0);
 	t_assert(out1 == NULL);
 	t_assert(out2 != NULL);
 	t_assert(!strcmp(out2, "GREEN"));
@@ -103,21 +103,21 @@ void test_radix_tree__set2_and_remove1_1key(){
 
 void test_radix_tree__set_and_remove_4key(){
 	char *in1="BLUE", *out1;
-	Node *tree = &fixture.tree;
+	RTree *tree = &fixture.tree;
 
 	radix_tree_set(tree, nzs("blue"), in1);
 	radix_tree_remove(tree, nzs("blue"));
 	out1= radix_tree_get(tree, nzs("blue"));
 
-	t_assert(bmap_node_count(&tree->children) == 0);
-	t_assert(tree->array == NULL);
-	t_assert(tree->size == 0);
+	t_assert(bmap_node_count(&tree->root.children) == 0);
+	t_assert(tree->root.array == NULL);
+	t_assert(tree->root.size == 0);
 	t_assert(out1 == NULL);
 }
 
 void test_radix_tree__set2_and_remove1_4key(){
 	char *in1="BLUE", *in2="GREEN", *out1, *out2;
-	Node *tree = &fixture.tree;
+	RTree *tree = &fixture.tree;
 
 	radix_tree_set(tree, nzs("blue"), in1);
 	radix_tree_set(tree, nzs("green"), in2);
@@ -125,9 +125,9 @@ void test_radix_tree__set2_and_remove1_4key(){
 	out1 = radix_tree_get(tree, nzs("blue"));
 	out2 = radix_tree_get(tree, nzs("green"));
 
-	t_assert(bmap_node_count(&tree->children) == 1);
-	t_assert(bmap_node_first(&tree->children)->node.array != NULL);
-	t_assert(bmap_node_first(&tree->children)->node.size == 4);
+	t_assert(bmap_node_count(&tree->root.children) == 1);
+	t_assert(bmap_node_first(&tree->root.children)->node.array != NULL);
+	t_assert(bmap_node_first(&tree->root.children)->node.size == 4);
 	t_assert(out1 == NULL);
 	t_assert(out2 != NULL);
 	t_assert(!strcmp(out2, "GREEN"));
@@ -135,7 +135,7 @@ void test_radix_tree__set2_and_remove1_4key(){
 
 void test_radix_tree__set2_and_remove1_4key_with_parent_array(){
 	char *in1="BLUE", *in2="GREEN", *out1, *out2;
-	Node *tree = &fixture.tree;
+	RTree *tree = &fixture.tree;
 
 	radix_tree_set(tree, nzs("lightblue"), in1);
 	radix_tree_set(tree, nzs("lightgreen"), in2);
@@ -143,16 +143,16 @@ void test_radix_tree__set2_and_remove1_4key_with_parent_array(){
 	out1 = radix_tree_get(tree, nzs("lightblue"));
 	out2 = radix_tree_get(tree, nzs("lightgreen"));
 
-	t_assert(bmap_node_count(&tree->children) == 1);
-	t_assert(bmap_node_first(&tree->children)->node.array != NULL);
-	t_assert(bmap_node_first(&tree->children)->node.size == 9);
+	t_assert(bmap_node_count(&tree->root.children) == 1);
+	t_assert(bmap_node_first(&tree->root.children)->node.array != NULL);
+	t_assert(bmap_node_first(&tree->root.children)->node.size == 9);
 	t_assert(out1 == NULL);
 	t_assert(!strcmp(out2, "GREEN"));
 }
 
 void test_radix_tree__set2_and_remove1_4key_deep(){
 	char *in1="BLUE", *in2="GREEN", *in3="LIG", *out1, *out2, *out6;
-	Node *tree = &fixture.tree;
+	RTree *tree = &fixture.tree;
 
 	radix_tree_set(tree, nzs("lightblue"), in1);
 	radix_tree_set(tree, nzs("lightgreen"), in2);
@@ -162,9 +162,9 @@ void test_radix_tree__set2_and_remove1_4key_deep(){
 	out2 = radix_tree_get(tree, nzs("lightgreen"));
 	out6 = radix_tree_get(tree, nzs("lig"));
 
-	t_assert(bmap_node_count(&tree->children) == 1);
-	t_assert(bmap_node_first(&tree->children)->node.array != NULL);
-	t_assert(bmap_node_first(&tree->children)->node.size == 2);
+	t_assert(bmap_node_count(&tree->root.children) == 1);
+	t_assert(bmap_node_first(&tree->root.children)->node.array != NULL);
+	t_assert(bmap_node_first(&tree->root.children)->node.size == 2);
 	t_assert(out1== NULL);
 	t_assert(!strcmp(out2, "GREEN"));
 	t_assert(!strcmp(out6, "LIG"));
@@ -172,7 +172,7 @@ void test_radix_tree__set2_and_remove1_4key_deep(){
 
 void test_radix_tree__set2_and_remove1_3key(){
 	char *in1="BLUE", *in2="GREEN", *out1, *out2;
-	Node *tree = &fixture.tree;
+	RTree *tree = &fixture.tree;
 
 	radix_tree_set(tree, nzs("lbl"), in1);
 	radix_tree_set(tree, nzs("lgr"), in2);
@@ -180,16 +180,16 @@ void test_radix_tree__set2_and_remove1_3key(){
 	out1 = radix_tree_get(tree, nzs("lbl"));
 	out2 = radix_tree_get(tree, nzs("lgr"));
 
-	t_assert(bmap_node_count(&tree->children) == 1);
-	t_assert(bmap_node_first(&tree->children)->node.array != NULL);
-	t_assert(bmap_node_first(&tree->children)->node.size == 2);
+	t_assert(bmap_node_count(&tree->root.children) == 1);
+	t_assert(bmap_node_first(&tree->root.children)->node.array != NULL);
+	t_assert(bmap_node_first(&tree->root.children)->node.size == 2);
 	t_assert(out1 == NULL);
 	t_assert(!strcmp(out2, "GREEN"));
 }
 
 void test_radix_tree__set_before_tree(){
 	char *in1="BLUER", *in2="BLUEST", *in3="BLUE", *out1;
-	Node *tree = &fixture.tree;
+	RTree *tree = &fixture.tree;
 
 	radix_tree_set(tree, nzs("bluer"), in1);
 	radix_tree_set(tree, nzs("bluest"), in2);
@@ -203,7 +203,7 @@ void test_radix_tree__set_before_tree(){
 
 void test_radix_tree__try_set(){
 	char *in1="BLUE", *in2="GREEN", *out1, *out2;
-	Node *tree = &fixture.tree;
+	RTree *tree = &fixture.tree;
 
 	radix_tree_set(tree, nzs("blue"), in1);
 	out1 = radix_tree_try_set(tree, nzs("blue"), in1);
@@ -216,7 +216,7 @@ void test_radix_tree__try_set(){
 
 void test_radix_tree__try_set_at_split_array(){
 	char *in1="BLUER", *out1;
-	Node *tree = &fixture.tree;
+	RTree *tree = &fixture.tree;
 
 	radix_tree_set(tree, nzs("bluer"), in1);
 	out1 = radix_tree_try_set(tree, nzs("blue"), NULL);
@@ -226,7 +226,7 @@ void test_radix_tree__try_set_at_split_array(){
 
 void test_radix_tree__remove_non_leaf_key(){
 	char *in1="LIGHTGREEN", *in2="GREEN", *out1, *out2;
-	Node *tree = &fixture.tree;
+	RTree *tree = &fixture.tree;
 
 	radix_tree_set(tree, nzs("lightgreen"), in1);
 	radix_tree_set(tree, nzs("light"), in2);
@@ -234,16 +234,16 @@ void test_radix_tree__remove_non_leaf_key(){
 	out1 = radix_tree_get(tree, nzs("lightgreen"));
 	out2 = radix_tree_get(tree, nzs("light"));
 
-	t_assert(bmap_node_count(&tree->children) == 1);
-	t_assert(bmap_node_first(&tree->children)->node.array != NULL);
-	t_assert(bmap_node_first(&tree->children)->node.size == 9);
+	t_assert(bmap_node_count(&tree->root.children) == 1);
+	t_assert(bmap_node_first(&tree->root.children)->node.array != NULL);
+	t_assert(bmap_node_first(&tree->root.children)->node.size == 9);
 	t_assert(!strcmp(out1, "LIGHTGREEN"));
 	t_assert(out2 == NULL);
 }
 
 void test_radix_tree__set_long_key(){
 	char *in1="BLUE", *out1;
-	Node *tree = &fixture.tree;
+	RTree *tree = &fixture.tree;
 
 	int length = 1024;
 	unsigned char key[length];
@@ -254,15 +254,15 @@ void test_radix_tree__set_long_key(){
 	radix_tree_set(tree, key, length, in1);
 	out1 = radix_tree_get(tree, key, length);
 
-	t_assert(bmap_node_count(&tree->children) == 1);
-	t_assert(bmap_node_first(&tree->children)->node.array != NULL);
-	t_assert(bmap_node_first(&tree->children)->node.size == 1023);
+	t_assert(bmap_node_count(&tree->root.children) == 1);
+	t_assert(bmap_node_first(&tree->root.children)->node.array != NULL);
+	t_assert(bmap_node_first(&tree->root.children)->node.size == 1023);
 	t_assert(!strcmp(out1, "BLUE"));
 }
 
 void test_radix_tree__non_clashing_keys(){
 	char *in1="BLUE", *in2="GREEN", *out1, *out2;
-	Node *tree = &fixture.tree;
+	RTree *tree = &fixture.tree;
 	radix_tree_set(tree, nzs("blue"), in1);
 	radix_tree_set(tree, nzs("green"), in2);
 	out1 = radix_tree_get(tree, nzs("blue"));
@@ -275,7 +275,7 @@ void test_radix_tree__non_clashing_keys(){
 
 void test_radix_tree__first_clashing_keys(){
 	char *in1="BLUE", *in2="BOBO", *out1, *out2;
-	Node *tree = &fixture.tree;
+	RTree *tree = &fixture.tree;
 	radix_tree_set(tree, nzs("blue"), in1);
 	radix_tree_set(tree, nzs("bobo"), in2);
 	out1 = radix_tree_get(tree, nzs("blue"));
@@ -288,7 +288,7 @@ void test_radix_tree__first_clashing_keys(){
 
 void test_radix_tree__last_clashing_keys(){
 	char *in1="BOBI", *in2="BOBO", *out1, *out2;
-	Node *tree = &fixture.tree;
+	RTree *tree = &fixture.tree;
 	radix_tree_set(tree, nzs("bobi"), in1);
 	radix_tree_set(tree, nzs("bobo"), in2);
 	out1 = radix_tree_get(tree, nzs("bobi"));
@@ -301,7 +301,7 @@ void test_radix_tree__last_clashing_keys(){
 
 void test_radix_tree__add_prefix(){
 	char *in1="DINOSAURIO", *in2="DINO", *out1, *out2;
-	Node *tree = &fixture.tree;
+	RTree *tree = &fixture.tree;
 	radix_tree_set(tree, nzs("dinosaurio"), in1);
 	radix_tree_set(tree, nzs("dino"), in2);
 	out1 = radix_tree_get(tree, nzs("dinosaurio"));
@@ -314,7 +314,7 @@ void test_radix_tree__add_prefix(){
 
 void test_radix_tree__add_suffix(){
 	char *in1="DINOSAURIO", *in2="DINO", *out1, *out2;
-	Node *tree = &fixture.tree;
+	RTree *tree = &fixture.tree;
 	radix_tree_set(tree, nzs("dino"), in2);
 	radix_tree_set(tree, nzs("dinosaurio"), in1);
 	out1 = radix_tree_get(tree, nzs("dinosaurio"));
@@ -328,7 +328,7 @@ void test_radix_tree__add_suffix(){
 void test_radix_tree__iterate(){
 	char *in1="DINOSAURIO", *in2="DINO", *in3="CASA", *in4="PIANO";
 	char *out1, *out2, *out3, *out4, *out5;
-	Node *tree = &fixture.tree;
+	RTree *tree = &fixture.tree;
 	Iterator it;
 	radix_tree_set(tree, nzs("dino"), in2);
 	radix_tree_set(tree, nzs("piano"), in4);
@@ -354,7 +354,7 @@ void test_radix_tree__iterate(){
 
 void test_radix_tree__iterate_empty(){
 	char *out1;
-	Node *tree = &fixture.tree;
+	RTree *tree = &fixture.tree;
 	Iterator it;
 	radix_tree_iterator_init(&it, tree);
 	out1 = (char *)radix_tree_iterator_next(&it);
@@ -365,7 +365,7 @@ void test_radix_tree__iterate_empty(){
 void test_radix_tree__iterate_binary(){
 	char *in1="DINOSAURIO", *in2="DINO", *in3="CASA";
 	char *out1, *out2, *out3, *out4;
-	Node *tree = &fixture.tree;
+	RTree *tree = &fixture.tree;
 	Iterator it;
 
 	unsigned char buffer[sizeof(intptr_t)];
@@ -401,7 +401,7 @@ void test_radix_tree__iterate_binary(){
 void test_radix_tree__get_next(){
 	char *in1="DINOSAURIO", *in2="DINO", *in3="CASA", *in4="PIANO";
 	char *out1, *out2, *out3, *out4, *out5;
-	Node *tree = &fixture.tree;
+	RTree *tree = &fixture.tree;
 
 	radix_tree_set(tree, nzs("dinosaurio"), in1);
 	radix_tree_set(tree, nzs("dino"), in2);
@@ -426,7 +426,7 @@ void test_radix_tree__get_next_full_key_scan(){
 	     *in4="IN4", *in5="IN5", *in6="IN6";
 	char *out1, *out2, *out3, *out4, *out5,
 	     *out6, *out7, *out8, *out9, *out10, *out11;
-	Node *tree = &fixture.tree;
+	RTree *tree = &fixture.tree;
 
 	radix_tree_set(tree, nzs("accca"), in1);
 	radix_tree_set(tree, nzs("acccb"), in2);
@@ -471,7 +471,7 @@ void test_radix_tree__get_next_full_key_scan(){
 void test_radix_tree__get_prev(){
 	char *in1="DINOSAURIO", *in2="DINO", *in3="CASA", *in4="PIANO";
 	char *out1, *out2, *out3, *out4, *out5;
-	Node *tree = &fixture.tree;
+	RTree *tree = &fixture.tree;
 
 	radix_tree_set(tree, nzs("dinosaurio"), in1);
 	radix_tree_set(tree, nzs("dino"), in2);
@@ -500,7 +500,7 @@ void test_radix_tree__get_prev_full_key_scan(){
 	     *in4="IN4", *in5="IN5", *in6="IN6";
 	char *out1, *out2, *out3, *out4, *out5,
 	     *out6, *out7, *out8, *out9, *out10, *out11;
-	Node *tree = &fixture.tree;
+	RTree *tree = &fixture.tree;
 
 	radix_tree_set(tree, nzs("accca"), in1);
 	radix_tree_set(tree, nzs("acccb"), in2);
@@ -545,7 +545,7 @@ void test_radix_tree__get_prev_full_key_scan(){
 }
 void test_radix_tree__set_and_get_int(){
 	char *in1="BLUE", *out1;
-	Node *tree = &fixture.tree;
+	RTree *tree = &fixture.tree;
 
 	radix_tree_set_int(tree, 1000, in1);
 	out1 = radix_tree_get_int(tree, 1000);
@@ -556,7 +556,7 @@ void test_radix_tree__set_and_get_int(){
 
 void test_radix_tree__set_and_get_intptr(){
 	char *in1="BLUE", *out1, *ptr = NULL;
-	Node *tree = &fixture.tree;
+	RTree *tree = &fixture.tree;
 
 	radix_tree_set_intptr(tree, (intptr_t)&ptr, in1);
 	out1 = radix_tree_get_intptr(tree, (intptr_t)&ptr);
@@ -568,7 +568,7 @@ void test_radix_tree__set_and_get_intptr(){
 void test_radix_tree__get_next_ple(){
 	char *in1="A", *in2="B", *in3="C", *in4="D", *in5="E";
 	char /* *out1, */ *out2, *out3, *out4, *out5, *out6;
-	Node *tree = &fixture.tree;
+	RTree *tree = &fixture.tree;
 
 	radix_tree_set_ple_int(tree, 20, in1);
 	radix_tree_set_ple_int(tree, 40, in2);
