@@ -6,11 +6,11 @@
 #include <string.h>
 
 #include "cmemory.h"
-#include "bsearch.h"
+#include "bmap.h"
 #include "arrays.h"
 
 
-DEFINE_BSEARCH_FUNCTIONS(struct Node, Node, node, IMPLEMENTATION)
+DEFINE_BMAP_FUNCTIONS(struct Node, Node, node, IMPLEMENTATION)
 
 #ifdef RADIXTREE_TRACE
 // Fix (NODE)->key
@@ -61,7 +61,7 @@ static void _scan_init(Scan *scan, unsigned char *key, unsigned short size, Node
 	scan->result = NULL;
 }
 
-static void _node_init(Node *node, BsearchNode children, void *data)
+static void _node_init(Node *node, BMapNode children, void *data)
 {
 	node->children = children;
 	node->data = data;
@@ -88,7 +88,7 @@ static Node *_tree_seek(Node *tree, Scan *scan)
 	Node *current = tree;
 
 	//Move to the next node within the tree
-	BsearchEntryNode *entry = bsearch_node_get(&current->children, scan->key[scan->index]);
+	BMapEntryNode *entry = bmap_node_get(&current->children, scan->key[scan->index]);
 	//Break if there is no node to move to
 	if(entry == NULL) {
 		scan->found = -1;
@@ -129,7 +129,7 @@ static Node *_tree_seek(Node *tree, Scan *scan)
 	return _tree_seek(current, scan);
 }
 
-static void _push_node_key(Scan *scan, BsearchEntryNode *entry)
+static void _push_node_key(Scan *scan, BMapEntryNode *entry)
 {
 	unsigned int offset = scan->index;
 	scan->index += 1 + entry->node.size;
@@ -144,7 +144,7 @@ static void _push_node_key(Scan *scan, BsearchEntryNode *entry)
 	}
 }
 
-static void _pop_node_key(Scan *scan, BsearchEntryNode *entry)
+static void _pop_node_key(Scan *scan, BMapEntryNode *entry)
 {
 	scan->index -= 1 + entry->node.size;
 	scan->psize = scan->index;
@@ -170,10 +170,10 @@ static int lmemcmp(unsigned char *a1, unsigned int l1, unsigned char *a2, unsign
 static void _tree_scan(Node *node, Scan *scan)
 {
 	bool has_next;
-	BsearchCursorNode cur;
-	BsearchEntryNode *entry;
+	BMapCursorNode cur;
+	BMapEntryNode *entry;
 
-	bsearch_cursor_node_init(&cur, &node->children);
+	bmap_cursor_node_init(&cur, &node->children);
 
 	switch(scan->mode) {
 	case S_DEFAULT:
@@ -181,23 +181,23 @@ static void _tree_scan(Node *node, Scan *scan)
 			scan->result = node;
 			return;
 		}
-		has_next = bsearch_cursor_node_next(&cur);
+		has_next = bmap_cursor_node_next(&cur);
 		break;
 	case S_FETCHNEXT:
 		if(scan->index >= scan->size) {
 			scan->mode = S_DEFAULT;
-			has_next = bsearch_cursor_node_next(&cur);
+			has_next = bmap_cursor_node_next(&cur);
 			goto CONTINUE;
 		}
 
-		bsearch_cursor_node_move_lt(&cur, scan->key[scan->index]);
+		bmap_cursor_node_move_lt(&cur, scan->key[scan->index]);
 
-		has_next = bsearch_cursor_node_next(&cur);
+		has_next = bmap_cursor_node_next(&cur);
 		if(!has_next) {
 			scan->mode = S_DEFAULT;
 			return;
 		}
-		entry = bsearch_cursor_node_current(&cur);
+		entry = bmap_cursor_node_current(&cur);
 
 		if(entry->entry.key == scan->key[scan->index]) {
 
@@ -212,7 +212,7 @@ static void _tree_scan(Node *node, Scan *scan)
 				scan->mode = S_DEFAULT;
 			}
 			if(result > 0) {
-				has_next = bsearch_cursor_node_next(&cur);
+				has_next = bmap_cursor_node_next(&cur);
 			}
 
 		} else {
@@ -224,7 +224,7 @@ static void _tree_scan(Node *node, Scan *scan)
 
 CONTINUE:
 	while(has_next) {
-		BsearchEntryNode *current = bsearch_cursor_node_current(&cur);
+		BMapEntryNode *current = bmap_cursor_node_current(&cur);
 
 		_push_node_key(scan, current);
 
@@ -234,9 +234,9 @@ CONTINUE:
 			break;
 
 		_pop_node_key(scan, current);
-		has_next = bsearch_cursor_node_next(&cur);
+		has_next = bmap_cursor_node_next(&cur);
 	}
-	bsearch_cursor_node_dispose(&cur);
+	bmap_cursor_node_dispose(&cur);
 }
 
 /**
@@ -245,11 +245,11 @@ CONTINUE:
 static void _tree_scan_prev(Node *node, Scan *scan)
 {
 	bool has_next;
-	BsearchCursorNode cur;
-	BsearchEntryNode *next;
+	BMapCursorNode cur;
+	BMapEntryNode *next;
 
-	bsearch_cursor_node_init(&cur, &node->children);
-	bsearch_cursor_node_revert(&cur);
+	bmap_cursor_node_init(&cur, &node->children);
+	bmap_cursor_node_revert(&cur);
 
 	if (scan->mode == S_FETCHNEXT) {
 		if(scan->index >= scan->size) {
@@ -257,15 +257,15 @@ static void _tree_scan_prev(Node *node, Scan *scan)
 			return;
 		}
 
-		bsearch_cursor_node_move_gt(&cur, scan->key[scan->index]);
+		bmap_cursor_node_move_gt(&cur, scan->key[scan->index]);
 
-		has_next = bsearch_cursor_node_next(&cur);
+		has_next = bmap_cursor_node_next(&cur);
 		if(!has_next) {
 			scan->mode = S_DEFAULT;
 			goto CONTINUE;
 		}
 
-		next = bsearch_cursor_node_current(&cur);
+		next = bmap_cursor_node_current(&cur);
 
 		if(next->entry.key == scan->key[scan->index]) {
 
@@ -281,7 +281,7 @@ static void _tree_scan_prev(Node *node, Scan *scan)
 				goto SKIP;
 			}
 			if(result != 0) {
-				has_next = bsearch_cursor_node_next(&cur);
+				has_next = bmap_cursor_node_next(&cur);
 				scan->mode = S_DEFAULT;
 			}
 
@@ -289,13 +289,13 @@ static void _tree_scan_prev(Node *node, Scan *scan)
 			scan->mode = S_DEFAULT;
 		}
 	} else {
-		has_next = bsearch_cursor_node_next(&cur);
+		has_next = bmap_cursor_node_next(&cur);
 	}
 
 SKIP:
-	if(bsearch_node_count(&node->children) > 0) {
+	if(bmap_node_count(&node->children) > 0) {
 		while(has_next) {
-			BsearchEntryNode *current = bsearch_cursor_node_current(&cur);
+			BMapEntryNode *current = bmap_cursor_node_current(&cur);
 
 			_push_node_key(scan, current);
 
@@ -305,9 +305,9 @@ SKIP:
 				break;
 
 			_pop_node_key(scan, current);
-			has_next = bsearch_cursor_node_next(&cur);
+			has_next = bmap_cursor_node_next(&cur);
 		}
-		bsearch_cursor_node_dispose(&cur);
+		bmap_cursor_node_dispose(&cur);
 	}
 CONTINUE:
 	if(scan->mode == S_DEFAULT && scan->result == NULL) {
@@ -326,7 +326,7 @@ static Node *_build_node(Node *node, unsigned char *string, unsigned short lengt
 	if (length >= 1) {
 		Node new_node;
 
-		_node_init(&new_node, (BsearchNode){(Bsearch){NULL, 0}}, NULL);
+		_node_init(&new_node, (BMapNode){(BMap){NULL, 0}}, NULL);
 		_node_array_init(&new_node);
 
 		//TODO: If key length <= sizeof(ptr) don't malloc,
@@ -335,7 +335,7 @@ static Node *_build_node(Node *node, unsigned char *string, unsigned short lengt
 			_node_set_array(&new_node, length-1);
 			memcpy(new_node.array, string+1, length-1);
 		}
-		next_node = &bsearch_node_insert(&node->children, string[0], new_node)->node;
+		next_node = &bmap_node_insert(&node->children, string[0], new_node)->node;
 		trace_node("BUILD-NODE", next_node);
 	} else {
 		next_node = node;
@@ -362,7 +362,7 @@ static Node * _split_node_array(Node *node, Scan *scan)
 
 	if (new_suffix_size == 0) {
                 //No new suffix, we add data to current node
-		_node_init(node, (BsearchNode){(Bsearch){NULL, 0}}, NULL);
+		_node_init(node, (BMapNode){(BMap){NULL, 0}}, NULL);
 
 		data_node = node;
 
@@ -371,7 +371,7 @@ static Node * _split_node_array(Node *node, Scan *scan)
 		_node_init(branch, old.children, old.data);
 	} else {
 		//make node point to new tree node
-		_node_init(node, (BsearchNode){(Bsearch){NULL, 0}}, NULL);
+		_node_init(node, (BMapNode){(BMap){NULL, 0}}, NULL);
 
 		//add branch to hold old suffix and delete old data
 		Node *branch1 = _build_node(node, old_suffix, old_suffix_size);
@@ -392,12 +392,12 @@ static Node * _split_node_array(Node *node, Scan *scan)
 
 static void _compact_nodes(Node *node)
 {
-	if (bsearch_node_count(&node->children) != 1 || node->data) {
+	if (bmap_node_count(&node->children) != 1 || node->data) {
 		return;
 	}
 
-	//TODO: Add bsearch_get_first
-	BsearchEntryNode *child = (BsearchEntryNode *)node->children.bsearch.entries;
+	//TODO: Add bmap_get_first
+	BMapEntryNode *child = (BMapEntryNode *)node->children.bmap.entries;
 
 	//Join arrays
 	int joined_size = node->size + 1 + child->node.size;
@@ -417,7 +417,7 @@ static void _compact_nodes(Node *node)
 
 	Node cont = child->node;
 
-	bsearch_node_delete(&node->children, child->entry.key);
+	bmap_node_delete(&node->children, child->entry.key);
 
 	trace("new size: %i", joined_size);
 
@@ -432,7 +432,7 @@ static void _pluck_node(Node *node, Scan *scan)
 	Node *previous = scan->previous;
 	trace_node("CLEAN", node);
 
-	if(bsearch_node_count(&node->children) == 0 && previous) {
+	if(bmap_node_count(&node->children) == 0 && previous) {
 		trace_node("PREVIOUS", previous);
 
 		if(node->array) {
@@ -441,7 +441,7 @@ static void _pluck_node(Node *node, Scan *scan)
 		}
 
 		char bkey = scan->key[scan->index - scan->subindex - 1];
-		bsearch_node_delete(&previous->children, bkey);
+		bmap_node_delete(&previous->children, bkey);
 
 		if(previous != scan->root) {
 			_compact_nodes(previous);
@@ -473,7 +473,7 @@ static Node *_build_data_node(Node *tree, unsigned char *string, unsigned short 
 
 void radix_tree_init(Node *tree)
 {
-	_node_init(tree, (BsearchNode){(Bsearch){NULL, 0}}, NULL);
+	_node_init(tree, (BMapNode){(BMap){NULL, 0}}, NULL);
 	_node_array_init(tree);
 }
 
@@ -603,14 +603,14 @@ void radix_tree_dispose(Node *tree)
 		free(tree->array);
 		set_null(tree->array);
 	}
-	BsearchCursorNode cur;
-	bsearch_cursor_node_init(&cur, &tree->children);
-	while(bsearch_cursor_node_next(&cur)) {
-		BsearchEntryNode *entry = bsearch_cursor_node_current(&cur);
+	BMapCursorNode cur;
+	bmap_cursor_node_init(&cur, &tree->children);
+	while(bmap_cursor_node_next(&cur)) {
+		BMapEntryNode *entry = bmap_cursor_node_current(&cur);
 		radix_tree_dispose(&entry->node);
 	}
-	bsearch_cursor_node_dispose(&cur);
-	bsearch_node_dispose(&tree->children);
+	bmap_cursor_node_dispose(&cur);
+	bmap_node_dispose(&tree->children);
 }
 
 void radix_tree_iterator_init(Iterator *iterator, Node *tree)

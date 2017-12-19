@@ -69,11 +69,11 @@ set_target_properties(dstlib PROPERTIES COMPILE_FLAGS "-DLIBRARY ${DSTLIB_FLAGS}
 include_directories("${PROJECT_SOURCE_DIR}/src")
 
 add_executable(stack_test tests/stack_test.c)
-add_executable(bsearch_test tests/bsearch_test.c)
+add_executable(bmap_test tests/bmap_test.c)
 add_executable(radixtree_test tests/radixtree_test.c)
 add_executable(arrays_test tests/arrays_test.c)
 
 target_link_libraries(stack_test dstlib)
-target_link_libraries(bsearch_test dstlib)
+target_link_libraries(bmap_test dstlib)
 target_link_libraries(radixtree_test dstlib)
 target_link_libraries(arrays_test dstlib)

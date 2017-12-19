@@ -2,16 +2,16 @@
 #define	RADIXTREE_H
 
 #include <stdint.h>
-#include "bsearch.h"
+#include "bmap.h"
 
 struct Node;
 
-struct S(BsearchEntry, Node);
+struct S(BMapEntry, Node);
 
-BSEARCH_STRUCT(struct Node, Node, node)
+BMAP_STRUCT(struct Node, Node, node)
 	
 typedef struct Node {
-	BsearchNode children;
+	BMapNode children;
 
 	//Radix tree specific
 	unsigned short size;
@@ -19,10 +19,10 @@ typedef struct Node {
 	void *data;
 } Node;
 
-BSEARCH_ENTRY_STRUCT(struct Node, Node, node)
-BSEARCH_CURSOR_STRUCT(struct Node, Node, node)
+BMAP_ENTRY_STRUCT(struct Node, Node, node)
+BMAP_CURSOR_STRUCT(struct Node, Node, node)
 
-DEFINE_BSEARCH_FUNCTIONS(struct Node, Node, node, PROTOTYPE)
+DEFINE_BMAP_FUNCTIONS(struct Node, Node, node, PROTOTYPE)
 
 
 typedef struct _Iterator {
