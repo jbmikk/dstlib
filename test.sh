@@ -11,5 +11,5 @@ echo "---------"
 
 run_test $MODE $PATTERN ./stack_test
 run_test $MODE $PATTERN ./bmap_test
-run_test $MODE $PATTERN ./radixtree_test
+run_test $MODE $PATTERN ./rtree_test
 run_test $MODE $PATTERN ./arrays_test

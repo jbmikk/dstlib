@@ -11,7 +11,7 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall")
 # Traces
 # ------
 
-option(ENABLE_RADIXTREE_TRACE "Enable radixtree traces" OFF)
+option(ENABLE_RADIXTREE_TRACE "Enable rtree traces" OFF)
 option(TRACE "Enable all traces" OFF)
 
 if(TRACE)
@@ -70,10 +70,10 @@ include_directories("${PROJECT_SOURCE_DIR}/src")
 
 add_executable(stack_test tests/stack_test.c)
 add_executable(bmap_test tests/bmap_test.c)
-add_executable(radixtree_test tests/radixtree_test.c)
+add_executable(rtree_test tests/rtree_test.c)
 add_executable(arrays_test tests/arrays_test.c)
 
 target_link_libraries(stack_test dstlib)
 target_link_libraries(bmap_test dstlib)
-target_link_libraries(radixtree_test dstlib)
+target_link_libraries(rtree_test dstlib)
 target_link_libraries(arrays_test dstlib)

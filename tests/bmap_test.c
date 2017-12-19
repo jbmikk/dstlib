@@ -3,7 +3,7 @@
 
 #include "test.h"
 #include "bmap.h"
-#include "radixtree.h"
+#include "rtree.h"
 
 
 typedef struct BTest {

@@ -1,4 +1,4 @@
-#include "radixtree.h"
+#include "rtree.h"
 
 #include <stddef.h>
 #include <stdio.h>
@@ -488,13 +488,13 @@ static void _node_dispose(Node *node)
 	bmap_node_dispose(&node->children);
 }
 
-void radix_tree_init(RTree *tree)
+void rtree_init(RTree *tree)
 {
 	_node_init(&tree->root, (BMapNode){(BMap){NULL, 0}}, NULL);
 	_node_array_init(&tree->root);
 }
 
-void *radix_tree_get(RTree *tree, unsigned char *string, unsigned short length)
+void *rtree_get(RTree *tree, unsigned char *string, unsigned short length)
 {
 	trace("RADIXTREE-GET(%p)", &tree->node);
 
@@ -512,7 +512,7 @@ void *radix_tree_get(RTree *tree, unsigned char *string, unsigned short length)
 	}
 }
 
-void radix_tree_set(RTree *tree, unsigned char *string, unsigned short length, void *data)
+void rtree_set(RTree *tree, unsigned char *string, unsigned short length, void *data)
 {
 	trace("RADIXTREE-SET(%p)", &tree->root);
 
@@ -520,7 +520,7 @@ void radix_tree_set(RTree *tree, unsigned char *string, unsigned short length, v
 	data_node->data = data;
 }
 
-int radix_tree_contains(RTree *tree, unsigned char *string, unsigned short length)
+int rtree_contains(RTree *tree, unsigned char *string, unsigned short length)
 {
 	trace("RADIXTREE-CONTAINS(%p)", &tree->root);
 
@@ -538,7 +538,7 @@ int radix_tree_contains(RTree *tree, unsigned char *string, unsigned short lengt
 	}
 }
 
-void *radix_tree_try_set(RTree *tree, unsigned char *string, unsigned short length, void *data)
+void *rtree_try_set(RTree *tree, unsigned char *string, unsigned short length, void *data)
 {
 	trace("RADIXTREE-TRY-SET(%p)", &tree->root);
 
@@ -551,7 +551,7 @@ void *radix_tree_try_set(RTree *tree, unsigned char *string, unsigned short leng
 	return previous_data;
 }
 
-void radix_tree_remove(RTree *tree, unsigned char *string, unsigned short length)
+void rtree_remove(RTree *tree, unsigned char *string, unsigned short length)
 {
 	trace("RADIXTREE-REMOVE(%p)", &tree->root);
 
@@ -569,7 +569,7 @@ void radix_tree_remove(RTree *tree, unsigned char *string, unsigned short length
 	}
 }
 
-void **radix_tree_get_next(RTree *tree, unsigned char *string, unsigned short length)
+void **rtree_get_next(RTree *tree, unsigned char *string, unsigned short length)
 {
 	Scan scan;
 
@@ -591,7 +591,7 @@ void **radix_tree_get_next(RTree *tree, unsigned char *string, unsigned short le
 	}
 }
 
-void **radix_tree_get_prev(RTree *tree, unsigned char *string, unsigned short length)
+void **rtree_get_prev(RTree *tree, unsigned char *string, unsigned short length)
 {
 	Scan scan;
 
@@ -613,12 +613,12 @@ void **radix_tree_get_prev(RTree *tree, unsigned char *string, unsigned short le
 	}
 }
 
-void radix_tree_dispose(RTree *tree)
+void rtree_dispose(RTree *tree)
 {
 	_node_dispose(&tree->root);
 }
 
-void radix_tree_iterator_init(Iterator *iterator, RTree *tree)
+void rtree_iterator_init(Iterator *iterator, RTree *tree)
 {
 	iterator->root = &tree->root;
 	iterator->key = NULL;
@@ -626,12 +626,12 @@ void radix_tree_iterator_init(Iterator *iterator, RTree *tree)
 	iterator->data= NULL;
 }
 
-void radix_tree_iterator_dispose(Iterator *iterator)
+void rtree_iterator_dispose(Iterator *iterator)
 {
 	free(iterator->key);
 }
 
-void **radix_tree_iterator_next(Iterator *iterator)
+void **rtree_iterator_next(Iterator *iterator)
 {
 	Scan scan;
 
@@ -659,86 +659,86 @@ void **radix_tree_iterator_next(Iterator *iterator)
 	}
 }
 
-void *radix_tree_get_int(RTree *tree, int number)
+void *rtree_get_int(RTree *tree, int number)
 {
 	unsigned char buffer[sizeof(int)];
 	int_to_padded_array(buffer, number);
-	return radix_tree_get(tree, buffer, sizeof(int));
+	return rtree_get(tree, buffer, sizeof(int));
 }
 
-void radix_tree_set_int(RTree *tree, int number, void *data)
+void rtree_set_int(RTree *tree, int number, void *data)
 {
 	unsigned char buffer[sizeof(int)];
 	int_to_padded_array(buffer, number);
-	radix_tree_set(tree, buffer, sizeof(int), data);
+	rtree_set(tree, buffer, sizeof(int), data);
 }
 
-int radix_tree_contains_int(RTree *tree, int number)
+int rtree_contains_int(RTree *tree, int number)
 {
 	unsigned char buffer[sizeof(int)];
 	int_to_padded_array(buffer, number);
-	return radix_tree_contains(tree, buffer, sizeof(int));
+	return rtree_contains(tree, buffer, sizeof(int));
 }
 
-void *radix_tree_get_next_int(RTree *tree, int number)
+void *rtree_get_next_int(RTree *tree, int number)
 {
 	unsigned char buffer[sizeof(int)];
 	int_to_padded_array(buffer, number);
-	return radix_tree_get_next(tree, buffer, sizeof(int));
+	return rtree_get_next(tree, buffer, sizeof(int));
 }
 
-void *radix_tree_get_ple_int(RTree *tree, int number)
+void *rtree_get_ple_int(RTree *tree, int number)
 {
 	unsigned char buffer[sizeof(int)];
 	int_to_padded_array_le(buffer, number);
-	return radix_tree_get(tree, buffer, sizeof(int));
+	return rtree_get(tree, buffer, sizeof(int));
 }
 
-void radix_tree_set_ple_int(RTree *tree, int number, void *data)
+void rtree_set_ple_int(RTree *tree, int number, void *data)
 {
 	unsigned char buffer[sizeof(int)];
 	int_to_padded_array_le(buffer, number);
-	radix_tree_set(tree, buffer, sizeof(int), data);
+	rtree_set(tree, buffer, sizeof(int), data);
 }
 
-int radix_tree_contains_ple_int(RTree *tree, int number)
+int rtree_contains_ple_int(RTree *tree, int number)
 {
 	unsigned char buffer[sizeof(int)];
 	int_to_padded_array_le(buffer, number);
-	return radix_tree_contains(tree, buffer, sizeof(int));
+	return rtree_contains(tree, buffer, sizeof(int));
 }
 
-void *radix_tree_get_next_ple_int(RTree *tree, int number)
+void *rtree_get_next_ple_int(RTree *tree, int number)
 {
 	unsigned char buffer[sizeof(int)];
 	int_to_padded_array_le(buffer, number);
-	return radix_tree_get_next(tree, buffer, sizeof(int));
+	return rtree_get_next(tree, buffer, sizeof(int));
 }
 
-void *radix_tree_get_intptr(RTree *tree, intptr_t ptr)
+void *rtree_get_intptr(RTree *tree, intptr_t ptr)
 {
 	unsigned char buffer[sizeof(intptr_t)];
 	intptr_to_padded_array_le(buffer, ptr);
-	return radix_tree_get(tree, buffer, sizeof(intptr_t));
+	return rtree_get(tree, buffer, sizeof(intptr_t));
 }
 
-void radix_tree_set_intptr(RTree *tree, intptr_t ptr, void *data)
+void rtree_set_intptr(RTree *tree, intptr_t ptr, void *data)
 {
 	unsigned char buffer[sizeof(intptr_t)];
 	intptr_to_padded_array_le(buffer, ptr);
-	radix_tree_set(tree, buffer, sizeof(intptr_t), data);
+	rtree_set(tree, buffer, sizeof(intptr_t), data);
 }
 
-int radix_tree_contains_intptr(RTree *tree, intptr_t ptr)
+int rtree_contains_intptr(RTree *tree, intptr_t ptr)
 {
 	unsigned char buffer[sizeof(intptr_t)];
 	intptr_to_padded_array_le(buffer, ptr);
-	return radix_tree_contains(tree, buffer, sizeof(intptr_t));
+	return rtree_contains(tree, buffer, sizeof(intptr_t));
 }
 
-void *radix_tree_get_next_intptr(RTree *tree, intptr_t ptr)
+void *rtree_get_next_intptr(RTree *tree, intptr_t ptr)
 {
 	unsigned char buffer[sizeof(intptr_t)];
 	intptr_to_padded_array_le(buffer, ptr);
-	return radix_tree_get_next(tree, buffer, sizeof(intptr_t));
+	return rtree_get_next(tree, buffer, sizeof(intptr_t));
 }
