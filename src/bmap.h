@@ -47,8 +47,6 @@ void bmap_cursor_move_lt(BMapCursor *cur, unsigned int size, unsigned char key);
 void bmap_cursor_move_gt(BMapCursor *cur, unsigned int size, unsigned char key);
 BMapEntry *bmap_cursor_current(BMapCursor *cur);
 
-#define PROTOTYPE(BLOCK) ;
-#define IMPLEMENTATION(BLOCK) BLOCK
 
 #define BMAP_ENTRY_STRUCT(TYPE, UPPER, LOWER) \
 typedef struct S(BMapEntry, UPPER) { \

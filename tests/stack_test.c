@@ -17,10 +17,14 @@ struct TestStruct {
 };
 
 DEFINE_STACK(int, Int, int);
+DEFINE_STACK_FUNCTIONS(int, Int, int, IMPLEMENTATION)
 
 DEFINE_STACK(char *, CharPtr, charptr);
+DEFINE_STACK_FUNCTIONS(char *, CharPtr, charptr, IMPLEMENTATION)
 
 DEFINE_STACK(struct TestStruct, TestStruct, teststruct);
+DEFINE_STACK_FUNCTIONS(struct TestStruct, TestStruct, teststruct, IMPLEMENTATION)
+
 
 void stack_push_pop_int(){
 

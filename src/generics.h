@@ -3,4 +3,7 @@
 
 #define S(GTYPE, PTYPE) GTYPE##PTYPE
 
+#define PROTOTYPE(BLOCK) ;
+#define IMPLEMENTATION(BLOCK) BLOCK
+
 #endif //GENERICS_H

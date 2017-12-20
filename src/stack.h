@@ -31,37 +31,40 @@ typedef struct S(Stack, UPPER) { \
 	Stack stack; \
 } S(Stack, UPPER);
 
-#define STACK_INIT(TYPE, UPPER, LOWER) \
-void stack_##LOWER##_init(struct S(Stack, UPPER) *stack) { \
+#define STACK_INIT(TYPE, UPPER, LOWER, BODY) \
+void stack_##LOWER##_init(struct S(Stack, UPPER) *stack) BODY({ \
 	stack_init(&stack->stack); \
-}
+})
 
-#define STACK_PUSH(TYPE, UPPER, LOWER) \
-void stack_##LOWER##_push(struct S(Stack, UPPER) *stack, TYPE data) { \
+#define STACK_PUSH(TYPE, UPPER, LOWER, BODY) \
+void stack_##LOWER##_push(struct S(Stack, UPPER) *stack, TYPE data) BODY({ \
 	struct S(StackNode, UPPER) *node = (struct S(StackNode, UPPER) *)stack_push( \
 		&stack->stack, \
 		sizeof(struct S(StackNode, UPPER)) \
 	); \
 	node->data = data; \
-}
+})
 
-#define STACK_POP(TYPE, UPPER, LOWER) \
-void stack_##LOWER##_pop(struct S(Stack, UPPER) *stack) { \
+#define STACK_POP(TYPE, UPPER, LOWER, BODY) \
+void stack_##LOWER##_pop(struct S(Stack, UPPER) *stack) BODY({ \
 	stack_pop(&stack->stack); \
-}
+})
 
-#define STACK_DISPOSE(TYPE, UPPER, LOWER) \
-void stack_##LOWER##_dispose(struct S(Stack, UPPER) *stack) { \
+#define STACK_DISPOSE(TYPE, UPPER, LOWER, BODY) \
+void stack_##LOWER##_dispose(struct S(Stack, UPPER) *stack) BODY({ \
 	stack_dispose(&stack->stack); \
-}
+})
 
 #define DEFINE_STACK(TYPE, UPPER, LOWER) \
 	STACK_NODE_STRUCT(TYPE, UPPER, LOWER) \
 	STACK_STRUCT(TYPE, UPPER, LOWER) \
-	STACK_INIT(TYPE, UPPER, LOWER) \
-	STACK_PUSH(TYPE, UPPER, LOWER) \
-	STACK_POP(TYPE, UPPER, LOWER) \
-	STACK_DISPOSE(TYPE, UPPER, LOWER)
+	DEFINE_STACK_FUNCTIONS(TYPE, UPPER, LOWER, PROTOTYPE)
+
+#define DEFINE_STACK_FUNCTIONS(TYPE, UPPER, LOWER, BODY) \
+	STACK_INIT(TYPE, UPPER, LOWER, BODY) \
+	STACK_PUSH(TYPE, UPPER, LOWER, BODY) \
+	STACK_POP(TYPE, UPPER, LOWER, BODY) \
+	STACK_DISPOSE(TYPE, UPPER, LOWER, BODY)
 
 
 #endif //STACK_H
