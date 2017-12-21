@@ -43,6 +43,24 @@ void stack_push_pop_int(){
 	t_assert(stack.stack.top == NULL);
 }
 
+void stack_top_int(){
+
+	int value = 314;
+
+	StackInt stack;
+
+	stack_int_init(&stack);
+	t_assert(stack.stack.top == NULL);
+
+	stack_int_push(&stack, value);
+	t_assert(stack.stack.top != NULL);
+
+	int top = stack_int_top(&stack);
+	t_assert(top == 314);
+
+	stack_int_dispose(&stack);
+}
+
 void stack_push_pop_char_ptr()
 {
 	char value[] = "test-string";
@@ -105,6 +123,7 @@ int main(int argc, char** argv){
 
 	t_init();
 	t_test(stack_push_pop_int);
+	t_test(stack_top_int);
 	t_test(stack_push_pop_char_ptr);
 	t_test(stack_push_pop_struct);
 	t_test(stack_dispose_many_nodes);

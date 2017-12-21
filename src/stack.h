@@ -50,6 +50,11 @@ void stack_##LOWER##_pop(struct S(Stack, UPPER) *stack) BODY({ \
 	stack_pop(&stack->stack); \
 })
 
+#define STACK_TOP(TYPE, UPPER, LOWER, BODY) \
+TYPE stack_##LOWER##_top(struct S(Stack, UPPER) *stack) BODY({ \
+	return ((S(StackNode, UPPER) *)(stack->stack.top))->data; \
+})
+
 #define STACK_DISPOSE(TYPE, UPPER, LOWER, BODY) \
 void stack_##LOWER##_dispose(struct S(Stack, UPPER) *stack) BODY({ \
 	stack_dispose(&stack->stack); \
@@ -64,6 +69,7 @@ void stack_##LOWER##_dispose(struct S(Stack, UPPER) *stack) BODY({ \
 	STACK_INIT(TYPE, UPPER, LOWER, BODY) \
 	STACK_PUSH(TYPE, UPPER, LOWER, BODY) \
 	STACK_POP(TYPE, UPPER, LOWER, BODY) \
+	STACK_TOP(TYPE, UPPER, LOWER, BODY) \
 	STACK_DISPOSE(TYPE, UPPER, LOWER, BODY)
 
 
