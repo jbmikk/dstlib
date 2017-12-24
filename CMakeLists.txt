@@ -11,11 +11,11 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall")
 # Traces
 # ------
 
-option(ENABLE_RADIXTREE_TRACE "Enable rtree traces" OFF)
+option(ENABLE_RTREE_TRACE "Enable rtree traces" OFF)
 option(TRACE "Enable all traces" OFF)
 
 if(TRACE)
-        set(ENABLE_RADIXTREE_TRACE ON)
+        set(ENABLE_RTREE_TRACE ON)
 endif(TRACE)
 
 # Profiling
@@ -44,11 +44,11 @@ externalproject_add(
 # Flags
 # -----
 
-if(ENABLE_RADIXTREE_TRACE)
-        set(RADIXTREE_TRACE_FLAGS "-DRADIXTREE_TRACE")
-endif(ENABLE_RADIXTREE_TRACE)
+if(ENABLE_RTREE_TRACE)
+        set(RTREE_TRACE_FLAGS "-DRTREE_TRACE")
+endif(ENABLE_RTREE_TRACE)
 
-set(DSTLIB_FLAGS "${RADIXTREE_TRACE_FLAGS}")
+set(DSTLIB_FLAGS "${RTREE_TRACE_FLAGS}")
 
 
 # Dstlib

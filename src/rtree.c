@@ -12,9 +12,9 @@
 
 DEFINE_BMAP_FUNCTIONS(struct Node, Node, node, IMPLEMENTATION)
 
-#ifdef RADIXTREE_TRACE
+#ifdef RTREE_TRACE
 // Fix (NODE)->key
-#define trace(M, ...) fprintf(stderr, "RADIXTREE: " M "\n", ##__VA_ARGS__)
+#define trace(M, ...) fprintf(stderr, "RTREE: " M "\n", ##__VA_ARGS__)
 #define trace_node(M, NODE) \
 	trace( \
 		"" M "(%p) [:%.*s], DATA:%p, CHILDREN(%i):%p", \
@@ -496,7 +496,7 @@ void rtree_init(RTree *tree)
 
 void *rtree_get(RTree *tree, unsigned char *string, unsigned short length)
 {
-	trace("RADIXTREE-GET(%p)", &tree->node);
+	trace("RTREE-GET(%p)", &tree->node);
 
 	Scan scan;
 	_scan_init(&scan, string, length, &tree->root, S_DEFAULT);
@@ -514,7 +514,7 @@ void *rtree_get(RTree *tree, unsigned char *string, unsigned short length)
 
 void rtree_set(RTree *tree, unsigned char *string, unsigned short length, void *data)
 {
-	trace("RADIXTREE-SET(%p)", &tree->root);
+	trace("RTREE-SET(%p)", &tree->root);
 
 	Node *data_node = _build_data_node(&tree->root, string, length);
 	data_node->data = data;
@@ -522,7 +522,7 @@ void rtree_set(RTree *tree, unsigned char *string, unsigned short length, void *
 
 int rtree_contains(RTree *tree, unsigned char *string, unsigned short length)
 {
-	trace("RADIXTREE-CONTAINS(%p)", &tree->root);
+	trace("RTREE-CONTAINS(%p)", &tree->root);
 
 	Scan scan;
 	_scan_init(&scan, string, length, &tree->root, S_DEFAULT);
@@ -540,7 +540,7 @@ int rtree_contains(RTree *tree, unsigned char *string, unsigned short length)
 
 void *rtree_try_set(RTree *tree, unsigned char *string, unsigned short length, void *data)
 {
-	trace("RADIXTREE-TRY-SET(%p)", &tree->root);
+	trace("RTREE-TRY-SET(%p)", &tree->root);
 
 	Node *data_node = _build_data_node(&tree->root, string, length);
 
@@ -553,7 +553,7 @@ void *rtree_try_set(RTree *tree, unsigned char *string, unsigned short length, v
 
 void rtree_remove(RTree *tree, unsigned char *string, unsigned short length)
 {
-	trace("RADIXTREE-REMOVE(%p)", &tree->root);
+	trace("RTREE-REMOVE(%p)", &tree->root);
 
 	Scan scan;
 	_scan_init(&scan, string, length, &tree->root, S_DEFAULT);

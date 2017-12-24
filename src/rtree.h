@@ -1,5 +1,5 @@
-#ifndef RADIXTREE_H
-#define	RADIXTREE_H
+#ifndef RTREE_H
+#define	RTREE_H
 
 #include <stdint.h>
 #include "bmap.h"
@@ -79,6 +79,6 @@ void rtree_set_intptr(RTree *tree, intptr_t ptr, void *data);
 int rtree_contains_intptr(RTree *tree, intptr_t ptr);
 void *rtree_get_next_intptr(RTree *tree, intptr_t ptr);
 
-#endif	//RADIXTREE_H
+#endif	//RTREE_H
 
 
