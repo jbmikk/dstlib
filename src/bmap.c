@@ -13,10 +13,15 @@ struct BMapScan {
 	struct BMapEntry *next;
 };
 
+int uchar_key_compare(const BMapComparator *c, const BMapEntry *e)
+{
+	return e->key - c->uchar_key;
+}
+
 // TODO: Refactor binary search into separate generic from BMap.
 //	 Bsearch generic should work without using key-value mapping.
 //	 Pretty much like standard c bsearch, but with generic structure.
-static void _scan(struct BMapScan *scan, BMap *bmap, unsigned int size, unsigned char key)
+static void _scan(struct BMapScan *scan, BMap *bmap, unsigned int size, BMapComparator *cmp)
 {
 	char *entries = (char *)bmap->entries;
 	int left = 0;
@@ -27,10 +32,11 @@ static void _scan(struct BMapScan *scan, BMap *bmap, unsigned int size, unsigned
 	while(left <= right) {
 		unsigned int i = left+((right - left)>>1);
 		BMapEntry *entry = (BMapEntry *)&entries[i * size];
-		if(entry->key < key) {
+		int diff = cmp->compare(cmp, entry);
+		if(diff < 0) {
 			scan->prev = entry;
 			left = i+1;
-		} else if(entry->key > key) {
+		} else if(diff > 0) {
 			scan->next = entry;
 			right = i-1;
 		} else {
@@ -81,40 +87,40 @@ BMapEntry *bmap_first(BMap *bmap)
 	return bmap->entries;
 }
 
-BMapEntry *bmap_get(BMap *bmap, unsigned int size, unsigned char key)
+BMapEntry *bmap_get(BMap *bmap, unsigned int size, BMapComparator *cmp)
 {
 	struct BMapScan scan = {NULL, NULL, NULL};
-	_scan(&scan, bmap, size, key);
+	_scan(&scan, bmap, size, cmp);
 	return scan.equal;
 }
 
 /**
  * Get closest greater than or equal child
  */
-BMapEntry *bmap_get_gte(BMap *bmap, unsigned int size, unsigned char key)
+BMapEntry *bmap_get_gte(BMap *bmap, unsigned int size, BMapComparator *cmp)
 {
 	struct BMapScan scan = {NULL, NULL, NULL};
-	_scan(&scan, bmap, size, key);
+	_scan(&scan, bmap, size, cmp);
 	return scan.equal? scan.equal: scan.next;
 }
 
 /**
  * Get closest less than or equal child
  */
-BMapEntry *bmap_get_lte(BMap *bmap, unsigned int size, unsigned char key)
+BMapEntry *bmap_get_lte(BMap *bmap, unsigned int size, BMapComparator *cmp)
 {
 	struct BMapScan scan = {NULL, NULL, NULL};
-	_scan(&scan, bmap, size, key);
+	_scan(&scan, bmap, size, cmp);
 	return scan.equal? scan.equal: scan.prev;
 }
 
 /**
  * Get closest greater than key
  */
-BMapEntry *bmap_get_gt(BMap *bmap, unsigned int size, unsigned char key)
+BMapEntry *bmap_get_gt(BMap *bmap, unsigned int size, BMapComparator *cmp)
 {
 	struct BMapScan scan = {NULL, NULL, NULL};
-	_scan(&scan, bmap, size, key);
+	_scan(&scan, bmap, size, cmp);
 	_scan_out(&scan, bmap, size);
 	return scan.next;
 }
@@ -122,21 +128,21 @@ BMapEntry *bmap_get_gt(BMap *bmap, unsigned int size, unsigned char key)
 /**
  * Get closest less than key
  */
-BMapEntry *bmap_get_lt(BMap *bmap, unsigned int size, unsigned char key)
+BMapEntry *bmap_get_lt(BMap *bmap, unsigned int size, BMapComparator *cmp)
 {
 	struct BMapScan scan = {NULL, NULL, NULL};
-	_scan(&scan, bmap, size, key);
+	_scan(&scan, bmap, size, cmp);
 	_scan_out(&scan, bmap, size);
 	return scan.prev;
 }
 
-BMapEntry *bmap_insert(BMap *bmap, unsigned int size, unsigned char key)
+BMapEntry *bmap_insert(BMap *bmap, unsigned int size, BMapComparator *cmp)
 {
 	char * entries = (char *)bmap->entries;
 	unsigned int index = 0;
 	unsigned int count = bmap->count * size;
 	struct BMapScan scan = {NULL, NULL, NULL};
-	_scan(&scan, bmap, size, key);
+	_scan(&scan, bmap, size, cmp);
 
 	if(!scan.equal) {
 		if(scan.next) {
@@ -160,7 +166,6 @@ BMapEntry *bmap_insert(BMap *bmap, unsigned int size, unsigned char key)
 		bmap->entries = (BMapEntry *)entries;
 
 		BMapEntry *entry = (BMapEntry *)&entries[index];
-		entry->key = key;
 		return entry;
 	} else {
 		return NULL;
@@ -171,10 +176,10 @@ error:
 	return NULL;
 }
 
-int bmap_delete(BMap *bmap, unsigned int size, unsigned char key)
+int bmap_delete(BMap *bmap, unsigned int size, BMapComparator *cmp)
 {
 	struct BMapScan scan = {NULL, NULL, NULL};
-	_scan(&scan, bmap, size, key);
+	_scan(&scan, bmap, size, cmp);
 	if(scan.equal) {
 		char *entries = (char *)bmap->entries;
 		unsigned int index = ((char *)scan.equal) - entries;
@@ -246,23 +251,23 @@ _Bool bmap_cursor_next(BMapCursor *cur)
 	return not_last;
 }
 
-void bmap_cursor_move(BMapCursor *cur, unsigned int size, unsigned char key)
+void bmap_cursor_move(BMapCursor *cur, unsigned int size, BMapComparator *cmp)
 {
-	cur->current = bmap_get(cur->bmap, size, key);
+	cur->current = bmap_get(cur->bmap, size, cmp);
 }
 
-void bmap_cursor_move_lt(BMapCursor *cur, unsigned int size, unsigned char key)
+void bmap_cursor_move_lt(BMapCursor *cur, unsigned int size, BMapComparator *cmp)
 {
-	cur->current = bmap_get_lt(cur->bmap, size, key);
+	cur->current = bmap_get_lt(cur->bmap, size, cmp);
 	if(!cur->current && cur->bmap->entries) {
 		char *entries = (char *)cur->bmap->entries;
 		cur->current = (BMapEntry *)(entries - size);
 	}
 }
 
-void bmap_cursor_move_gt(BMapCursor *cur, unsigned int size, unsigned char key)
+void bmap_cursor_move_gt(BMapCursor *cur, unsigned int size, BMapComparator *cmp)
 {
-	cur->current = bmap_get_gt(cur->bmap, size, key);
+	cur->current = bmap_get_gt(cur->bmap, size, cmp);
 	if(!cur->current && cur->bmap->entries) {
 		// This equals initial value in reverse mode.
 		char *entries = (char *)cur->bmap->entries;

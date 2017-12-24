@@ -25,26 +25,41 @@ typedef struct BMapCursor {
 	int step;
 } BMapCursor;
 
+
+typedef struct BMapComparator {
+	int (*compare)(const struct BMapComparator *c, const BMapEntry *e);
+	union {
+		char char_key;
+		int int_key;
+		long long_key;
+		unsigned char uchar_key;
+		unsigned int uint_key;
+		unsigned long ulong_key;
+	};
+} BMapComparator;
+
+int uchar_key_compare(const BMapComparator *c, const BMapEntry *e);
+
 void bmap_init(BMap *bmap);
 void bmap_dispose(BMap *bmap);
 unsigned int bmap_count(BMap *bmap);
 BMapEntry *bmap_first(BMap *bmap);
-BMapEntry *bmap_get(BMap *bmap, unsigned int size, unsigned char key);
-BMapEntry *bmap_insert(BMap *bmap, unsigned int size, unsigned char key);
-BMapEntry *bmap_get_gte(BMap *bmap, unsigned int size, unsigned char key);
-BMapEntry *bmap_get_lte(BMap *bmap, unsigned int size, unsigned char key);
-BMapEntry *bmap_get_gt(BMap *bmap, unsigned int size, unsigned char key);
-BMapEntry *bmap_get_lt(BMap *bmap, unsigned int size, unsigned char key);
-int bmap_delete(BMap *bmap, unsigned int size, unsigned char key);
+BMapEntry *bmap_get(BMap *bmap, unsigned int size, BMapComparator *cmp);
+BMapEntry *bmap_insert(BMap *bmap, unsigned int size, BMapComparator *cmp);
+BMapEntry *bmap_get_gte(BMap *bmap, unsigned int size, BMapComparator *cmp);
+BMapEntry *bmap_get_lte(BMap *bmap, unsigned int size, BMapComparator *cmp);
+BMapEntry *bmap_get_gt(BMap *bmap, unsigned int size, BMapComparator *cmp);
+BMapEntry *bmap_get_lt(BMap *bmap, unsigned int size, BMapComparator *cmp);
+int bmap_delete(BMap *bmap, unsigned int size, BMapComparator *cmp);
 void bmap_delete_all(BMap *bmap);
 
 void bmap_cursor_init(BMapCursor *cur, BMap *bmap, unsigned int size);
 void bmap_cursor_revert(BMapCursor *cur);
 void bmap_cursor_dispose(BMapCursor *cur);
 bool bmap_cursor_next(BMapCursor *cur);
-void bmap_cursor_move(BMapCursor *cur, unsigned int size, unsigned char key);
-void bmap_cursor_move_lt(BMapCursor *cur, unsigned int size, unsigned char key);
-void bmap_cursor_move_gt(BMapCursor *cur, unsigned int size, unsigned char key);
+void bmap_cursor_move(BMapCursor *cur, unsigned int size, BMapComparator *cmp);
+void bmap_cursor_move_lt(BMapCursor *cur, unsigned int size, BMapComparator *cmp);
+void bmap_cursor_move_gt(BMapCursor *cur, unsigned int size, BMapComparator *cmp);
 BMapEntry *bmap_cursor_current(BMapCursor *cur);
 
 
@@ -84,9 +99,10 @@ S(BMapEntry, UPPER) *bmap_##LOWER##_insert( \
 	struct S(BMapEntry, UPPER) *entry = (struct S(BMapEntry, UPPER) *)bmap_insert( \
 		&bmap->bmap, \
 		sizeof(struct S(BMapEntry, UPPER)), \
-		key \
+		&(BMapComparator) { .compare = uchar_key_compare, .uchar_key = key } \
 	); \
 	if(entry) { \
+		entry->entry.key = key; \
 		entry->LOWER = LOWER; \
 	} \
 	return entry; \
@@ -114,7 +130,7 @@ S(BMapEntry, UPPER) *bmap_##LOWER##_get( \
 	return (S(BMapEntry, UPPER) *)bmap_get( \
 		&bmap->bmap, \
 		sizeof(struct S(BMapEntry, UPPER)), \
-		key \
+		&(BMapComparator) { .compare = uchar_key_compare, .uchar_key = key } \
 	); \
 })
 
@@ -126,7 +142,7 @@ S(BMapEntry, UPPER) *bmap_##LOWER##_get_gte( \
 	return (S(BMapEntry, UPPER) *)bmap_get_gte( \
 		&bmap->bmap, \
 		sizeof(struct S(BMapEntry, UPPER)), \
-		key \
+		&(BMapComparator) { .compare = uchar_key_compare, .uchar_key = key } \
 	); \
 })
 
@@ -138,7 +154,7 @@ S(BMapEntry, UPPER) *bmap_##LOWER##_get_lte( \
 	return (S(BMapEntry, UPPER) *)bmap_get_lte( \
 		&bmap->bmap, \
 		sizeof(struct S(BMapEntry, UPPER)), \
-		key \
+		&(BMapComparator) { .compare = uchar_key_compare, .uchar_key = key } \
 	); \
 })
 
@@ -150,7 +166,7 @@ S(BMapEntry, UPPER) *bmap_##LOWER##_get_gt( \
 	return (S(BMapEntry, UPPER) *)bmap_get_gt( \
 		&bmap->bmap, \
 		sizeof(struct S(BMapEntry, UPPER)), \
-		key \
+		&(BMapComparator) { .compare = uchar_key_compare, .uchar_key = key } \
 	); \
 })
 
@@ -162,7 +178,7 @@ S(BMapEntry, UPPER) *bmap_##LOWER##_get_lt( \
 	return (S(BMapEntry, UPPER) *)bmap_get_lt( \
 		&bmap->bmap, \
 		sizeof(struct S(BMapEntry, UPPER)), \
-		key \
+		&(BMapComparator) { .compare = uchar_key_compare, .uchar_key = key } \
 	); \
 })
 
@@ -174,7 +190,7 @@ int bmap_##LOWER##_delete( \
 	return bmap_delete( \
 		&bmap->bmap, \
 		sizeof(struct S(BMapEntry, UPPER)), \
-		key \
+		&(BMapComparator) { .compare = uchar_key_compare, .uchar_key = key } \
 	); \
 })
 
@@ -219,7 +235,7 @@ void bmap_cursor_##LOWER##_move( \
 	bmap_cursor_move( \
 		&cursor->cursor, \
 		sizeof(struct S(BMapEntry, UPPER)), \
-		key \
+		&(BMapComparator) { .compare = uchar_key_compare, .uchar_key = key } \
 	); \
 })
 
@@ -231,7 +247,7 @@ void bmap_cursor_##LOWER##_move_lt( \
 	bmap_cursor_move_lt( \
 		&cursor->cursor, \
 		sizeof(struct S(BMapEntry, UPPER)), \
-		key \
+		&(BMapComparator) { .compare = uchar_key_compare, .uchar_key = key } \
 	); \
 })
 
@@ -243,7 +259,7 @@ void bmap_cursor_##LOWER##_move_gt( \
 	bmap_cursor_move_gt( \
 		&cursor->cursor, \
 		sizeof(struct S(BMapEntry, UPPER)), \
-		key \
+		&(BMapComparator) { .compare = uchar_key_compare, .uchar_key = key } \
 	); \
 })
 
