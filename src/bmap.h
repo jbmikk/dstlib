@@ -38,7 +38,37 @@ typedef struct BMapComparator {
 	};
 } BMapComparator;
 
+#define TYPEMAP(_, JOIN, ...) \
+	_(char, char, __VA_ARGS__) JOIN\
+	_(int, int, __VA_ARGS__) JOIN\
+	_(long, long, __VA_ARGS__) JOIN\
+	_(unsigned char, uchar, __VA_ARGS__) JOIN\
+	_(unsigned int, uint, __VA_ARGS__) JOIN\
+	_(unsigned long, ulong, __VA_ARGS__)
+
+#define COMMA ,
+
+#define EXPAND_TYPE(FUNC, TYPE, ...) _Generic((TYPE), \
+	TYPEMAP(FUNC, COMMA, __VA_ARGS__) \
+)
+
+#define _KEY_EXPANSION(TYPE, NAME, VAR) TYPE: VAR.NAME##_key = key
+
+#define _COMPARATOR_EXPANSION(TYPE, NAME, VAR) TYPE: VAR.compare = NAME##_key_compare
+
+#define COMPARATOR_INIT(CMP, KEY) \
+	EXPAND_TYPE(_COMPARATOR_EXPANSION, KEY, CMP); \
+	EXPAND_TYPE(_KEY_EXPANSION, KEY, CMP);
+
+
+
+int char_key_compare(const BMapComparator *c, const BMapEntry *e);
+int int_key_compare(const BMapComparator *c, const BMapEntry *e);
+int long_key_compare(const BMapComparator *c, const BMapEntry *e);
 int uchar_key_compare(const BMapComparator *c, const BMapEntry *e);
+int uint_key_compare(const BMapComparator *c, const BMapEntry *e);
+int ulong_key_compare(const BMapComparator *c, const BMapEntry *e);
+
 
 void bmap_init(BMap *bmap);
 void bmap_dispose(BMap *bmap);
@@ -96,10 +126,12 @@ S(BMapEntry, UPPER) *bmap_##LOWER##_insert( \
 	unsigned char key, \
 	TYPE LOWER \
 ) BODY({ \
+	BMapComparator cmp; \
+	COMPARATOR_INIT(cmp, key); \
 	struct S(BMapEntry, UPPER) *entry = (struct S(BMapEntry, UPPER) *)bmap_insert( \
 		&bmap->bmap, \
 		sizeof(struct S(BMapEntry, UPPER)), \
-		&(BMapComparator) { .compare = uchar_key_compare, .uchar_key = key } \
+		&cmp \
 	); \
 	if(entry) { \
 		entry->entry.key = key; \
@@ -127,10 +159,12 @@ S(BMapEntry, UPPER) *bmap_##LOWER##_get( \
 	struct S(BMap, UPPER) *bmap, \
 	unsigned char key \
 ) BODY({ \
+	BMapComparator cmp; \
+	COMPARATOR_INIT(cmp, key); \
 	return (S(BMapEntry, UPPER) *)bmap_get( \
 		&bmap->bmap, \
 		sizeof(struct S(BMapEntry, UPPER)), \
-		&(BMapComparator) { .compare = uchar_key_compare, .uchar_key = key } \
+		&cmp \
 	); \
 })
 
@@ -139,10 +173,12 @@ S(BMapEntry, UPPER) *bmap_##LOWER##_get_gte( \
 	struct S(BMap, UPPER) *bmap, \
 	unsigned char key \
 ) BODY({ \
+	BMapComparator cmp; \
+	COMPARATOR_INIT(cmp, key); \
 	return (S(BMapEntry, UPPER) *)bmap_get_gte( \
 		&bmap->bmap, \
 		sizeof(struct S(BMapEntry, UPPER)), \
-		&(BMapComparator) { .compare = uchar_key_compare, .uchar_key = key } \
+		&cmp \
 	); \
 })
 
@@ -151,10 +187,12 @@ S(BMapEntry, UPPER) *bmap_##LOWER##_get_lte( \
 	struct S(BMap, UPPER) *bmap, \
 	unsigned char key \
 ) BODY({ \
+	BMapComparator cmp; \
+	COMPARATOR_INIT(cmp, key); \
 	return (S(BMapEntry, UPPER) *)bmap_get_lte( \
 		&bmap->bmap, \
 		sizeof(struct S(BMapEntry, UPPER)), \
-		&(BMapComparator) { .compare = uchar_key_compare, .uchar_key = key } \
+		&cmp \
 	); \
 })
 
@@ -163,10 +201,12 @@ S(BMapEntry, UPPER) *bmap_##LOWER##_get_gt( \
 	struct S(BMap, UPPER) *bmap, \
 	unsigned char key \
 ) BODY({ \
+	BMapComparator cmp; \
+	COMPARATOR_INIT(cmp, key); \
 	return (S(BMapEntry, UPPER) *)bmap_get_gt( \
 		&bmap->bmap, \
 		sizeof(struct S(BMapEntry, UPPER)), \
-		&(BMapComparator) { .compare = uchar_key_compare, .uchar_key = key } \
+		&cmp \
 	); \
 })
 
@@ -175,10 +215,12 @@ S(BMapEntry, UPPER) *bmap_##LOWER##_get_lt( \
 	struct S(BMap, UPPER) *bmap, \
 	unsigned char key \
 ) BODY({ \
+	BMapComparator cmp; \
+	COMPARATOR_INIT(cmp, key); \
 	return (S(BMapEntry, UPPER) *)bmap_get_lt( \
 		&bmap->bmap, \
 		sizeof(struct S(BMapEntry, UPPER)), \
-		&(BMapComparator) { .compare = uchar_key_compare, .uchar_key = key } \
+		&cmp \
 	); \
 })
 
@@ -187,10 +229,12 @@ int bmap_##LOWER##_delete( \
 	struct S(BMap, UPPER) *bmap, \
 	unsigned char key \
 ) BODY({ \
+	BMapComparator cmp; \
+	COMPARATOR_INIT(cmp, key); \
 	return bmap_delete( \
 		&bmap->bmap, \
 		sizeof(struct S(BMapEntry, UPPER)), \
-		&(BMapComparator) { .compare = uchar_key_compare, .uchar_key = key } \
+		&cmp \
 	); \
 })
 
@@ -232,10 +276,12 @@ void bmap_cursor_##LOWER##_move( \
 	struct S(BMapCursor, UPPER) *cursor, \
 	unsigned char key \
 ) BODY({ \
+	BMapComparator cmp; \
+	COMPARATOR_INIT(cmp, key); \
 	bmap_cursor_move( \
 		&cursor->cursor, \
 		sizeof(struct S(BMapEntry, UPPER)), \
-		&(BMapComparator) { .compare = uchar_key_compare, .uchar_key = key } \
+		&cmp \
 	); \
 })
 
@@ -244,10 +290,12 @@ void bmap_cursor_##LOWER##_move_lt( \
 	struct S(BMapCursor, UPPER) *cursor, \
 	unsigned char key \
 ) BODY({ \
+	BMapComparator cmp; \
+	COMPARATOR_INIT(cmp, key); \
 	bmap_cursor_move_lt( \
 		&cursor->cursor, \
 		sizeof(struct S(BMapEntry, UPPER)), \
-		&(BMapComparator) { .compare = uchar_key_compare, .uchar_key = key } \
+		&cmp \
 	); \
 })
 
@@ -256,10 +304,12 @@ void bmap_cursor_##LOWER##_move_gt( \
 	struct S(BMapCursor, UPPER) *cursor, \
 	unsigned char key \
 ) BODY({ \
+	BMapComparator cmp; \
+	COMPARATOR_INIT(cmp, key); \
 	bmap_cursor_move_gt( \
 		&cursor->cursor, \
 		sizeof(struct S(BMapEntry, UPPER)), \
-		&(BMapComparator) { .compare = uchar_key_compare, .uchar_key = key } \
+		&cmp \
 	); \
 })
 
