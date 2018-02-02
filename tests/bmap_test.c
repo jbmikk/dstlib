@@ -10,9 +10,9 @@ typedef struct BTest {
 	void *data;
 } BTest;
 
-DEFINE_BMAP(struct BTest, BTest, btest)
+DEFINE_BMAP(unsigned char, struct BTest, BTest, btest)
 
-DEFINE_BMAP_FUNCTIONS(struct BTest, BTest, btest, IMPLEMENTATION)
+DEFINE_BMAP_FUNCTIONS(unsigned char, struct BTest, BTest, btest, IMPLEMENTATION)
 
 typedef struct {
 	BMapBTest bmap;
@@ -200,7 +200,7 @@ void bmap__set2_and_get2_ensure_unsigned(){
 	bmap_btest_insert(&fixture.bmap, 128, (BTest){ NULL });
 
 	t_assert(bmap_btest_count(&fixture.bmap) == 2);
-	t_assert(bmap_btest_first(&fixture.bmap)->entry.key == 10);
+	t_assert(bmap_btest_first(&fixture.bmap)->key == 10);
 }
 
 void bmap__set2_and_delete1(){

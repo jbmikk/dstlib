@@ -15,7 +15,9 @@ struct BMapScan {
 
 int uchar_key_compare(const BMapComparator *c, const BMapEntry *e)
 {
-	return e->key - c->uchar_key;
+	//return e->key - c->uchar_key;
+	// Assume key is always the first member.
+	return *((typeof(c->uchar_key)*)e) - c->uchar_key;
 }
 
 // TODO: Refactor binary search into separate generic from BMap.
@@ -54,10 +56,10 @@ static void _scan_out(struct BMapScan *scan, BMap *bmap, unsigned int size)
 {
 	if(scan->equal) {
 		if(scan->equal > bmap->entries) {
-			scan->prev = scan->equal - size;
+			scan->prev = (void*)scan->equal - size;
 		}
-		if(scan->equal < bmap->entries + ((bmap->count - 1) * size)) {
-			scan->next = scan->equal + size;
+		if((void*)scan->equal < ((void*)bmap->entries) + ((bmap->count - 1) * size)) {
+			scan->next = (void*)scan->equal + size;
 		}
 	}
 }
@@ -187,7 +189,7 @@ int bmap_delete(BMap *bmap, unsigned int size, BMapComparator *cmp)
 
 		memmove(
 			scan.equal,
-			scan.equal + size,
+			(void*)scan.equal + size,
 			count - index - size
 		);
 
@@ -220,8 +222,8 @@ void bmap_cursor_init(BMapCursor *cur, BMap *bmap, unsigned int size)
 	cur->bmap = bmap;
 	cur->step = size;
 	if(bmap->entries) {
-		cur->current = bmap->entries - size;
-		cur->last = bmap->entries + (bmap->count - 1) * size;
+		cur->current = (void*)bmap->entries - size;
+		cur->last = (void*)bmap->entries + (bmap->count - 1) * size;
 	} else {
 		cur->current = NULL;
 		cur->last = NULL;
@@ -232,8 +234,8 @@ void bmap_cursor_revert(BMapCursor *cur)
 {
 	BMapEntry *temp = cur->current;
 	if(cur->current) {
-		cur->current = cur->last + cur->step;
-		cur->last = temp + cur->step;
+		cur->current = (void*)cur->last + cur->step;
+		cur->last = (void*)temp + cur->step;
 	}
 	cur->step = -cur->step;
 }
@@ -247,7 +249,7 @@ void bmap_cursor_dispose(BMapCursor *cur)
 _Bool bmap_cursor_next(BMapCursor *cur)
 {
 	_Bool not_last = cur->current != cur->last;
-	cur->current += cur->step;
+	cur->current = (void*)cur->current + cur->step;
 	return not_last;
 }
 

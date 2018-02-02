@@ -10,7 +10,7 @@
 #include "arrays.h"
 
 
-DEFINE_BMAP_FUNCTIONS(struct Node, Node, node, IMPLEMENTATION)
+DEFINE_BMAP_FUNCTIONS(unsigned char, struct Node, Node, node, IMPLEMENTATION)
 
 #ifdef RTREE_TRACE
 // Fix (NODE)->key
@@ -137,7 +137,7 @@ static void _push_node_key(Scan *scan, BMapEntryNode *entry)
 
 	scan->pkey = realloc(scan->pkey, sizeof(unsigned char) * scan->psize);
 
-	scan->pkey[offset] = entry->entry.key;
+	scan->pkey[offset] = entry->key;
 
 	if (entry->node.size) {
 		memcpy(scan->pkey + offset + 1, entry->node.array, entry->node.size);
@@ -199,7 +199,7 @@ static void _tree_scan(Node *node, Scan *scan)
 		}
 		entry = bmap_cursor_node_current(&cur);
 
-		if(entry->entry.key == scan->key[scan->index]) {
+		if(entry->key == scan->key[scan->index]) {
 
 			int result = lmemcmp(
 				scan->key + scan->index + 1,
@@ -267,7 +267,7 @@ static void _tree_scan_prev(Node *node, Scan *scan)
 
 		next = bmap_cursor_node_current(&cur);
 
-		if(next->entry.key == scan->key[scan->index]) {
+		if(next->key == scan->key[scan->index]) {
 
 			int result = lmemcmp(
 				scan->key + scan->index + 1,
@@ -405,7 +405,7 @@ static void _compact_nodes(Node *node)
 
 	_node_set_array(node, joined_size);
 
-	node->array[end++] = child->entry.key;
+	node->array[end++] = child->key;
 
 	memcpy(node->array+end, child->node.array, child->node.size);
 
@@ -417,7 +417,7 @@ static void _compact_nodes(Node *node)
 
 	Node cont = child->node;
 
-	bmap_node_delete(&node->children, child->entry.key);
+	bmap_node_delete(&node->children, child->key);
 
 	trace("new size: %i", joined_size);
 
