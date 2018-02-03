@@ -13,11 +13,38 @@ struct BMapScan {
 	struct BMapEntry *next;
 };
 
+int char_key_compare(const BMapComparator *c, const BMapEntry *e)
+{
+	//return e->key - c->uchar_key;
+	// Assume key is always the first member.
+	return *((typeof(c->char_key)*)e) - c->char_key;
+}
+
 int uchar_key_compare(const BMapComparator *c, const BMapEntry *e)
 {
 	//return e->key - c->uchar_key;
 	// Assume key is always the first member.
 	return *((typeof(c->uchar_key)*)e) - c->uchar_key;
+}
+
+int int_key_compare(const BMapComparator *c, const BMapEntry *e)
+{
+	return *((typeof(c->int_key)*)e) - c->int_key;
+}
+
+int uint_key_compare(const BMapComparator *c, const BMapEntry *e)
+{
+	return *((typeof(c->uint_key)*)e) - c->uint_key;
+}
+
+int long_key_compare(const BMapComparator *c, const BMapEntry *e)
+{
+	return *((typeof(c->long_key)*)e) - c->long_key;
+}
+
+int ulong_key_compare(const BMapComparator *c, const BMapEntry *e)
+{
+	return *((typeof(c->ulong_key)*)e) - c->ulong_key;
 }
 
 // TODO: Refactor binary search into separate generic from BMap.

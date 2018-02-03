@@ -12,7 +12,8 @@ typedef struct BMapEntry BMapEntry;
 
 typedef struct BMap {
 	struct BMapEntry *entries;
-	unsigned char count;
+	//It should probably be a long to make sure
+	unsigned int count;
 } BMap;
 
 typedef struct BMapCursor {
