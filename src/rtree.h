@@ -8,7 +8,7 @@ struct Node;
 
 struct S(BMapEntry, Node);
 
-BMAP_STRUCT(unsigned char, struct Node, Node, node)
+TYPEDEF(BMap, unsigned char, struct Node, Node, node)
 	
 typedef struct Node {
 	BMapNode children;
@@ -19,14 +19,14 @@ typedef struct Node {
 	void *data;
 } Node;
 
-BMAP_ENTRY_STRUCT(unsigned char, struct Node, Node, node)
-BMAP_CURSOR_STRUCT(unsigned char, struct Node, Node, node)
+TYPEDEF(BMapEntry, unsigned char, struct Node, Node, node)
+TYPEDEF(BMapCursor, unsigned char, struct Node, Node, node)
 
 typedef struct RTree {
 	Node root;
 } RTree;
 
-DEFINE_BMAP_FUNCTIONS(unsigned char, struct Node, Node, node, PROTOTYPE)
+PROTOTYPES(BMap, unsigned char, struct Node, Node, node)
 
 
 typedef struct _Iterator {

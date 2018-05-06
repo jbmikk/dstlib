@@ -10,9 +10,9 @@ typedef struct BTest {
 	void *data;
 } BTest;
 
-DEFINE_BMAP(unsigned char, struct BTest, BTest, btest)
+DEFINE(BMap, unsigned char, struct BTest, BTest, btest)
 
-DEFINE_BMAP_FUNCTIONS(unsigned char, struct BTest, BTest, btest, IMPLEMENTATION)
+FUNCTIONS(BMap, unsigned char, struct BTest, BTest, btest)
 
 typedef struct {
 	BMapBTest bmap;

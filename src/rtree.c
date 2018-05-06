@@ -10,7 +10,7 @@
 #include "arrays.h"
 
 
-DEFINE_BMAP_FUNCTIONS(unsigned char, struct Node, Node, node, IMPLEMENTATION)
+FUNCTIONS(BMap, unsigned char, struct Node, Node, node)
 
 #ifdef RTREE_TRACE
 // Fix (NODE)->key

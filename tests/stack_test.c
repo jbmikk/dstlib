@@ -16,14 +16,14 @@ struct TestStruct {
 	char value2;
 };
 
-DEFINE_STACK(int, Int, int);
-DEFINE_STACK_FUNCTIONS(int, Int, int, IMPLEMENTATION)
+DEFINE(Stack, int, Int, int);
+FUNCTIONS(Stack, int, Int, int)
 
-DEFINE_STACK(char *, CharPtr, charptr);
-DEFINE_STACK_FUNCTIONS(char *, CharPtr, charptr, IMPLEMENTATION)
+DEFINE(Stack, char *, CharPtr, charptr);
+FUNCTIONS(Stack, char *, CharPtr, charptr)
 
-DEFINE_STACK(struct TestStruct, TestStruct, teststruct);
-DEFINE_STACK_FUNCTIONS(struct TestStruct, TestStruct, teststruct, IMPLEMENTATION)
+DEFINE(Stack, struct TestStruct, TestStruct, teststruct);
+FUNCTIONS(Stack, struct TestStruct, TestStruct, teststruct)
 
 
 void stack_push_pop_int(){

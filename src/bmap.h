@@ -1,5 +1,5 @@
-#ifndef BMAP_H
-#define	BMAP_H
+#ifndef BMap_H
+#define	BMap_H
 
 #include <stdbool.h>
 
@@ -91,34 +91,34 @@ void bmap_cursor_move_gt(BMapCursor *cur, unsigned int size, BMapComparator *cmp
 BMapEntry *bmap_cursor_current(BMapCursor *cur);
 
 
-#define BMAP_ENTRY_STRUCT(KTYPE, VTYPE, UPPER, LOWER) \
+#define BMapEntry_TYPEDEF(KTYPE, VTYPE, UPPER, LOWER) \
 typedef struct S(BMapEntry, UPPER) { \
 	KTYPE key; \
 	VTYPE LOWER; \
 } S(BMapEntry, UPPER);
 
-#define BMAP_STRUCT(KTYPE, VTYPE, UPPER, LOWER) \
+#define BMap_TYPEDEF(KTYPE, VTYPE, UPPER, LOWER) \
 typedef struct S(BMap, UPPER) { \
 	BMap bmap; \
 } S(BMap, UPPER);
 
-#define BMAP_CURSOR_STRUCT(KTYPE, VTYPE, UPPER, LOWER) \
+#define BMapCursor_TYPEDEF(KTYPE, VTYPE, UPPER, LOWER) \
 typedef struct S(BMapCursor, UPPER) { \
 	BMapCursor cursor; \
 } S(BMapCursor, UPPER);
 
 
-#define BMAP_INIT(KTYPE, VTYPE, UPPER, LOWER, BODY) \
+#define BMap_INIT(KTYPE, VTYPE, UPPER, LOWER, BODY) \
 void bmap_##LOWER##_init(struct S(BMap, UPPER) *bmap) BODY({ \
 	bmap_init(&bmap->bmap); \
 })
 
-#define BMAP_DISPOSE(KTYPE, VTYPE, UPPER, LOWER, BODY) \
+#define BMap_DISPOSE(KTYPE, VTYPE, UPPER, LOWER, BODY) \
 void bmap_##LOWER##_dispose(struct S(BMap, UPPER) *bmap) BODY({ \
 	bmap_dispose(&bmap->bmap); \
 })
 
-#define BMAP_INSERT(KTYPE, VTYPE, UPPER, LOWER, BODY) \
+#define BMap_INSERT(KTYPE, VTYPE, UPPER, LOWER, BODY) \
 S(BMapEntry, UPPER) *bmap_##LOWER##_insert( \
 	struct S(BMap, UPPER) *bmap, \
 	KTYPE key, \
@@ -138,21 +138,21 @@ S(BMapEntry, UPPER) *bmap_##LOWER##_insert( \
 	return entry; \
 })
 
-#define BMAP_COUNT(KTYPE, VTYPE, UPPER, LOWER, BODY) \
+#define BMap_COUNT(KTYPE, VTYPE, UPPER, LOWER, BODY) \
 unsigned int bmap_##LOWER##_count( \
 	struct S(BMap, UPPER) *bmap \
 ) BODY({ \
 	return bmap_count(&bmap->bmap); \
 })
 
-#define BMAP_FIRST(KTYPE, VTYPE, UPPER, LOWER, BODY) \
+#define BMap_FIRST(KTYPE, VTYPE, UPPER, LOWER, BODY) \
 S(BMapEntry, UPPER) *bmap_##LOWER##_first( \
 	struct S(BMap, UPPER) *bmap \
 ) BODY({ \
 	return (S(BMapEntry, UPPER) *)bmap_first(&bmap->bmap); \
 })
 
-#define BMAP_GET(KTYPE, VTYPE, UPPER, LOWER, BODY) \
+#define BMap_GET(KTYPE, VTYPE, UPPER, LOWER, BODY) \
 S(BMapEntry, UPPER) *bmap_##LOWER##_get( \
 	struct S(BMap, UPPER) *bmap, \
 	KTYPE key \
@@ -166,7 +166,7 @@ S(BMapEntry, UPPER) *bmap_##LOWER##_get( \
 	); \
 })
 
-#define BMAP_GET_GTE(KTYPE, VTYPE, UPPER, LOWER, BODY) \
+#define BMap_GET_GTE(KTYPE, VTYPE, UPPER, LOWER, BODY) \
 S(BMapEntry, UPPER) *bmap_##LOWER##_get_gte( \
 	struct S(BMap, UPPER) *bmap, \
 	KTYPE key \
@@ -180,7 +180,7 @@ S(BMapEntry, UPPER) *bmap_##LOWER##_get_gte( \
 	); \
 })
 
-#define BMAP_GET_LTE(KTYPE, VTYPE, UPPER, LOWER, BODY) \
+#define BMap_GET_LTE(KTYPE, VTYPE, UPPER, LOWER, BODY) \
 S(BMapEntry, UPPER) *bmap_##LOWER##_get_lte( \
 	struct S(BMap, UPPER) *bmap, \
 	KTYPE key \
@@ -194,7 +194,7 @@ S(BMapEntry, UPPER) *bmap_##LOWER##_get_lte( \
 	); \
 })
 
-#define BMAP_GET_GT(KTYPE, VTYPE, UPPER, LOWER, BODY) \
+#define BMap_GET_GT(KTYPE, VTYPE, UPPER, LOWER, BODY) \
 S(BMapEntry, UPPER) *bmap_##LOWER##_get_gt( \
 	struct S(BMap, UPPER) *bmap, \
 	KTYPE key \
@@ -208,7 +208,7 @@ S(BMapEntry, UPPER) *bmap_##LOWER##_get_gt( \
 	); \
 })
 
-#define BMAP_GET_LT(KTYPE, VTYPE, UPPER, LOWER, BODY) \
+#define BMap_GET_LT(KTYPE, VTYPE, UPPER, LOWER, BODY) \
 S(BMapEntry, UPPER) *bmap_##LOWER##_get_lt( \
 	struct S(BMap, UPPER) *bmap, \
 	KTYPE key \
@@ -222,7 +222,7 @@ S(BMapEntry, UPPER) *bmap_##LOWER##_get_lt( \
 	); \
 })
 
-#define BMAP_DELETE(KTYPE, VTYPE, UPPER, LOWER, BODY) \
+#define BMap_DELETE(KTYPE, VTYPE, UPPER, LOWER, BODY) \
 int bmap_##LOWER##_delete( \
 	struct S(BMap, UPPER) *bmap, \
 	KTYPE key \
@@ -236,7 +236,7 @@ int bmap_##LOWER##_delete( \
 	); \
 })
 
-#define BMAP_CURSOR_INIT(KTYPE, VTYPE, UPPER, LOWER, BODY) \
+#define BMapCursor_INIT(KTYPE, VTYPE, UPPER, LOWER, BODY) \
 void bmap_cursor_##LOWER##_init( \
 	struct S(BMapCursor, UPPER) *cursor, \
 	struct S(BMap, UPPER) *bmap \
@@ -248,28 +248,28 @@ void bmap_cursor_##LOWER##_init( \
 	); \
 })
 
-#define BMAP_CURSOR_REVERT(KTYPE, VTYPE, UPPER, LOWER, BODY) \
+#define BMapCursor_REVERT(KTYPE, VTYPE, UPPER, LOWER, BODY) \
 void bmap_cursor_##LOWER##_revert( \
 	struct S(BMapCursor, UPPER) *cursor \
 ) BODY({ \
 	bmap_cursor_revert(&cursor->cursor); \
 })
 
-#define BMAP_CURSOR_DISPOSE(KTYPE, VTYPE, UPPER, LOWER, BODY) \
+#define BMapCursor_DISPOSE(KTYPE, VTYPE, UPPER, LOWER, BODY) \
 void bmap_cursor_##LOWER##_dispose( \
 	struct S(BMapCursor, UPPER) *cursor \
 ) BODY({ \
 	bmap_cursor_dispose(&cursor->cursor); \
 })
 
-#define BMAP_CURSOR_NEXT(KTYPE, VTYPE, UPPER, LOWER, BODY) \
+#define BMapCursor_NEXT(KTYPE, VTYPE, UPPER, LOWER, BODY) \
 bool bmap_cursor_##LOWER##_next( \
 	struct S(BMapCursor, UPPER) *cursor \
 ) BODY({ \
 	return bmap_cursor_next(&cursor->cursor); \
 })
 
-#define BMAP_CURSOR_MOVE(KTYPE, VTYPE, UPPER, LOWER, BODY) \
+#define BMapCursor_MOVE(KTYPE, VTYPE, UPPER, LOWER, BODY) \
 void bmap_cursor_##LOWER##_move( \
 	struct S(BMapCursor, UPPER) *cursor, \
 	KTYPE key \
@@ -283,7 +283,7 @@ void bmap_cursor_##LOWER##_move( \
 	); \
 })
 
-#define BMAP_CURSOR_MOVE_LT(KTYPE, VTYPE, UPPER, LOWER, BODY) \
+#define BMapCursor_MOVE_LT(KTYPE, VTYPE, UPPER, LOWER, BODY) \
 void bmap_cursor_##LOWER##_move_lt( \
 	struct S(BMapCursor, UPPER) *cursor, \
 	KTYPE key \
@@ -297,7 +297,7 @@ void bmap_cursor_##LOWER##_move_lt( \
 	); \
 })
 
-#define BMAP_CURSOR_MOVE_GT(KTYPE, VTYPE, UPPER, LOWER, BODY) \
+#define BMapCursor_MOVE_GT(KTYPE, VTYPE, UPPER, LOWER, BODY) \
 void bmap_cursor_##LOWER##_move_gt( \
 	struct S(BMapCursor, UPPER) *cursor, \
 	KTYPE key \
@@ -311,7 +311,7 @@ void bmap_cursor_##LOWER##_move_gt( \
 	); \
 })
 
-#define BMAP_CURSOR_CURRENT(KTYPE, VTYPE, UPPER, LOWER, BODY) \
+#define BMapCursor_CURRENT(KTYPE, VTYPE, UPPER, LOWER, BODY) \
 S(BMapEntry, UPPER) *bmap_cursor_##LOWER##_current( \
 	struct S(BMapCursor, UPPER) *cursor \
 ) BODY({ \
@@ -321,33 +321,33 @@ S(BMapEntry, UPPER) *bmap_cursor_##LOWER##_current( \
 })
 
 
-#define DEFINE_BMAP_FUNCTIONS(KTYPE, VTYPE, UPPER, LOWER, BODY) \
-	BMAP_INIT(KTYPE, VTYPE, UPPER, LOWER, BODY) \
-	BMAP_DISPOSE(KTYPE, VTYPE, UPPER, LOWER, BODY) \
-	BMAP_INSERT(KTYPE, VTYPE, UPPER, LOWER, BODY) \
-	BMAP_COUNT(KTYPE, VTYPE, UPPER, LOWER, BODY) \
-	BMAP_FIRST(KTYPE, VTYPE, UPPER, LOWER, BODY) \
-	BMAP_GET(KTYPE, VTYPE, UPPER, LOWER, BODY) \
-	BMAP_GET_GTE(KTYPE, VTYPE, UPPER, LOWER, BODY) \
-	BMAP_GET_LTE(KTYPE, VTYPE, UPPER, LOWER, BODY) \
-	BMAP_GET_GT(KTYPE, VTYPE, UPPER, LOWER, BODY) \
-	BMAP_GET_LT(KTYPE, VTYPE, UPPER, LOWER, BODY) \
-	BMAP_DELETE(KTYPE, VTYPE, UPPER, LOWER, BODY) \
-	BMAP_CURSOR_INIT(KTYPE, VTYPE, UPPER, LOWER, BODY) \
-	BMAP_CURSOR_REVERT(KTYPE, VTYPE, UPPER, LOWER, BODY) \
-	BMAP_CURSOR_DISPOSE(KTYPE, VTYPE, UPPER, LOWER, BODY) \
-	BMAP_CURSOR_NEXT(KTYPE, VTYPE, UPPER, LOWER, BODY) \
-	BMAP_CURSOR_MOVE(KTYPE, VTYPE, UPPER, LOWER, BODY) \
-	BMAP_CURSOR_MOVE_LT(KTYPE, VTYPE, UPPER, LOWER, BODY) \
-	BMAP_CURSOR_MOVE_GT(KTYPE, VTYPE, UPPER, LOWER, BODY) \
-	BMAP_CURSOR_CURRENT(KTYPE, VTYPE, UPPER, LOWER, BODY)
+#define BMap_FUNCTIONS(KTYPE, VTYPE, UPPER, LOWER, BODY) \
+	BMap_INIT(KTYPE, VTYPE, UPPER, LOWER, BODY) \
+	BMap_DISPOSE(KTYPE, VTYPE, UPPER, LOWER, BODY) \
+	BMap_INSERT(KTYPE, VTYPE, UPPER, LOWER, BODY) \
+	BMap_COUNT(KTYPE, VTYPE, UPPER, LOWER, BODY) \
+	BMap_FIRST(KTYPE, VTYPE, UPPER, LOWER, BODY) \
+	BMap_GET(KTYPE, VTYPE, UPPER, LOWER, BODY) \
+	BMap_GET_GTE(KTYPE, VTYPE, UPPER, LOWER, BODY) \
+	BMap_GET_LTE(KTYPE, VTYPE, UPPER, LOWER, BODY) \
+	BMap_GET_GT(KTYPE, VTYPE, UPPER, LOWER, BODY) \
+	BMap_GET_LT(KTYPE, VTYPE, UPPER, LOWER, BODY) \
+	BMap_DELETE(KTYPE, VTYPE, UPPER, LOWER, BODY) \
+	BMapCursor_INIT(KTYPE, VTYPE, UPPER, LOWER, BODY) \
+	BMapCursor_REVERT(KTYPE, VTYPE, UPPER, LOWER, BODY) \
+	BMapCursor_DISPOSE(KTYPE, VTYPE, UPPER, LOWER, BODY) \
+	BMapCursor_NEXT(KTYPE, VTYPE, UPPER, LOWER, BODY) \
+	BMapCursor_MOVE(KTYPE, VTYPE, UPPER, LOWER, BODY) \
+	BMapCursor_MOVE_LT(KTYPE, VTYPE, UPPER, LOWER, BODY) \
+	BMapCursor_MOVE_GT(KTYPE, VTYPE, UPPER, LOWER, BODY) \
+	BMapCursor_CURRENT(KTYPE, VTYPE, UPPER, LOWER, BODY)
 
-#define DEFINE_BMAP(KTYPE, VTYPE, UPPER, LOWER) \
-	BMAP_ENTRY_STRUCT(KTYPE, VTYPE, UPPER, LOWER) \
-	BMAP_STRUCT(KTYPE, VTYPE, UPPER, LOWER) \
-	BMAP_CURSOR_STRUCT(KTYPE, VTYPE, UPPER, LOWER) \
-	DEFINE_BMAP_FUNCTIONS(KTYPE, VTYPE, UPPER, LOWER, PROTOTYPE)
+#define BMap_DEFINE(KTYPE, VTYPE, UPPER, LOWER) \
+	BMapEntry_TYPEDEF(KTYPE, VTYPE, UPPER, LOWER) \
+	BMap_TYPEDEF(KTYPE, VTYPE, UPPER, LOWER) \
+	BMapCursor_TYPEDEF(KTYPE, VTYPE, UPPER, LOWER) \
+	BMap_FUNCTIONS(KTYPE, VTYPE, UPPER, LOWER, PROTOTYPE)
 
-#endif	//BMAP_H
+#endif	//BMap_H
 
 
