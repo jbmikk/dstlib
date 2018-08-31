@@ -81,9 +81,11 @@ static void _scan(struct BMapScan *scan, BMap *bmap, unsigned int size, BMapComp
  */
 static void _scan_next(struct BMapScan *scan, BMap *bmap, unsigned int size)
 {
+	char *entry = (char *)scan->equal;
+	char *entries = (char *)bmap->entries;
 	if(scan->equal) {
-		if((void*)scan->equal < ((void*)bmap->entries) + ((bmap->count - 1) * size)) {
-			scan->next = (void*)scan->equal + size;
+		if(entry < entries + ((bmap->count - 1) * size)) {
+			scan->next = (BMapEntry *)(entry + size);
 		}
 	}
 }
@@ -96,6 +98,25 @@ static void _scan_previous(struct BMapScan *scan, BMap *bmap, unsigned int size)
 	if(scan->equal) {
 		if(scan->equal > bmap->entries) {
 			scan->prev = (void*)scan->equal - size;
+		}
+	}
+}
+
+/**
+ * Scan until the next different key
+ */
+static void _scan_next_key(struct BMapScan *scan, BMap *bmap, unsigned int size, BMapComparator *cmp)
+{
+	char *entry = (char *)scan->equal;
+	char *entries = (char *)bmap->entries;
+	char *end = entries + (bmap->count * size);
+
+	if(entry) {
+		do {
+			entry += size;
+		} while (entry < end && !cmp->compare(cmp, (BMapEntry *)entry));
+		if(entry < end) {
+			scan->next = (BMapEntry *)entry;
 		}
 	}
 }
@@ -174,44 +195,58 @@ BMapEntry *bmap_get_lt(BMap *bmap, unsigned int size, BMapComparator *cmp)
 	return scan.prev;
 }
 
+static BMapEntry *_prepend(BMap *bmap, unsigned int size, BMapEntry *entry)
+{
+	char *entries = (char *)bmap->entries;
+	unsigned int index;
+	unsigned int count = bmap->count * size;
+	if(entry) {
+		index = ((char *)entry) - entries;
+	} else {
+		index = count;
+	}
+	entries = realloc(
+		entries,
+		count + size
+	);
+	check_mem(entries);
+
+	memmove(
+		entries + index + size,
+		entries + index,
+		count - index
+	);
+
+	bmap->count++;
+	bmap->entries = (BMapEntry *)entries;
+
+	return (BMapEntry *)&entries[index];
+error:
+	return NULL;
+}
+
 BMapEntry *bmap_insert(BMap *bmap, unsigned int size, BMapComparator *cmp)
 {
-	char * entries = (char *)bmap->entries;
-	unsigned int index = 0;
-	unsigned int count = bmap->count * size;
 	struct BMapScan scan = {NULL, NULL, NULL};
 	_scan(&scan, bmap, size, cmp);
 
 	if(!scan.equal) {
-		if(scan.next) {
-			index = ((char *)scan.next) - entries;
-		} else {
-			index = count;
-		}
-		entries = realloc(
-			entries,
-			count + size
-		);
-		check_mem(entries);
-
-		memmove(
-			entries + index + size,
-			entries + index,
-			count - index
-		);
-
-		bmap->count++;
-		bmap->entries = (BMapEntry *)entries;
-
-		BMapEntry *entry = (BMapEntry *)&entries[index];
-		return entry;
+		return _prepend(bmap, size, scan.next);
 	} else {
 		return NULL;
 	}
 
 //TODO: Should change interface, possible to return NULL without errors.
-error:
 	return NULL;
+}
+
+BMapEntry *bmap_append(BMap *bmap, unsigned int size, BMapComparator *cmp)
+{
+	struct BMapScan scan = {NULL, NULL, NULL};
+	_scan(&scan, bmap, size, cmp);
+	_scan_next_key(&scan, bmap, size, cmp);
+
+	return _prepend(bmap, size, scan.next);
 }
 
 int bmap_delete(BMap *bmap, unsigned int size, BMapComparator *cmp)
