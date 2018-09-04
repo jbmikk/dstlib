@@ -63,7 +63,7 @@ void stack_##LOWER##_dispose(struct S(Stack, UPPER) *stack) BODY({ \
 #define Stack_DEFINE(TYPE, UPPER, LOWER) \
 	StackNode_TYPEDEF(TYPE, UPPER, LOWER) \
 	Stack_TYPEDEF(TYPE, UPPER, LOWER) \
-	Stack_FUNCTIONS(TYPE, UPPER, LOWER, _PROTOTYPE)
+	PROTOTYPES(Stack, TYPE, UPPER, LOWER)
 
 #define Stack_FUNCTION_LIST(_, ...) \
 	_(Stack_INIT, __VA_ARGS__) \
@@ -71,9 +71,6 @@ void stack_##LOWER##_dispose(struct S(Stack, UPPER) *stack) BODY({ \
 	_(Stack_POP, __VA_ARGS__) \
 	_(Stack_TOP, __VA_ARGS__) \
 	_(Stack_DISPOSE, __VA_ARGS__)
-
-#define Stack_FUNCTIONS(TYPE, UPPER, LOWER, BODY) \
-	Stack_FUNCTION_LIST(_EXPAND_FUNCTION, TYPE, UPPER, LOWER, BODY)
 
 
 #endif //Stack_H
