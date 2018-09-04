@@ -60,10 +60,10 @@ void stack_##LOWER##_dispose(struct S(Stack, UPPER) *stack) BODY({ \
 	stack_dispose(&stack->stack); \
 })
 
-#define Stack_DEFINE(TYPE, UPPER, LOWER) \
-	StackNode_TYPEDEF(TYPE, UPPER, LOWER) \
-	Stack_TYPEDEF(TYPE, UPPER, LOWER) \
-	PROTOTYPES(Stack, TYPE, UPPER, LOWER)
+
+#define Stack_TYPE_LIST(_, ...) \
+	_(StackNode, __VA_ARGS__) \
+	_(Stack, __VA_ARGS__)
 
 #define Stack_FUNCTION_LIST(_, ...) \
 	_(Stack_INIT, __VA_ARGS__) \

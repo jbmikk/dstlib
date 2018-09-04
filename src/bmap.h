@@ -342,6 +342,11 @@ S(BMapEntry, UPPER) *bmap_cursor_##LOWER##_current( \
 })
 
 
+#define BMap_TYPE_LIST(_, ...) \
+	_(BMapEntry, __VA_ARGS__) \
+	_(BMap, __VA_ARGS__) \
+	_(BMapCursor, __VA_ARGS__)
+
 #define BMap_FUNCTION_LIST(_, ...) \
 	_(BMap_INIT, __VA_ARGS__) \
 	_(BMap_DISPOSE, __VA_ARGS__) \
@@ -364,12 +369,6 @@ S(BMapEntry, UPPER) *bmap_cursor_##LOWER##_current( \
 	_(BMapCursor_MOVE_GT, __VA_ARGS__) \
 	_(BMapCursor_CURRENT, __VA_ARGS__)
 
-
-#define BMap_DEFINE(KTYPE, VTYPE, UPPER, LOWER) \
-	BMapEntry_TYPEDEF(KTYPE, VTYPE, UPPER, LOWER) \
-	BMap_TYPEDEF(KTYPE, VTYPE, UPPER, LOWER) \
-	BMapCursor_TYPEDEF(KTYPE, VTYPE, UPPER, LOWER) \
-	PROTOTYPES(BMap, KTYPE, VTYPE, UPPER, LOWER)
 
 #endif	//BMap_H
 

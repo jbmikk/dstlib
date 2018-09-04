@@ -9,7 +9,13 @@
 #define _PROTOTYPE(BLOCK) ;
 #define _IMPLEMENTATION(BLOCK) BLOCK
 
+
+// Public interface for specifying concrete types from generic ones.
+
 #define TYPEDEF(BASE_TYPE, ...) BASE_TYPE##_TYPEDEF(__VA_ARGS__)
+
+#define TYPES(BASE_TYPE, ...) \
+	BASE_TYPE##_TYPE_LIST(TYPEDEF, __VA_ARGS__)
 
 #define FUNCTIONS(BASE_TYPE, ...) \
 	BASE_TYPE##_FUNCTION_LIST(_EXPAND_FUNCTION, __VA_ARGS__, _IMPLEMENTATION)
@@ -17,6 +23,8 @@
 #define PROTOTYPES(BASE_TYPE, ...) \
 	BASE_TYPE##_FUNCTION_LIST(_EXPAND_FUNCTION, __VA_ARGS__, _PROTOTYPE)
 
-#define DEFINE(BASE_TYPE, ...) BASE_TYPE##_DEFINE(__VA_ARGS__)
+#define DEFINE(BASE_TYPE, ...) \
+	TYPES(BASE_TYPE, __VA_ARGS__) \
+	PROTOTYPES(BASE_TYPE, __VA_ARGS__)
 
 #endif //GENERICS_H
