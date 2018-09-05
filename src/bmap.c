@@ -121,6 +121,25 @@ static void _scan_next_key(struct BMapScan *scan, BMap *bmap, unsigned int size,
 	}
 }
 
+/**
+ * Scan first entry in the key group
+ */
+static void _scan_first_key(struct BMapScan *scan, BMap *bmap, unsigned int size, BMapComparator *cmp)
+{
+	char *entry = (char *)scan->equal;
+	char *entries = (char *)bmap->entries;
+
+	if(entry) {
+		do {
+			entry = entry - size;
+		} while (entry >= entries && !cmp->compare(cmp, (BMapEntry *)entry));
+		scan->prev = (BMapEntry *)(entry + size);
+	} else {
+		scan->prev = scan->next;
+	}
+}
+
+
 void bmap_init(BMap *bmap)
 {
 	bmap->entries = NULL;
@@ -247,6 +266,15 @@ BMapEntry *bmap_append(BMap *bmap, unsigned int size, BMapComparator *cmp)
 	_scan_next_key(&scan, bmap, size, cmp);
 
 	return _prepend(bmap, size, scan.next);
+}
+
+BMapEntry *bmap_prepend(BMap *bmap, unsigned int size, BMapComparator *cmp)
+{
+	struct BMapScan scan = {NULL, NULL, NULL};
+	_scan(&scan, bmap, size, cmp);
+	_scan_first_key(&scan, bmap, size, cmp);
+
+	return _prepend(bmap, size, scan.prev);
 }
 
 int bmap_delete(BMap *bmap, unsigned int size, BMapComparator *cmp)
