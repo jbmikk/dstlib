@@ -253,7 +253,7 @@ void bmap__append_key_middle(){
 
 	bmap_btest_insert(&fixture.bmap, 10, (BTest){ &dummy1 });
 	bmap_btest_insert(&fixture.bmap, 128, (BTest){ &dummy2 });
-	bmap_btest_append(&fixture.bmap, 10, (BTest){ &dummy3 });
+	bmap_btest_m_append(&fixture.bmap, 10, (BTest){ &dummy3 });
 
 	t_assert(bmap_btest_count(&fixture.bmap) == 3);
 	t_assert(bmap_btest_first(&fixture.bmap)->key == 10);
@@ -292,9 +292,9 @@ void bmap__append_key_middle_unique(){
 	BMapEntryBTest *b1, *b2, *b3;
 	int dummy1 = 0, dummy2 = 0, dummy3 = 0;
 
-	bmap_btest_append(&fixture.bmap, 10, (BTest){ &dummy1 });
-	bmap_btest_append(&fixture.bmap, 128, (BTest){ &dummy2 });
-	bmap_btest_append(&fixture.bmap, 50, (BTest){ &dummy3 });
+	bmap_btest_m_append(&fixture.bmap, 10, (BTest){ &dummy1 });
+	bmap_btest_m_append(&fixture.bmap, 128, (BTest){ &dummy2 });
+	bmap_btest_m_append(&fixture.bmap, 50, (BTest){ &dummy3 });
 
 	t_assert(bmap_btest_count(&fixture.bmap) == 3);
 	t_assert(bmap_btest_first(&fixture.bmap)->key == 10);
@@ -335,7 +335,7 @@ void bmap__append_key_last(){
 
 	bmap_btest_insert(&fixture.bmap, 10, (BTest){ &dummy1 });
 	bmap_btest_insert(&fixture.bmap, 128, (BTest){ &dummy2 });
-	bmap_btest_append(&fixture.bmap, 128, (BTest){ &dummy3 });
+	bmap_btest_m_append(&fixture.bmap, 128, (BTest){ &dummy3 });
 
 	t_assert(bmap_btest_count(&fixture.bmap) == 3);
 	t_assert(bmap_btest_first(&fixture.bmap)->key == 10);
@@ -375,7 +375,7 @@ void bmap__append_key_single(){
 	int dummy1 = 0, dummy2 = 0;
 
 	bmap_btest_insert(&fixture.bmap, 10, (BTest){ &dummy1 });
-	bmap_btest_append(&fixture.bmap, 128, (BTest){ &dummy2 });
+	bmap_btest_m_append(&fixture.bmap, 128, (BTest){ &dummy2 });
 
 	t_assert(bmap_btest_count(&fixture.bmap) == 2);
 	t_assert(bmap_btest_first(&fixture.bmap)->key == 10);
@@ -410,7 +410,7 @@ void bmap__prepend_key_middle(){
 
 	bmap_btest_insert(&fixture.bmap, 10, (BTest){ &dummy1 });
 	bmap_btest_insert(&fixture.bmap, 128, (BTest){ &dummy2 });
-	bmap_btest_prepend(&fixture.bmap, 128, (BTest){ &dummy3 });
+	bmap_btest_m_prepend(&fixture.bmap, 128, (BTest){ &dummy3 });
 
 	t_assert(bmap_btest_count(&fixture.bmap) == 3);
 	t_assert(bmap_btest_first(&fixture.bmap)->key == 10);
@@ -449,9 +449,9 @@ void bmap__prepend_key_middle_unique(){
 	BMapEntryBTest *b1, *b2, *b3;
 	int dummy1 = 0, dummy2 = 0, dummy3 = 0;
 
-	bmap_btest_prepend(&fixture.bmap, 10, (BTest){ &dummy1 });
-	bmap_btest_prepend(&fixture.bmap, 128, (BTest){ &dummy2 });
-	bmap_btest_prepend(&fixture.bmap, 50, (BTest){ &dummy3 });
+	bmap_btest_m_prepend(&fixture.bmap, 10, (BTest){ &dummy1 });
+	bmap_btest_m_prepend(&fixture.bmap, 128, (BTest){ &dummy2 });
+	bmap_btest_m_prepend(&fixture.bmap, 50, (BTest){ &dummy3 });
 
 	t_assert(bmap_btest_count(&fixture.bmap) == 3);
 	t_assert(bmap_btest_first(&fixture.bmap)->key == 10);
@@ -492,7 +492,7 @@ void bmap__prepend_key_last(){
 
 	bmap_btest_insert(&fixture.bmap, 10, (BTest){ &dummy1 });
 	bmap_btest_insert(&fixture.bmap, 50, (BTest){ &dummy2 });
-	bmap_btest_prepend(&fixture.bmap, 128, (BTest){ &dummy3 });
+	bmap_btest_m_prepend(&fixture.bmap, 128, (BTest){ &dummy3 });
 
 	t_assert(bmap_btest_count(&fixture.bmap) == 3);
 	t_assert(bmap_btest_first(&fixture.bmap)->key == 10);
@@ -532,7 +532,7 @@ void bmap__prepend_key_first(){
 	int dummy1 = 0, dummy2 = 0;
 
 	bmap_btest_insert(&fixture.bmap, 128, (BTest){ &dummy1 });
-	bmap_btest_prepend(&fixture.bmap, 10, (BTest){ &dummy2 });
+	bmap_btest_m_prepend(&fixture.bmap, 10, (BTest){ &dummy2 });
 
 	t_assert(bmap_btest_count(&fixture.bmap) == 2);
 	t_assert(bmap_btest_first(&fixture.bmap)->key == 10);

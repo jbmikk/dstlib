@@ -259,7 +259,7 @@ BMapEntry *bmap_insert(BMap *bmap, unsigned int size, BMapComparator *cmp)
 	return NULL;
 }
 
-BMapEntry *bmap_append(BMap *bmap, unsigned int size, BMapComparator *cmp)
+BMapEntry *bmap_m_append(BMap *bmap, unsigned int size, BMapComparator *cmp)
 {
 	struct BMapScan scan = {NULL, NULL, NULL};
 	_scan(&scan, bmap, size, cmp);
@@ -268,7 +268,7 @@ BMapEntry *bmap_append(BMap *bmap, unsigned int size, BMapComparator *cmp)
 	return _prepend(bmap, size, scan.next);
 }
 
-BMapEntry *bmap_prepend(BMap *bmap, unsigned int size, BMapComparator *cmp)
+BMapEntry *bmap_m_prepend(BMap *bmap, unsigned int size, BMapComparator *cmp)
 {
 	struct BMapScan scan = {NULL, NULL, NULL};
 	_scan(&scan, bmap, size, cmp);
