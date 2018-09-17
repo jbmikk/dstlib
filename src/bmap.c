@@ -218,6 +218,36 @@ BMapEntry *bmap_get_lt(BMap *bmap, unsigned int size, BMapComparator *cmp)
 	return scan.prev;
 }
 
+BMapEntry *bmap_m_get(BMap *bmap, unsigned int size, BMapComparator *cmp)
+{
+	struct BMapScan scan = {NULL, NULL, NULL};
+	_scan_previous_key(&scan, bmap, size, cmp);
+
+	return scan.next;
+}
+
+BMapEntry *bmap_m_get_at(BMap *bmap, unsigned int size, BMapComparator *cmp, int index)
+{
+	struct BMapScan scan = {NULL, NULL, NULL};
+	_scan_previous_key(&scan, bmap, size, cmp);
+
+	BMapEntry *result;
+	if(scan.next) {
+		char *entries = (char *)bmap->entries;
+		char *end = entries + (bmap->count * size);
+
+		result = (BMapEntry *)(((char *)scan.next) + size * index);
+		// TODO: validate > entries?
+		if((char *)result >= end || cmp->compare(cmp, result)) {
+			result = NULL;
+		}
+	} else {
+		result = NULL;
+	}
+	return result;
+}
+
+
 static BMapEntry *_prepend(BMap *bmap, unsigned int size, BMapEntry *entry)
 {
 	char *entries = (char *)bmap->entries;
