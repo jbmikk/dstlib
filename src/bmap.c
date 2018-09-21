@@ -11,6 +11,7 @@ struct BMapScan {
 	struct BMapEntry *prev;
 	struct BMapEntry *equal;
 	struct BMapEntry *next;
+	int eq_diff;
 };
 
 int char_key_compare(const BMapComparator *c, const BMapEntry *e)
@@ -92,6 +93,7 @@ static void _scan_previous_key(struct BMapScan *scan, BMap *bmap, unsigned int s
 			scan->next = entry;
 			right = i-1;
 			scan->equal = entry;
+			scan->eq_diff = diff;
 		}
 	}
 }
@@ -110,6 +112,7 @@ static void _scan_next_key(struct BMapScan *scan, BMap *bmap, unsigned int size,
 			scan->prev = entry;
 			left = i+1;
 			scan->equal = entry;
+			scan->eq_diff = diff;
 		} else if(diff > 0) {
 			scan->next = entry;
 			right = i-1;
@@ -171,7 +174,7 @@ BMapEntry *bmap_first(BMap *bmap)
 
 BMapEntry *bmap_get(BMap *bmap, unsigned int size, BMapComparator *cmp)
 {
-	struct BMapScan scan = {NULL, NULL, NULL};
+	struct BMapScan scan = {NULL, NULL, NULL, 0};
 	_scan(&scan, bmap, size, cmp);
 	return scan.equal;
 }
@@ -181,7 +184,7 @@ BMapEntry *bmap_get(BMap *bmap, unsigned int size, BMapComparator *cmp)
  */
 BMapEntry *bmap_get_gte(BMap *bmap, unsigned int size, BMapComparator *cmp)
 {
-	struct BMapScan scan = {NULL, NULL, NULL};
+	struct BMapScan scan = {NULL, NULL, NULL, 0};
 	_scan(&scan, bmap, size, cmp);
 	return scan.equal? scan.equal: scan.next;
 }
@@ -191,7 +194,7 @@ BMapEntry *bmap_get_gte(BMap *bmap, unsigned int size, BMapComparator *cmp)
  */
 BMapEntry *bmap_get_lte(BMap *bmap, unsigned int size, BMapComparator *cmp)
 {
-	struct BMapScan scan = {NULL, NULL, NULL};
+	struct BMapScan scan = {NULL, NULL, NULL, 0};
 	_scan(&scan, bmap, size, cmp);
 	return scan.equal? scan.equal: scan.prev;
 }
@@ -201,7 +204,7 @@ BMapEntry *bmap_get_lte(BMap *bmap, unsigned int size, BMapComparator *cmp)
  */
 BMapEntry *bmap_get_gt(BMap *bmap, unsigned int size, BMapComparator *cmp)
 {
-	struct BMapScan scan = {NULL, NULL, NULL};
+	struct BMapScan scan = {NULL, NULL, NULL, 0};
 	_scan(&scan, bmap, size, cmp);
 	_scan_next(&scan, bmap, size);
 	return scan.next;
@@ -212,7 +215,7 @@ BMapEntry *bmap_get_gt(BMap *bmap, unsigned int size, BMapComparator *cmp)
  */
 BMapEntry *bmap_get_lt(BMap *bmap, unsigned int size, BMapComparator *cmp)
 {
-	struct BMapScan scan = {NULL, NULL, NULL};
+	struct BMapScan scan = {NULL, NULL, NULL, 0};
 	_scan(&scan, bmap, size, cmp);
 	_scan_previous(&scan, bmap, size);
 	return scan.prev;
@@ -220,15 +223,15 @@ BMapEntry *bmap_get_lt(BMap *bmap, unsigned int size, BMapComparator *cmp)
 
 BMapEntry *bmap_m_get(BMap *bmap, unsigned int size, BMapComparator *cmp)
 {
-	struct BMapScan scan = {NULL, NULL, NULL};
+	struct BMapScan scan = {NULL, NULL, NULL, 0};
 	_scan_previous_key(&scan, bmap, size, cmp);
 
-	return scan.next;
+	return scan.eq_diff == 0? scan.equal: NULL;
 }
 
 BMapEntry *bmap_m_get_at(BMap *bmap, unsigned int size, BMapComparator *cmp, int index)
 {
-	struct BMapScan scan = {NULL, NULL, NULL};
+	struct BMapScan scan = {NULL, NULL, NULL, 0};
 	_scan_previous_key(&scan, bmap, size, cmp);
 
 	BMapEntry *result;
@@ -280,7 +283,7 @@ error:
 
 BMapEntry *bmap_insert(BMap *bmap, unsigned int size, BMapComparator *cmp)
 {
-	struct BMapScan scan = {NULL, NULL, NULL};
+	struct BMapScan scan = {NULL, NULL, NULL, 0};
 	_scan(&scan, bmap, size, cmp);
 
 	if(!scan.equal) {
@@ -295,7 +298,7 @@ BMapEntry *bmap_insert(BMap *bmap, unsigned int size, BMapComparator *cmp)
 
 BMapEntry *bmap_m_append(BMap *bmap, unsigned int size, BMapComparator *cmp)
 {
-	struct BMapScan scan = {NULL, NULL, NULL};
+	struct BMapScan scan = {NULL, NULL, NULL, 0};
 	_scan_next_key(&scan, bmap, size, cmp);
 
 	return _prepend(bmap, size, scan.next);
@@ -303,7 +306,7 @@ BMapEntry *bmap_m_append(BMap *bmap, unsigned int size, BMapComparator *cmp)
 
 BMapEntry *bmap_m_prepend(BMap *bmap, unsigned int size, BMapComparator *cmp)
 {
-	struct BMapScan scan = {NULL, NULL, NULL};
+	struct BMapScan scan = {NULL, NULL, NULL, 0};
 	_scan_previous_key(&scan, bmap, size, cmp);
 
 	return _prepend(bmap, size, scan.next);
@@ -311,7 +314,7 @@ BMapEntry *bmap_m_prepend(BMap *bmap, unsigned int size, BMapComparator *cmp)
 
 int bmap_delete(BMap *bmap, unsigned int size, BMapComparator *cmp)
 {
-	struct BMapScan scan = {NULL, NULL, NULL};
+	struct BMapScan scan = {NULL, NULL, NULL, 0};
 	_scan(&scan, bmap, size, cmp);
 	if(scan.equal) {
 		char *entries = (char *)bmap->entries;
