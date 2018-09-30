@@ -369,6 +369,40 @@ void bmap__append_key_last(){
 	t_assert(!fourth);
 }
 
+void bmap__append_key_new_last(){
+
+	BMapEntryBTest *b1, *b2;
+	int dummy1 = 0, dummy2 = 0;
+
+	bmap_btest_insert(&fixture.bmap, 10, (BTest){ &dummy1 });
+	bmap_btest_m_append(&fixture.bmap, 128, (BTest){ &dummy2 });
+
+	t_assert(bmap_btest_count(&fixture.bmap) == 2);
+	t_assert(bmap_btest_first(&fixture.bmap)->key == 10);
+	BMapCursorBTest cur;
+
+	bmap_cursor_btest_init(&cur, &fixture.bmap);
+	bool first = bmap_cursor_btest_next(&cur);
+	b1 = bmap_cursor_btest_current(&cur);
+
+	bool second = bmap_cursor_btest_next(&cur);
+	b2 = bmap_cursor_btest_current(&cur);
+
+	bool third = bmap_cursor_btest_next(&cur);
+
+	bmap_cursor_btest_dispose(&cur);
+
+	t_assert(first);
+	t_assert(b1 != NULL);
+	t_assert(b1->btest.data == (void *)&dummy1);
+
+	t_assert(second);
+	t_assert(b2 != NULL);
+	t_assert(b2->btest.data == (void *)&dummy2);
+
+	t_assert(!third);
+}
+
 void bmap__append_key_single(){
 
 	BMapEntryBTest *b1, *b2;
@@ -860,6 +894,7 @@ int main(int argc, char** argv) {
 	t_test(bmap__append_key_middle);
 	t_test(bmap__append_key_middle_unique);
 	t_test(bmap__append_key_last);
+	t_test(bmap__append_key_new_last);
 	t_test(bmap__append_key_single);
 	t_test(bmap__prepend_key_middle);
 	t_test(bmap__prepend_key_middle_unique);
