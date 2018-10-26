@@ -1,6 +1,7 @@
 #ifndef Stack_H
 #define Stack_H
 
+#include <stdbool.h>
 #include "stddef.h"
 
 #include "generics.h"
@@ -55,6 +56,11 @@ TYPE stack_##LOWER##_top(struct S(Stack, UPPER) *stack) BODY({ \
 	return ((S(StackNode, UPPER) *)(stack->stack.top))->data; \
 })
 
+#define Stack_IS_EMPTY(TYPE, UPPER, LOWER, BODY) \
+bool stack_##LOWER##_is_empty(struct S(Stack, UPPER) *stack) BODY({ \
+	return !stack->stack.top; \
+})
+
 #define Stack_DISPOSE(TYPE, UPPER, LOWER, BODY) \
 void stack_##LOWER##_dispose(struct S(Stack, UPPER) *stack) BODY({ \
 	stack_dispose(&stack->stack); \
@@ -70,6 +76,7 @@ void stack_##LOWER##_dispose(struct S(Stack, UPPER) *stack) BODY({ \
 	_(Stack_PUSH, __VA_ARGS__) \
 	_(Stack_POP, __VA_ARGS__) \
 	_(Stack_TOP, __VA_ARGS__) \
+	_(Stack_IS_EMPTY, __VA_ARGS__) \
 	_(Stack_DISPOSE, __VA_ARGS__)
 
 
