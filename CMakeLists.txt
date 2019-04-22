@@ -68,12 +68,12 @@ set_target_properties(dstlib PROPERTIES COMPILE_FLAGS "-DLIBRARY ${DSTLIB_FLAGS}
 
 include_directories("${PROJECT_SOURCE_DIR}/src")
 
-add_executable(stack_test tests/stack_test.c)
-add_executable(bmap_test tests/bmap_test.c)
-add_executable(bmap_char_test tests/bmap_char_test.c)
-add_executable(bmap_uint_test tests/bmap_uint_test.c)
-add_executable(rtree_test tests/rtree_test.c)
-add_executable(arrays_test tests/arrays_test.c)
+add_executable(stack_test test/stack_test.c)
+add_executable(bmap_test test/bmap_test.c)
+add_executable(bmap_char_test test/bmap_char_test.c)
+add_executable(bmap_uint_test test/bmap_uint_test.c)
+add_executable(rtree_test test/rtree_test.c)
+add_executable(arrays_test test/arrays_test.c)
 
 target_link_libraries(stack_test dstlib)
 target_link_libraries(bmap_test dstlib)
