@@ -57,6 +57,21 @@ void bmap__set2_and_get2(){
 	t_assert(b2->btest.data == (void *)&d2);
 }
 
+void bmap__get_index(){
+	BMapEntryBTest d1, d2;
+
+	bmap_btest_insert(&fixture.bmap, 'a', (BTest){ &d1 });
+	bmap_btest_insert(&fixture.bmap, 'b', (BTest){ &d2 });
+
+	int index_a = bmap_btest_get_index(&fixture.bmap, 'a');
+	int index_b = bmap_btest_get_index(&fixture.bmap, 'b');
+	int index_c = bmap_btest_get_index(&fixture.bmap, 'c');
+
+	t_assert(index_a == 0);
+	t_assert(index_b == 1);
+	t_assert(index_c == -1);
+}
+
 
 void bmap__not_set_same_key_twice()
 {
@@ -882,6 +897,7 @@ int main(int argc, char** argv) {
 	t_init();
 	t_test(bmap__set_and_get);
 	t_test(bmap__set2_and_get2);
+	t_test(bmap__get_index);
 	t_test(bmap__not_set_same_key_twice);
 	t_test(bmap__set_third_in_the_middle);
 	t_test(bmap__get_gte);

@@ -179,6 +179,14 @@ BMapEntry *bmap_get(BMap *bmap, unsigned int size, BMapComparator *cmp)
 	return scan.equal;
 }
 
+int bmap_get_index(BMap *bmap, unsigned int size, BMapComparator *cmp)
+{
+	char *entry = (char *)bmap_get(bmap, size, cmp);
+	char *entries = (char *)bmap->entries;
+	// TODO: Could division be optimized?
+	return entry? (entry - entries) / size: -1;
+}
+
 /**
  * Get closest greater than or equal child
  */
