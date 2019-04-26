@@ -15,3 +15,4 @@ run_test $MODE $PATTERN ./bmap_char_test
 run_test $MODE $PATTERN ./bmap_uint_test
 run_test $MODE $PATTERN ./rtree_test
 run_test $MODE $PATTERN ./arrays_test
+run_test $MODE $PATTERN ./result_test
