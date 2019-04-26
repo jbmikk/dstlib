@@ -22,6 +22,15 @@ Test
 The tests give good insights into how to use the library.
 
 
+Debugging
+---------
+
+This project uses lots of macros, in order to debug files it's often useful to
+preprocess files. CMake generates preprocessor targets for each file. So you
+can generate preprocessed files like this:
+
+    make src/bmap.i
+
 License
 -------
 
