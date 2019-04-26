@@ -179,6 +179,7 @@ BMapEntry *bmap_get(BMap *bmap, unsigned int size, BMapComparator *cmp)
 	return scan.equal;
 }
 
+// TODO: change to unsigned int to support broader range? what about -1?
 int bmap_get_index(BMap *bmap, unsigned int size, BMapComparator *cmp)
 {
 	char *entry = (char *)bmap_get(bmap, size, cmp);
