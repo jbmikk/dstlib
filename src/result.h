@@ -38,9 +38,9 @@ typedef struct S(_Result, UPPER) { \
 	.error = (E) \
 }
 
-#define SwitchType(E) switch((E).result.type)
+#define TypeOf(E) ((E).result.type)
 
-#define ResultType(T) _Result_TYPE_##T
+#define Type(B, T) _##B##_TYPE_##T
 
 
 #endif	//Result_H

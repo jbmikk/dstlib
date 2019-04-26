@@ -18,11 +18,11 @@ void result__result_ok(){
 	t_assert(r.result.type == _Result_TYPE_Ok);
 	t_assert(r.data == 70000);
 
-	SwitchType(r) {
-	case ResultType(Ok):
+	switch(TypeOf(r)) {
+	case Type(Result, Ok):
 		t_assert(1);
 		break;
-	case ResultType(Error):
+	case Type(Result, Error):
 		//Should never happen
 		t_assert(0);
 		break;
@@ -35,12 +35,12 @@ void result__result_error(){
 	t_assert(r.result.type == _Result_TYPE_Error);
 	t_assert(r.error == -1);
 
-	SwitchType(r) {
-	case ResultType(Ok):
+	switch(TypeOf(r)) {
+	case Type(Result, Ok):
 		//Should never happen
 		t_assert(0);
 		break;
-	case ResultType(Error):
+	case Type(Result, Error):
 		t_assert(1);
 		break;
 	}
