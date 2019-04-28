@@ -297,14 +297,13 @@ Result(BMapEntryPtr) bmap_insert(BMap *bmap, unsigned int size, BMapComparator *
 
 	if(!scan.equal) {
 		BMapEntry *entry = _prepend(bmap, size, scan.next);
-		if(entry) {
-			return ResultOk(BMapEntryPtr, entry);
-		} else {
-			return ResultError(BMapEntryPtr, -1);
-		}
+		check_mem(entry);
+		return ResultOk(BMapEntryPtr, entry);
 	} else {
 		return ResultOk(BMapEntryPtr, NULL);
 	}
+error:
+	return ResultError(BMapEntryPtr, -1);
 }
 
 BMapEntry *bmap_m_append(BMap *bmap, unsigned int size, BMapComparator *cmp)
