@@ -4,6 +4,7 @@
 #include <stdbool.h>
 
 #include "generics.h"
+#include "result.h"
 
 struct BMapEntry;
 
@@ -35,6 +36,8 @@ typedef struct BMapComparator {
 		unsigned long ulong_key;
 	};
 } BMapComparator;
+
+DEFINE(_Result, BMapEntry *, BMapEntryPtr, bmapentryptr)
 
 #define TYPEMAP(_, JOIN, ...) \
 	_(char, char, __VA_ARGS__) JOIN\
@@ -74,7 +77,7 @@ unsigned int bmap_count(BMap *bmap);
 BMapEntry *bmap_first(BMap *bmap);
 BMapEntry *bmap_get(BMap *bmap, unsigned int size, BMapComparator *cmp);
 int bmap_get_index(BMap *bmap, unsigned int size, BMapComparator *cmp);
-BMapEntry *bmap_insert(BMap *bmap, unsigned int size, BMapComparator *cmp);
+Result(BMapEntryPtr) bmap_insert(BMap *bmap, unsigned int size, BMapComparator *cmp);
 BMapEntry *bmap_m_get(BMap *bmap, unsigned int size, BMapComparator *cmp);
 BMapEntry *bmap_m_get_at(BMap *bmap, unsigned int size, BMapComparator *cmp, int index);
 BMapEntry *bmap_m_append(BMap *bmap, unsigned int size, BMapComparator *cmp);
@@ -96,6 +99,8 @@ void bmap_cursor_move_gt(BMapCursor *cur, unsigned int size, BMapComparator *cmp
 BMapEntry *bmap_cursor_current(BMapCursor *cur);
 
 
+// TYPEDEFs
+
 #define BMapEntry_TYPEDEF(KTYPE, VTYPE, UPPER, LOWER) \
 typedef struct S(BMapEntry, UPPER) { \
 	KTYPE key; \
@@ -113,6 +118,13 @@ typedef struct S(BMapCursor, UPPER) { \
 } S(BMapCursor, UPPER);
 
 
+// EXTEND OTHER TYPES
+#define _Result__WITH__BMapEntry(KTYPE, VTYPE, UPPER, LOWER) \
+	NESTED_DEFINE(_Result, S(BMapEntry, UPPER) *, BMapEntry##UPPER##Ptr, bmapentry##LOWER##ptr)
+
+
+// FUNCTIONS
+
 #define BMap_INIT(KTYPE, VTYPE, UPPER, LOWER, BODY) \
 void bmap_##LOWER##_init(struct S(BMap, UPPER) *bmap) BODY({ \
 	bmap_init(&bmap->bmap); \
@@ -124,23 +136,25 @@ void bmap_##LOWER##_dispose(struct S(BMap, UPPER) *bmap) BODY({ \
 })
 
 #define BMap_INSERT(KTYPE, VTYPE, UPPER, LOWER, BODY) \
-S(BMapEntry, UPPER) *bmap_##LOWER##_insert( \
+Result(BMapEntry##UPPER##Ptr) bmap_##LOWER##_insert( \
 	struct S(BMap, UPPER) *bmap, \
 	KTYPE key, \
 	VTYPE LOWER \
 ) BODY({ \
 	BMapComparator cmp; \
 	COMPARATOR_INIT(cmp, key); \
-	struct S(BMapEntry, UPPER) *entry = (struct S(BMapEntry, UPPER) *)bmap_insert( \
+	Result(BMapEntryPtr) _result = bmap_insert( \
 		&bmap->bmap, \
 		sizeof(struct S(BMapEntry, UPPER)), \
 		&cmp \
 	); \
-	if(entry) { \
-		entry->key = key; \
-		entry->LOWER = LOWER; \
+	Result(BMapEntry##UPPER##Ptr) *resultp = (Result(BMapEntry##UPPER##Ptr) *) &_result; \
+	Result(BMapEntry##UPPER##Ptr) result = *resultp; \
+	if(TypeOf(result) == Type(Result, Ok) && result.data) { \
+		result.data->key = key; \
+		result.data->LOWER = LOWER; \
 	} \
-	return entry; \
+	return result; \
 })
 
 #define BMap_M_GET(KTYPE, VTYPE, UPPER, LOWER, BODY) \
@@ -410,6 +424,11 @@ S(BMapEntry, UPPER) *bmap_cursor_##LOWER##_current( \
 	); \
 })
 
+
+// Lists
+
+#define BMap_EXTEND_TYPE_LIST(_, ...) \
+	_(_Result, BMapEntry, __VA_ARGS__)
 
 #define BMap_TYPE_LIST(_, ...) \
 	_(BMapEntry, __VA_ARGS__) \

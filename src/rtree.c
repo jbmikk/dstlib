@@ -335,7 +335,10 @@ static Node *_build_node(Node *node, unsigned char *string, unsigned short lengt
 			_node_set_array(&new_node, length-1);
 			memcpy(new_node.array, string+1, length-1);
 		}
-		next_node = &bmap_node_insert(&node->children, string[0], new_node)->node;
+		Result(BMapEntryNodePtr) result = bmap_node_insert(&node->children, string[0], new_node);
+		if(TypeOf(result) == Type(Result, Ok)) {
+			next_node = &result.data->node;
+		}
 		trace_node("BUILD-NODE", next_node);
 	} else {
 		next_node = node;

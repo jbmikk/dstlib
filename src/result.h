@@ -19,6 +19,11 @@ typedef struct S(_Result, UPPER) { \
 	}; \
 } S(_Result, UPPER);
 
+
+// Lists
+
+#define _Result_EXTEND_TYPE_LIST(_, ...)
+
 #define _Result_TYPE_LIST(_, ...) \
 	_(_Result, __VA_ARGS__)
 

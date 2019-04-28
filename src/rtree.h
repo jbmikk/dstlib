@@ -22,6 +22,8 @@ typedef struct Node {
 TYPEDEF(BMapEntry, unsigned char, struct Node, Node, node)
 TYPEDEF(BMapCursor, unsigned char, struct Node, Node, node)
 
+EXTEND_TYPES(BMap, unsigned char, struct Node, Node, node)
+
 typedef struct RTree {
 	Node root;
 } RTree;

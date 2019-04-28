@@ -33,12 +33,14 @@ void t_teardown(){
 }
 
 void bmap__set_and_get(){
-	BMapEntryBTest *a1, *a2;
+	Result(BMapEntryBTestPtr) a1;
+	BMapEntryBTest *a2;
 	a1 = bmap_btest_insert(&fixture.bmap, 'a', (BTest){NULL});
 	a2 = bmap_btest_get(&fixture.bmap, 'a');
-	t_assert(a1 != NULL);
+	t_assert(TypeOf(a1) == Type(Result, Ok));
+	t_assert(a1.data != NULL);
 	t_assert(a2 != NULL);
-	t_assert(a1 == a2);
+	t_assert(a1.data == a2);
 }
 
 void bmap__set2_and_get2(){
@@ -75,7 +77,8 @@ void bmap__get_index(){
 
 void bmap__not_set_same_key_twice()
 {
-	BMapEntryBTest *a1, *a2, *b1;
+	Result(BMapEntryBTestPtr) a1, b1;
+	BMapEntryBTest *a2;
 	BMapEntryBTest d1;
 
 	a1 = bmap_btest_insert(&fixture.bmap, 'a', (BTest){ &d1 });
@@ -83,8 +86,10 @@ void bmap__not_set_same_key_twice()
 	a2 = bmap_btest_get(&fixture.bmap, 'a');
 
 	t_assert(bmap_btest_count(&fixture.bmap) == 1);
-	t_assert(a1 != NULL);
-	t_assert(b1 == NULL);
+	t_assert(TypeOf(a1) == Type(Result, Ok));
+	t_assert(TypeOf(b1) == Type(Result, Ok));
+	t_assert(a1.data != NULL);
+	t_assert(b1.data == NULL);
 	t_assert(a2 != NULL);
 	t_assert(a2->btest.data == (void *)&d1);
 }

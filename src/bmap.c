@@ -290,19 +290,21 @@ error:
 	return NULL;
 }
 
-BMapEntry *bmap_insert(BMap *bmap, unsigned int size, BMapComparator *cmp)
+Result(BMapEntryPtr) bmap_insert(BMap *bmap, unsigned int size, BMapComparator *cmp)
 {
 	struct BMapScan scan = {NULL, NULL, NULL, 0};
 	_scan(&scan, bmap, size, cmp);
 
 	if(!scan.equal) {
-		return _prepend(bmap, size, scan.next);
+		BMapEntry *entry = _prepend(bmap, size, scan.next);
+		if(entry) {
+			return ResultOk(BMapEntryPtr, entry);
+		} else {
+			return ResultError(BMapEntryPtr, -1);
+		}
 	} else {
-		return NULL;
+		return ResultOk(BMapEntryPtr, NULL);
 	}
-
-//TODO: Should change interface, possible to return NULL without errors.
-	return NULL;
 }
 
 BMapEntry *bmap_m_append(BMap *bmap, unsigned int size, BMapComparator *cmp)

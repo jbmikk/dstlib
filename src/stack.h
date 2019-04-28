@@ -67,6 +67,10 @@ void stack_##LOWER##_dispose(struct S(Stack, UPPER) *stack) BODY({ \
 })
 
 
+// Lists
+
+#define Stack_EXTEND_TYPE_LIST(_, ...)
+
 #define Stack_TYPE_LIST(_, ...) \
 	_(StackNode, __VA_ARGS__) \
 	_(Stack, __VA_ARGS__)
