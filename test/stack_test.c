@@ -3,7 +3,7 @@
 #include <stdio.h>
 
 #include "stack.h"
-#include "test.h"
+#include "ctest.h"
 
 void t_setup(){
 }

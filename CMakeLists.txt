@@ -26,8 +26,8 @@ if(PROFILE)
 endif(PROFILE)
 
 
-# Include external dbg
-# --------------------
+# Include externals
+# -----------------
 
 include_directories("${CMAKE_BINARY_DIR}/dbg-prefix/src/dbg")
 
@@ -36,6 +36,17 @@ externalproject_add(
         GIT_REPOSITORY git@github.com:jbmikk/dbg.git
         DOWNLOAD_NAME dbg
         DOWNLOAD_DIR dbg
+        INSTALL_COMMAND ""
+        UPDATE_DISCONNECTED 1
+)
+
+include_directories("${CMAKE_BINARY_DIR}/ctest-prefix/src/ctest/src")
+
+externalproject_add(
+        ctest
+        GIT_REPOSITORY git@github.com:jbmikk/ctest.git
+        DOWNLOAD_NAME ctest
+        DOWNLOAD_DIR ctest
         INSTALL_COMMAND ""
         UPDATE_DISCONNECTED 1
 )
@@ -58,7 +69,7 @@ file(GLOB SOURCES src/*.c)
 
 add_library(dstlib ${SOURCES})
 
-add_dependencies(dstlib dbg)
+add_dependencies(dstlib dbg ctest)
 
 set_target_properties(dstlib PROPERTIES COMPILE_FLAGS "-DLIBRARY ${DSTLIB_FLAGS}")
 

@@ -3,7 +3,7 @@
 #include <string.h>
 
 #include "rtree.h"
-#include "test.h"
+#include "ctest.h"
 #include "arrays.h"
 
 #define nzs(S) ((unsigned char*)S), (strlen(S))
