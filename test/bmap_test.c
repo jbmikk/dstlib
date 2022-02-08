@@ -672,6 +672,26 @@ void bmap__m_get_at(){
 	t_assert(b6 == NULL);
 }
 
+void bmap__m_get_last(){
+
+	BMapEntryBTest *b1, *b2, *b3;
+	int dummy1 = 0, dummy2 = 0, dummy3 = 0;
+
+	bmap_btest_m_append(&fixture.bmap, 10, (BTest){ &dummy1 });
+	bmap_btest_m_append(&fixture.bmap, 10, (BTest){ &dummy2 });
+	bmap_btest_m_append(&fixture.bmap, 10, (BTest){ &dummy3 });
+
+	b1 = bmap_btest_m_get_last(&fixture.bmap, 10);
+	b2 = bmap_btest_m_get_last(&fixture.bmap, 40);
+	b3 = bmap_btest_m_get_last(&fixture.bmap, 7);
+
+	t_assert(b1 != NULL);
+	t_assert(b1->btest.data == (void *)&dummy3);
+
+	t_assert(b2 == NULL);
+	t_assert(b3 == NULL);
+}
+
 void bmap_cursor_btest__iterate_zero(){
 	BMapCursorBTest cur;
 
@@ -924,6 +944,7 @@ int main(int argc, char** argv) {
 	t_test(bmap__m_get);
 	t_test(bmap__m_get_not_found);
 	t_test(bmap__m_get_at);
+	t_test(bmap__m_get_last);
 	t_test(bmap_cursor_btest__iterate_zero);
 	t_test(bmap_cursor_btest__iterate_one);
 	t_test(bmap_cursor_btest__iterate_two);

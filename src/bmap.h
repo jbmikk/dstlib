@@ -80,6 +80,7 @@ int bmap_get_index(BMap *bmap, unsigned int size, BMapComparator *cmp);
 Result(BMapEntryPtr) bmap_insert(BMap *bmap, unsigned int size, BMapComparator *cmp);
 BMapEntry *bmap_m_get(BMap *bmap, unsigned int size, BMapComparator *cmp);
 BMapEntry *bmap_m_get_at(BMap *bmap, unsigned int size, BMapComparator *cmp, int index);
+BMapEntry *bmap_m_get_last(BMap *bmap, unsigned int size, BMapComparator *cmp);
 BMapEntry *bmap_m_append(BMap *bmap, unsigned int size, BMapComparator *cmp);
 BMapEntry *bmap_m_prepend(BMap *bmap, unsigned int size, BMapComparator *cmp);
 BMapEntry *bmap_get_gte(BMap *bmap, unsigned int size, BMapComparator *cmp);
@@ -187,6 +188,19 @@ S(BMapEntry, UPPER) *bmap_##LOWER##_m_get_at( \
 	); \
 })
 
+#define BMap_M_GET_LAST(KTYPE, VTYPE, UPPER, LOWER, BODY) \
+S(BMapEntry, UPPER) *bmap_##LOWER##_m_get_last( \
+	struct S(BMap, UPPER) *bmap, \
+	KTYPE key \
+) BODY({ \
+	BMapComparator cmp; \
+	COMPARATOR_INIT(cmp, key); \
+	return (S(BMapEntry, UPPER) *)bmap_m_get_last( \
+		&bmap->bmap, \
+		sizeof(struct S(BMapEntry, UPPER)), \
+		&cmp \
+	); \
+})
 
 #define BMap_M_APPEND(KTYPE, VTYPE, UPPER, LOWER, BODY) \
 S(BMapEntry, UPPER) *bmap_##LOWER##_m_append( \
@@ -441,6 +455,7 @@ S(BMapEntry, UPPER) *bmap_cursor_##LOWER##_current( \
 	_(BMap_INSERT, __VA_ARGS__) \
 	_(BMap_M_GET, __VA_ARGS__) \
 	_(BMap_M_GET_AT, __VA_ARGS__) \
+	_(BMap_M_GET_LAST, __VA_ARGS__) \
 	_(BMap_M_APPEND, __VA_ARGS__) \
 	_(BMap_M_PREPEND, __VA_ARGS__) \
 	_(BMap_COUNT, __VA_ARGS__) \

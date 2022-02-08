@@ -11,6 +11,7 @@ struct BMapScan {
 	struct BMapEntry *prev;
 	struct BMapEntry *equal;
 	struct BMapEntry *next;
+	// It means the equal key is actually equal
 	int eq_diff;
 };
 
@@ -253,6 +254,20 @@ BMapEntry *bmap_m_get_at(BMap *bmap, unsigned int size, BMapComparator *cmp, int
 		if((char *)result >= end || cmp->compare(cmp, result)) {
 			result = NULL;
 		}
+	} else {
+		result = NULL;
+	}
+	return result;
+}
+
+BMapEntry *bmap_m_get_last(BMap *bmap, unsigned int size, BMapComparator *cmp)
+{
+	struct BMapScan scan = {NULL, NULL, NULL, 0};
+	_scan_next_key(&scan, bmap, size, cmp);
+
+	BMapEntry *result;
+	if(scan.eq_diff == 0) {
+		result = scan.equal;
 	} else {
 		result = NULL;
 	}
