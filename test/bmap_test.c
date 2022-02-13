@@ -692,6 +692,36 @@ void bmap__m_get_last(){
 	t_assert(b3 == NULL);
 }
 
+void bmap__m_get_last_middle(){
+
+	BMapEntryBTest *b1, *b2, *b3, *b4, *b5;
+	int dummy1 = 0, dummy2 = 0, dummy3 = 0, dummy4 = 0, dummy5 = 0;
+
+	bmap_btest_m_append(&fixture.bmap, 10, (BTest){ &dummy1 });
+	bmap_btest_m_append(&fixture.bmap, 10, (BTest){ &dummy2 });
+	bmap_btest_m_append(&fixture.bmap, 10, (BTest){ &dummy3 });
+	bmap_btest_m_append(&fixture.bmap, 12, (BTest){ &dummy4 });
+	bmap_btest_m_append(&fixture.bmap, 12, (BTest){ &dummy5 });
+
+	b1 = bmap_btest_m_get_last(&fixture.bmap, 7);
+	b2 = bmap_btest_m_get_last(&fixture.bmap, 10);
+	b3 = bmap_btest_m_get_last(&fixture.bmap, 11);
+	b4 = bmap_btest_m_get_last(&fixture.bmap, 12);
+	b5 = bmap_btest_m_get_last(&fixture.bmap, 40);
+
+	t_assert(b1 == NULL);
+
+	t_assert(b2 != NULL);
+	t_assert(b2->btest.data == (void *)&dummy3);
+
+	t_assert(b3 == NULL);
+
+	t_assert(b4 != NULL);
+	t_assert(b4->btest.data == (void *)&dummy5);
+
+	t_assert(b5 == NULL);
+}
+
 void bmap_cursor_btest__iterate_zero(){
 	BMapCursorBTest cur;
 
@@ -945,6 +975,7 @@ int main(int argc, char** argv) {
 	t_test(bmap__m_get_not_found);
 	t_test(bmap__m_get_at);
 	t_test(bmap__m_get_last);
+	t_test(bmap__m_get_last_middle);
 	t_test(bmap_cursor_btest__iterate_zero);
 	t_test(bmap_cursor_btest__iterate_one);
 	t_test(bmap_cursor_btest__iterate_two);
