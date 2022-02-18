@@ -122,32 +122,6 @@ static void _scan_next_key(struct BMapScan *scan, BMap *bmap, unsigned int size,
 }
 
 
-/**
- * Ensure next entry is defined if available.
- */
-static void _scan_next(struct BMapScan *scan, BMap *bmap, unsigned int size)
-{
-	char *entry = (char *)scan->equal;
-	char *entries = (char *)bmap->entries;
-	if(scan->equal) {
-		if(entry < entries + ((bmap->count - 1) * size)) {
-			scan->next = (BMapEntry *)(entry + size);
-		}
-	}
-}
-
-/**
- * Ensure previous entry is defined if available.
- */
-static void _scan_previous(struct BMapScan *scan, BMap *bmap, unsigned int size)
-{
-	if(scan->equal) {
-		if(scan->equal > bmap->entries) {
-			scan->prev = (void*)scan->equal - size;
-		}
-	}
-}
-
 void bmap_init(BMap *bmap)
 {
 	bmap->entries = NULL;
@@ -215,8 +189,7 @@ BMapEntry *bmap_get_lte(BMap *bmap, unsigned int size, BMapComparator *cmp)
 BMapEntry *bmap_get_gt(BMap *bmap, unsigned int size, BMapComparator *cmp)
 {
 	struct BMapScan scan = {NULL, NULL, NULL, 0};
-	_scan(&scan, bmap, size, cmp);
-	_scan_next(&scan, bmap, size);
+	_scan_next_key(&scan, bmap, size, cmp);
 	return scan.next;
 }
 
@@ -226,8 +199,7 @@ BMapEntry *bmap_get_gt(BMap *bmap, unsigned int size, BMapComparator *cmp)
 BMapEntry *bmap_get_lt(BMap *bmap, unsigned int size, BMapComparator *cmp)
 {
 	struct BMapScan scan = {NULL, NULL, NULL, 0};
-	_scan(&scan, bmap, size, cmp);
-	_scan_previous(&scan, bmap, size);
+	_scan_previous_key(&scan, bmap, size, cmp);
 	return scan.prev;
 }
 
@@ -273,7 +245,6 @@ BMapEntry *bmap_m_get_last(BMap *bmap, unsigned int size, BMapComparator *cmp)
 	}
 	return result;
 }
-
 
 static BMapEntry *_prepend(BMap *bmap, unsigned int size, BMapEntry *entry)
 {

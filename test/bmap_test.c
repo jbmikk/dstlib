@@ -894,6 +894,46 @@ void bmap_cursor_btest__move_lt_mid(){
 	t_assert(b2->btest.data == (void *)&d2);
 }
 
+void bmap_cursor_btest__move_lt__multiple(){
+	BMapEntryBTest *b1, *b2, *b3, *b4;
+	BMapEntryBTest d1, d2, d3, d4;
+	BMapCursorBTest cur;
+
+	bmap_btest_m_append(&fixture.bmap, 'a', (BTest){ &d1 });
+	bmap_btest_m_append(&fixture.bmap, 'a', (BTest){ &d2 });
+	bmap_btest_m_append(&fixture.bmap, 'a', (BTest){ &d3 });
+	bmap_btest_m_append(&fixture.bmap, 'b', (BTest){ &d4 });
+
+	bmap_cursor_btest_init(&cur, &fixture.bmap);
+	bmap_cursor_btest_move_lt(&cur, 'a');
+	bool first = bmap_cursor_btest_next(&cur);
+	b1 = bmap_cursor_btest_current(&cur);
+	bool second = bmap_cursor_btest_next(&cur);
+	b2 = bmap_cursor_btest_current(&cur);
+	bool third = bmap_cursor_btest_next(&cur);
+	b3 = bmap_cursor_btest_current(&cur);
+	bool fourth = bmap_cursor_btest_next(&cur);
+	b4 = bmap_cursor_btest_current(&cur);
+	bool fifth = bmap_cursor_btest_next(&cur);
+
+	bmap_cursor_btest_dispose(&cur);
+
+	t_assert(first);
+	t_assert(second);
+	t_assert(third);
+	t_assert(fourth);
+	t_assert(!fifth);
+
+	t_assert(b1 != NULL);
+	t_assert(b1->btest.data == (void *)&d1);
+	t_assert(b2 != NULL);
+	t_assert(b2->btest.data == (void *)&d2);
+	t_assert(b3 != NULL);
+	t_assert(b3->btest.data == (void *)&d3);
+	t_assert(b4 != NULL);
+	t_assert(b4->btest.data == (void *)&d4);
+}
+
 void bmap_cursor_btest__move_gt_last(){
 	BMapEntryBTest *b1, *b2;
 	BMapEntryBTest d1, d2;
@@ -947,6 +987,47 @@ void bmap_cursor_btest__move_gt_mid(){
 	t_assert(b2->btest.data == (void *)&d1);
 }
 
+void bmap_cursor_btest__move_gt__multiple(){
+	BMapEntryBTest *b1, *b2, *b3, *b4;
+	BMapEntryBTest d1, d2, d3, d4;
+	BMapCursorBTest cur;
+
+	bmap_btest_m_append(&fixture.bmap, 'a', (BTest){ &d1 });
+	bmap_btest_m_append(&fixture.bmap, 'b', (BTest){ &d2 });
+	bmap_btest_m_append(&fixture.bmap, 'b', (BTest){ &d3 });
+	bmap_btest_m_append(&fixture.bmap, 'b', (BTest){ &d4 });
+
+	bmap_cursor_btest_init(&cur, &fixture.bmap);
+	bmap_cursor_btest_revert(&cur);
+	bmap_cursor_btest_move_gt(&cur, 'b');
+	bool first = bmap_cursor_btest_next(&cur);
+	b1 = bmap_cursor_btest_current(&cur);
+	bool second = bmap_cursor_btest_next(&cur);
+	b2 = bmap_cursor_btest_current(&cur);
+	bool third = bmap_cursor_btest_next(&cur);
+	b3 = bmap_cursor_btest_current(&cur);
+	bool fourth = bmap_cursor_btest_next(&cur);
+	b4 = bmap_cursor_btest_current(&cur);
+	bool fifth = bmap_cursor_btest_next(&cur);
+
+	bmap_cursor_btest_dispose(&cur);
+
+	t_assert(first);
+	t_assert(second);
+	t_assert(third);
+	t_assert(fourth);
+	t_assert(!fifth);
+
+	t_assert(b1 != NULL);
+	t_assert(b1->btest.data == (void *)&d4);
+	t_assert(b2 != NULL);
+	t_assert(b2->btest.data == (void *)&d3);
+	t_assert(b3 != NULL);
+	t_assert(b3->btest.data == (void *)&d2);
+	t_assert(b4 != NULL);
+	t_assert(b4->btest.data == (void *)&d1);
+}
+
 
 int main(int argc, char** argv) {
 	t_init();
@@ -984,8 +1065,11 @@ int main(int argc, char** argv) {
 	t_test(bmap_cursor_btest__iterate_revert_two);
 	t_test(bmap_cursor_btest__move_lt_first);
 	t_test(bmap_cursor_btest__move_lt_mid);
+	t_test(bmap_cursor_btest__move_lt__multiple);
 	t_test(bmap_cursor_btest__move_gt_last);
 	t_test(bmap_cursor_btest__move_gt_mid);
+	t_test(bmap_cursor_btest__move_gt__multiple);
+
 	//TODO:
 	//delete
 	//set_and_out_of_memory
