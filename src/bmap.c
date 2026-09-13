@@ -310,6 +310,7 @@ BMapEntry *bmap_m_prepend(BMap *bmap, unsigned int size, BMapComparator *cmp)
 
 int bmap_delete(BMap *bmap, unsigned int size, BMapComparator *cmp)
 {
+	// TODO: GUARD for bmap->count == 0 and bmap->entries == NULL
 	struct BMapScan scan = {NULL, NULL, NULL, 0};
 	_scan(&scan, bmap, size, cmp);
 	if(scan.equal) {
@@ -325,13 +326,16 @@ int bmap_delete(BMap *bmap, unsigned int size, BMapComparator *cmp)
 
 		// TODO: Realloc call may be avoidable. We can just leave the 
 		// memory allocated and only call realloc on insert.
-		bmap->entries = realloc(
-			entries,
-			count - size
-		);
-
-		bmap->count--;
-		if(bmap->count) {
+		if (bmap->count == 1) {
+			free(bmap->entries);
+			bmap->entries = NULL;
+			bmap->count = 0;
+		} else {
+			bmap->entries = realloc(
+				entries,
+				count - size
+			);
+			bmap->count--;
 			check_mem(bmap->entries);
 		}
 	}
