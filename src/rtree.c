@@ -75,8 +75,14 @@ static void _node_array_init(Node *node)
 
 static void _node_set_array(Node *node, unsigned short size)
 {
-	node->size = size;
-	node->array = realloc(node->array, sizeof(unsigned char) * size);
+	if (size == 0) {
+		free(node->array);
+		node->array = NULL;
+		node->size = 0;
+	} else {
+		node->array = realloc(node->array, sizeof(unsigned char) * size);
+		node->size = size;
+	}
 }
 
 /**
