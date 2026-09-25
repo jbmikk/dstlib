@@ -34,13 +34,13 @@ endif(PROFILE)
 FetchContent_Declare(
         dbg
         GIT_REPOSITORY https://github.com/jbmikk/dbg.git
-        GIT_TAG 1.0.0
+        GIT_TAG 1.0.1
 )
 
 FetchContent_Declare(
         ctest
         GIT_REPOSITORY https://github.com/jbmikk/ctest.git
-        GIT_TAG 1.0.0
+        GIT_TAG 1.0.1
 )
 
 FetchContent_MakeAvailable(dbg ctest)
