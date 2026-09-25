@@ -29,7 +29,8 @@ endif(PROFILE)
 
 externalproject_add(
         dbg
-        GIT_REPOSITORY git@github.com:jbmikk/dbg.git
+        GIT_REPOSITORY https://github.com/jbmikk/dbg.git
+        GIT_TAG 1.0.0
         DOWNLOAD_NAME dbg
         DOWNLOAD_DIR dbg
         INSTALL_COMMAND ""
@@ -38,7 +39,8 @@ externalproject_add(
 
 externalproject_add(
         ctest
-        GIT_REPOSITORY git@github.com:jbmikk/ctest.git
+        GIT_REPOSITORY https://github.com/jbmikk/ctest.git
+        GIT_TAG 1.0.0
         DOWNLOAD_NAME ctest
         DOWNLOAD_DIR ctest
         INSTALL_COMMAND ""
