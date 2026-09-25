@@ -6,6 +6,7 @@ set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_C_EXTENSIONS ON) # Only needed for typeof
 
 include(FetchContent)
+include(CTest)
 
 option(PROFILE "Enable profiling options" OFF)
 
@@ -72,14 +73,6 @@ endif()
 # Tests
 # -----
 
-add_executable(stack_test test/stack_test.c)
-add_executable(bmap_test test/bmap_test.c)
-add_executable(bmap_char_test test/bmap_char_test.c)
-add_executable(bmap_uint_test test/bmap_uint_test.c)
-add_executable(rtree_test test/rtree_test.c)
-add_executable(arrays_test test/arrays_test.c)
-add_executable(result_test test/result_test.c)
-
 set(TEST_TARGETS
         stack_test
         bmap_test
@@ -91,10 +84,14 @@ set(TEST_TARGETS
 )
 
 foreach(test_target IN LISTS TEST_TARGETS)
+        add_executable(${test_target} test/${test_target}.c)
+
         target_include_directories(${test_target} PRIVATE
                 "${PROJECT_SOURCE_DIR}/src"
                 "${ctest_SOURCE_DIR}/src"
         )
         target_compile_options(${test_target} PRIVATE -Wall)
         target_link_libraries(${test_target} PRIVATE dstlib)
+
+        add_test(NAME ${test_target} COMMAND ${test_target})
 endforeach()
