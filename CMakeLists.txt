@@ -1,11 +1,9 @@
-cmake_minimum_required (VERSION 2.8.0)
+cmake_minimum_required (VERSION 3.16.0)
 project (dstlib)
 
 include(ExternalProject)
 
 option(PROFILE "Enable profiling options" OFF)
-
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall")
 
 
 # Traces
@@ -29,8 +27,6 @@ endif(PROFILE)
 # Include externals
 # -----------------
 
-include_directories("${CMAKE_BINARY_DIR}/dbg-prefix/src/dbg")
-
 externalproject_add(
         dbg
         GIT_REPOSITORY git@github.com:jbmikk/dbg.git
@@ -39,8 +35,6 @@ externalproject_add(
         INSTALL_COMMAND ""
         UPDATE_DISCONNECTED 1
 )
-
-include_directories("${CMAKE_BINARY_DIR}/ctest-prefix/src/ctest/src")
 
 externalproject_add(
         ctest
@@ -52,16 +46,6 @@ externalproject_add(
 )
 
 
-# Flags
-# -----
-
-if(ENABLE_RTREE_TRACE)
-        set(RTREE_TRACE_FLAGS "-DRTREE_TRACE")
-endif(ENABLE_RTREE_TRACE)
-
-set(DSTLIB_FLAGS "${RTREE_TRACE_FLAGS}")
-
-
 # Dstlib
 # ------
 
@@ -69,15 +53,24 @@ file(GLOB SOURCES src/*.c)
 
 add_library(dstlib ${SOURCES})
 
+target_include_directories(dstlib PRIVATE
+        "${CMAKE_BINARY_DIR}/dbg-prefix/src/dbg"
+        "${PROJECT_SOURCE_DIR}/src"
+)
+
+target_compile_options(dstlib PRIVATE -Wall)
+
 add_dependencies(dstlib dbg ctest)
 
-set_target_properties(dstlib PROPERTIES COMPILE_FLAGS "-DLIBRARY ${DSTLIB_FLAGS}")
+target_compile_definitions(dstlib PRIVATE LIBRARY)
+
+if(ENABLE_RTREE_TRACE)
+        target_compile_definitions(dstlib PRIVATE RTREE_TRACE)
+endif()
 
 
 # Tests
 # -----
-
-include_directories("${PROJECT_SOURCE_DIR}/src")
 
 add_executable(stack_test test/stack_test.c)
 add_executable(bmap_test test/bmap_test.c)
@@ -87,10 +80,21 @@ add_executable(rtree_test test/rtree_test.c)
 add_executable(arrays_test test/arrays_test.c)
 add_executable(result_test test/result_test.c)
 
-target_link_libraries(stack_test dstlib)
-target_link_libraries(bmap_test dstlib)
-target_link_libraries(bmap_char_test dstlib)
-target_link_libraries(bmap_uint_test dstlib)
-target_link_libraries(rtree_test dstlib)
-target_link_libraries(arrays_test dstlib)
-target_link_libraries(result_test dstlib)
+set(TEST_TARGETS
+        stack_test
+        bmap_test
+        bmap_char_test
+        bmap_uint_test
+        rtree_test
+        arrays_test
+        result_test
+)
+
+foreach(test_target IN LISTS TEST_TARGETS)
+        target_include_directories(${test_target} PRIVATE
+                "${PROJECT_SOURCE_DIR}/src"
+                "${CMAKE_BINARY_DIR}/ctest-prefix/src/ctest/src"
+        )
+        target_compile_options(${test_target} PRIVATE -Wall)
+        target_link_libraries(${test_target} PRIVATE dstlib)
+endforeach()
