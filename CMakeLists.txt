@@ -5,7 +5,7 @@ set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_C_EXTENSIONS ON) # Only needed for typeof
 
-include(ExternalProject)
+include(FetchContent)
 
 option(PROFILE "Enable profiling options" OFF)
 
@@ -31,25 +31,19 @@ endif(PROFILE)
 # Include externals
 # -----------------
 
-externalproject_add(
+FetchContent_Declare(
         dbg
         GIT_REPOSITORY https://github.com/jbmikk/dbg.git
         GIT_TAG 1.0.0
-        DOWNLOAD_NAME dbg
-        DOWNLOAD_DIR dbg
-        INSTALL_COMMAND ""
-        UPDATE_DISCONNECTED 1
 )
 
-externalproject_add(
+FetchContent_Declare(
         ctest
         GIT_REPOSITORY https://github.com/jbmikk/ctest.git
         GIT_TAG 1.0.0
-        DOWNLOAD_NAME ctest
-        DOWNLOAD_DIR ctest
-        INSTALL_COMMAND ""
-        UPDATE_DISCONNECTED 1
 )
+
+FetchContent_MakeAvailable(dbg ctest)
 
 
 # Dstlib
@@ -60,13 +54,13 @@ file(GLOB SOURCES src/*.c)
 add_library(dstlib ${SOURCES})
 
 target_include_directories(dstlib PRIVATE
-        "${CMAKE_BINARY_DIR}/dbg-prefix/src/dbg"
+        "${dbg_SOURCE_DIR}"
         "${PROJECT_SOURCE_DIR}/src"
 )
 
-target_compile_options(dstlib PRIVATE -Wall)
+target_link_libraries(dstlib PRIVATE dbg ctest)
 
-add_dependencies(dstlib dbg ctest)
+target_compile_options(dstlib PRIVATE -Wall)
 
 target_compile_definitions(dstlib PRIVATE LIBRARY)
 
@@ -99,7 +93,7 @@ set(TEST_TARGETS
 foreach(test_target IN LISTS TEST_TARGETS)
         target_include_directories(${test_target} PRIVATE
                 "${PROJECT_SOURCE_DIR}/src"
-                "${CMAKE_BINARY_DIR}/ctest-prefix/src/ctest/src"
+                "${ctest_SOURCE_DIR}/src"
         )
         target_compile_options(${test_target} PRIVATE -Wall)
         target_link_libraries(${test_target} PRIVATE dstlib)
