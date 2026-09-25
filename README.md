@@ -15,11 +15,18 @@ Build
 In order to build this library you need:
 * cmake
 
+Then run `make build`
+
 
 Test
 ----
 
 The tests give good insights into how to use the library.
+
+```
+    make test
+```
+
 
 
 Debugging
