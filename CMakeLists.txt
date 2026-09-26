@@ -1,4 +1,4 @@
-cmake_minimum_required (VERSION 3.16.0)
+cmake_minimum_required (VERSION 3.20.0)
 project (dstlib LANGUAGES C)
 
 set(CMAKE_C_STANDARD 11)
@@ -83,6 +83,9 @@ set(TEST_TARGETS
         result_test
 )
 
+find_program(VALGRIND_EXECUTABLE valgrind)
+find_program(GPROF_EXECUTABLE gprof)
+
 foreach(test_target IN LISTS TEST_TARGETS)
         add_executable(${test_target} test/${test_target}.c)
 
@@ -94,4 +97,28 @@ foreach(test_target IN LISTS TEST_TARGETS)
         target_link_libraries(${test_target} PRIVATE dstlib)
 
         add_test(NAME ${test_target} COMMAND ${test_target})
+        set_tests_properties(${test_target} PROPERTIES LABELS regular)
+
+        if(GPROF_EXECUTABLE)
+                # TODO: Save output "gprof executable gmon.out > output.txt"
+                add_test(NAME ${test_target}_profile COMMAND "${GPROF_EXECUTABLE}" "$<TARGET_FILE:${test_target}>")
+                set_tests_properties(${test_target}_profile PROPERTIES LABELS profile)
+        endif()
+
+        if(VALGRIND_EXECUTABLE)
+                add_test(NAME ${test_target}_valgrind
+                        COMMAND "${VALGRIND_EXECUTABLE}" --leak-check=full --show-leak-kinds=all --track-origins=yes --error-exitcode=1 --suppressions=${PROJECT_SOURCE_DIR}/suppressions.supp "$<TARGET_FILE:${test_target}>"
+                )
+                set_tests_properties(${test_target}_valgrind PROPERTIES LABELS valgrind)
+
+                add_test(NAME ${test_target}_callgrind_calls
+                        COMMAND "${VALGRIND_EXECUTABLE}" --tool=callgrind "$<TARGET_FILE:${test_target}>"
+                )
+                set_tests_properties(${test_target}_callgrind_calls PROPERTIES LABELS callgrind_calls)
+
+                add_test(NAME ${test_target}_callgrind_simulate_cache
+                        COMMAND "${VALGRIND_EXECUTABLE}" --tool=callgrind --simulate-cache=yes "$<TARGET_FILE:${test_target}>"
+                )
+                set_tests_properties(${test_target}_callgrind_simulate_cache PROPERTIES LABELS callgrind_simulate_cache)
+        endif()
 endforeach()

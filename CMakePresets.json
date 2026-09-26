@@ -1,0 +1,75 @@
+{
+  "version": 2,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 20,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "run",
+      "displayName": "Run",
+      "generator": "Unix Makefiles",
+      "binaryDir": "${sourceDir}/build/presets/run",
+      "cacheVariables": {
+        "BUILD_TESTING": "ON",
+        "TRACE": "OFF"
+      }
+    },
+    {
+      "name": "trace",
+      "displayName": "Trace",
+      "inherits": "run",
+      "binaryDir": "${sourceDir}/build/presets/trace",
+      "cacheVariables": {
+        "TRACE": "ON"
+      }
+    },
+    {
+      "name": "profile",
+      "displayName": "Profile",
+      "inherits": "run",
+      "binaryDir": "${sourceDir}/build/presets/profile",
+      "cacheVariables": {
+        "PROFILE":  "ON"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "run",
+      "configurePreset": "run"
+    },
+    {
+      "name": "trace",
+      "configurePreset": "trace"
+    },
+    {
+      "name": "profile",
+      "configurePreset": "profile"
+    }
+  ],
+  "testPresets": [
+    {
+      "name": "run",
+      "configurePreset": "run",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "trace",
+      "configurePreset": "trace",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "profile",
+      "configurePreset": "profile",
+      "output": {
+        "outputOnFailure": true
+      }
+    }
+  ]
+}
